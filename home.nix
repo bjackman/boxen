@@ -15,7 +15,10 @@
       # You can configure some Fish stuff through Nix, but experimentally it
       # seems you can also just dump files into the home directory and things
       # work OK.
-      ".config/fish/functions/fish_prompt.fish".source = ./fish/functions/fish_prompt.fish;
+      ".config/fish/functions/" = {
+        source = ./fish/functions;
+        recursive = true;
+      };
 
       # # Building this configuration will create a copy of 'dotfiles/screenrc' in
       # # the Nix store. Activating the configuration will then make '~/.screenrc' a
