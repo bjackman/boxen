@@ -15,8 +15,8 @@
       # You can configure some Fish stuff through Nix, but experimentally it
       # seems you can also just dump files into the home directory and things
       # work OK.
-      ".config/fish/functions/" = {
-        source = ./fish/functions;
+      ".config/fish/" = {
+        source = ./fish;
         recursive = true;
       };
 
