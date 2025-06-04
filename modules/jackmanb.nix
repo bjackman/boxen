@@ -8,4 +8,6 @@
     # up on gLinux.
     sessionPath = [ "${config.home.profileDirectory}/bin" ];
   };
+
+  common.fishConfigDirs = [ ../files/jackmanb/config/fish ];
 }

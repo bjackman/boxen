@@ -3,11 +3,7 @@
   options = {
     common.fishConfigDirs = lib.mkOption {
       type = lib.types.listOf lib.types.pathInStore;
-      default = [
-        # Note awkward relative path here. Alternative would be to communicate a
-        # base path for these files via specialArgs based on the flake's `self`.
-        ../files/common/config/fish
-      ];
+      default = [];
       description = "Derivations producing directories with fish configs, will be combined into a single config using symlinkJoin.";
     };
   };
@@ -50,5 +46,9 @@
       ];
     };
     programs.bash.enable = true;
+
+    # Note awkward relative path here. Alternative would be to communicate a
+    # base path for these files via specialArgs based on the flake's `self`.
+    common.fishConfigDirs = [ ../files/common/config/fish ];
   };
 }
