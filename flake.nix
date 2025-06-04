@@ -26,9 +26,16 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
-      homeConfigurations."brendan" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [ ./home.nix ];
-      };
+      homeConfigurations =
+        let
+          mkConfig = { modules }:
+            home-manager.lib.homeManagerConfiguration {
+              inherit pkgs;
+              modules = [ ./modules/common.nix ] ++ modules;
+            };
+        in {
+          brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
+          jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
+        };
     };
 }
