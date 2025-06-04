@@ -30,4 +30,5 @@
       }
     ];
   };
+  programs.bash.enable = true;
 }
