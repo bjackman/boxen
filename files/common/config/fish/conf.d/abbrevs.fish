@@ -1,0 +1,1 @@
+abbr --add hms "home-manager switch"
