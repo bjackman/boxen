@@ -13,7 +13,7 @@
       ".config/fish/" = {
         # Note awkward relative path here. Alternative would be to communicate a
         # base path for these files via specialArgs based on the flake's `self`.
-        source = ../files/fish;
+        source = ../files/common/config/fish;
         recursive = true;
       };
     };
