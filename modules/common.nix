@@ -3,8 +3,10 @@
     common.fishConfigDirs = lib.mkOption {
       type = lib.types.listOf lib.types.pathInStore;
       default = [ ];
-      description =
-        "Derivations producing directories with fish configs, will be combined into a single config using symlinkJoin.";
+      description = ''
+        Derivations producing directories with fish configs, will be combined
+        into a single config using symlinkJoin.
+      '';
     };
   };
 
