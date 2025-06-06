@@ -95,6 +95,9 @@
             "message/rfc822" = "colorize";
             ".headers" = "colorize";
           };
+          # Unsure why but if I don't set this explicitly opening messages does
+          # nothing.
+          viewer.pager = "less -Rc";
         };
       };
 
