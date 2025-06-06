@@ -15,6 +15,20 @@
       # :).
       default = "${config.home.homeDirectory}/lkml";
     };
+
+    # Cargo culted from
+    # https://github.com/nix-community/home-manager/blob/91287a0e9d42570754487b7e38c6697e15a9aab2/modules/programs/notmuch.nix#L179
+    # The idea here is to add a accounts.email.accounts.$name.lkml.enable option
+    # which will then apply all the other relevant account settings.
+    # This will somewhat clobber any other email setup, it might break if you do
+    # anything other than just set lkml.enable = true;
+    accounts.email.accounts = lib.mkOption {
+      type =
+        with types;
+        attrsOf (submodule {
+          options.lkml.enable = lib.mkEnableOption "Fancy LKML-reading setup";
+        });
+    };
   };
   config = {
     programs.notmuch = {

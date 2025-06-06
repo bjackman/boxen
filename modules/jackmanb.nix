@@ -32,5 +32,6 @@
       };
     };
     primary = true;
+    lkml.enable = true;
   };
 }
