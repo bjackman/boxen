@@ -130,7 +130,7 @@
             name = "do-notmuch-propagate-mute";
             runtimeInputs = [ notmuch-propagate-mute ];
             text = ''
-              notmuch-propagate-mute --email ${account.address} --db-path ${config.lkml.maildirBasePath}
+              notmuch-propagate-mute --email ${account.address} --db-path ${config.lkml.maildirBasePath} "$@"
             '';
           };
         in

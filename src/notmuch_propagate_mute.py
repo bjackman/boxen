@@ -105,12 +105,14 @@ if __name__ == '__main__':
 	parser.add_argument('--email', required=True, help="The email address to check for in To/Cc.")
 	parser.add_argument('--db-path', required=True, help="Path to the notmuch database.")
 	parser.add_argument('--verbose', action='store_true')
+	parser.add_argument('--query-extra', default='',
+						help='Notmuch query terms to apply. Only modify threads with matches for these terms')
 	args = parser.parse_args()
 
 	EMAIL = args.email
 	VERBOSE = args.verbose
 
-	query_string = 'tag:mute-thread'
+	query_string = 'tag:mute-thread ' + args.query_extra
 
 	# Need to secify path explicitly, otherwise it doesn't work if the database
 	# path isn't explicit in notmuch-config.
