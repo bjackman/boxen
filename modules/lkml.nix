@@ -86,6 +86,15 @@
             # Default: false
             threading-enabled = true;
           };
+          # I don't know what this does really, but aerc couldn't open anything
+          # until I set it.
+          filters = {
+            "text/plain" = "colorize";
+            "text/calendar" = "calendar";
+            "message/delivery-status" = "colorize";
+            "message/rfc822" = "colorize";
+            ".headers" = "colorize";
+          };
         };
       };
 
