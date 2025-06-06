@@ -89,6 +89,15 @@
         };
       };
 
+      # The HM packaging for Aerc call the setting "extraBinds", but actually
+      # if you set it then those are the _only_ keybindings you yet.
+      # If you don't set it, then Aerc will produce an initial keybinding
+      # setup on first run. Therefore we don't set it here and instead we just
+      # have a config file checked in.
+      home.file."${config.xdg.configHome}/aerc/binds.conf" = {
+        source = ../files/lkml/config/aerc/binds.conf;
+      };
+
       # TODO: Defining packages directly here is messy. But I haven't figured out
       # the proper way to organise this.
       home.packages =
