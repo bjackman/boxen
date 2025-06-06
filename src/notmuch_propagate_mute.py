@@ -27,7 +27,6 @@ import signal
 import notmuch
 
 
-EMAIL = 'jackmanb@google.com'
 MUTE_CMD_TAG = 'mute-thread'
 MUTED_TAG = 'thread-muted'
 
