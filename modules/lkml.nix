@@ -1,3 +1,7 @@
+# WIP: Need to figure out how to move the notmuch and aerc config from the
+# overall mail accounts declaration into this file.
+# Then, need to set up aerc's query-map. This is not supported by the HM
+# packaging, it needs to be done manually.
 {
   config,
   pkgs,
