@@ -18,6 +18,7 @@
 # but it still SIGABRTed, I dunno maybe I got that wrong.
 #
 
+import argparse
 import collections
 import enum
 import os
@@ -98,11 +99,18 @@ def apply_mute(msg, parent_muted, parent_addressed):
 
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description="Script for muting threads in notmuch.")
+	parser.add_argument('--email', required=True, help="The email address to check for in To/Cc.")
+	parser.add_argument('--db-path', required=True, help="Path to the notmuch database.")
+	args = parser.parse_args()
+
+	EMAIL = args.email
+
 	query_string = 'tag:mute-thread'
 
 	# Need to secify path explicitly, otherwise it doesn't work if the database
 	# path isn't explicit in notmuch-config.
-	db = notmuch.Database(path=os.path.expanduser('~/mail'),
+	db = notmuch.Database(path=args.db_path,
 						  mode=notmuch.Database.MODE.READ_WRITE)
 	for thread in db.create_query(query_string).search_threads():
 		print_thread(next(thread.get_messages()))
