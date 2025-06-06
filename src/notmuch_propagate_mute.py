@@ -30,6 +30,9 @@ import notmuch
 MUTE_CMD_TAG = 'mute-thread'
 MUTED_TAG = 'thread-muted'
 
+def verbose_print(*args):
+	if VERBOSE:
+		print(*args)
 
 class Addressed(enum.IntEnum):
 	NONE = 0
@@ -62,7 +65,7 @@ def print_thread(msg, nest_level=0):
 	else:
 		tag_chars += ' '
 
-	print(f'{'  ' * nest_level}<{tag_chars}> {msg.get_header('Subject')}')
+	verbose_print(f'{'  ' * nest_level}<{tag_chars}> {msg.get_header('Subject')}')
 	for reply in msg.get_replies():
 		print_thread(reply, nest_level + 1)
 
@@ -101,9 +104,11 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="Script for muting threads in notmuch.")
 	parser.add_argument('--email', required=True, help="The email address to check for in To/Cc.")
 	parser.add_argument('--db-path', required=True, help="Path to the notmuch database.")
+	parser.add_argument('--verbose', action='store_true')
 	args = parser.parse_args()
 
 	EMAIL = args.email
+	VERBOSE = args.verbose
 
 	query_string = 'tag:mute-thread'
 
@@ -113,13 +118,13 @@ if __name__ == '__main__':
 						  mode=notmuch.Database.MODE.READ_WRITE)
 	for thread in db.create_query(query_string).search_threads():
 		print_thread(next(thread.get_messages()))
-		print()
-		print('muting...')
+		verbose_print()
+		verbose_print('muting...')
 	# Must recreate the iterator each time due to the fucked up memory
 	# management, otherwise the library will SIGABRT.
 	for thread in db.create_query(query_string).search_threads():
 		apply_mute(next(thread.get_messages()), parent_muted=False, parent_addressed=None)
-		print()
-		print()
+		verbose_print()
+		verbose_print()
 	for thread in db.create_query(query_string).search_threads():
 		print_thread(next(thread.get_messages()))
