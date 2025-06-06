@@ -51,6 +51,7 @@
           runtimeInputs = [
             pkgs.public-inbox
             pkgs.notmuch
+            notmuch-propagate-mute
           ];
           text =
             # TODO: can't be bothered to figure out multiple addresses, assert
@@ -64,6 +65,8 @@
                 --threads --dedupe=mid --augment \
                 '(a:${account.address} OR a:linux-mm@kvack.org OR a:x86@kernel.org) AND d:2025-04'
               notmuch new
+              notmuch-propagate-mute \
+                --email ${account.address} --db-path ${config.lkml.maildirBasePath}
             '';
         })
       ];
