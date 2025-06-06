@@ -1,3 +1,7 @@
+# TODO: This is coupled with configuration in accounts.email.accounts.
+# Probably the solution to that is to drop the usage of high-level aerc and
+# notmuch configuration, and instead configure them directly via home.files in
+# here.
 {
   config,
   pkgs,
