@@ -150,11 +150,12 @@
             # lei q does undocumented fucked up things inserting quotes into its
             # arguments. It's written in Perl. It seems not to shit the bed too
             # badly if you provide each "term" of the search query as separate
-            # arguments.
+            # arguments. It also munges the date filter in a weird way that I
+            # don't understand and which is buggy.
             text = ''
               lei q -I https://lore.kernel.org/all/ -o ${config.lkml.maildirBasePath} \
                 --threads --dedupe=mid --augment \
-                'a:${account.address}' 'AND' 'd:2025-04'
+                'a:${account.address}' 'AND' 'dt:20250204132159..'
               notmuch new
               do-notmuch-propagate-mute
             '';
