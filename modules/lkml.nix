@@ -147,10 +147,14 @@
               notmuch-propagate-mute
               do-notmuch-propagate-mute
             ];
+            # lei q does undocumented fucked up things inserting quotes into its
+            # arguments. It's written in Perl. It seems not to shit the bed too
+            # badly if you provide each "term" of the search query as separate
+            # arguments.
             text = ''
               lei q -I https://lore.kernel.org/all/ -o ${config.lkml.maildirBasePath} \
                 --threads --dedupe=mid --augment \
-                'a:${account.address} AND d:2025-04'
+                'a:${account.address}' 'AND' 'd:2025-04'
               notmuch new
               do-notmuch-propagate-mute
             '';
