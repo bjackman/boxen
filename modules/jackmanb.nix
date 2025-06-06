@@ -19,7 +19,18 @@
   accounts.email.accounts.work = {
     address = "jackmanb@google.com";
     realName = "Brendan Jackman";
+    # TODO: It would be better to enable notmuch and aerc in lkml.nix as their
+    # configs are all interwingled in this setup.
     notmuch.enable = true;
+    aerc = {
+      enable = true;
+      extraAccounts = {
+        source = "notmuch://${config.lkml.maildirBasePath}";
+        # Needed for postponing messages:
+        #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
+        maildir-store = "${config.lkml.maildirBasePath}";
+      };
+    };
     primary = true;
   };
 }

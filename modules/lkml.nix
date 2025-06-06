@@ -26,6 +26,14 @@
       };
     };
 
+    programs.aerc = {
+      enable = true;
+      # aerc is fussy about config permissions since you might put creds in
+      # there. Nix doesn't support having the cautious permissions, but we won't
+      # put creds in it (they would be leaked into the Nix store anyway).
+      extraConfig.general.unsafe-accounts-conf = true;
+    };
+
     # TODO: Defining packages directly here is messy. But I haven't figured out
     # the proper way to organise this.
     home.packages =
