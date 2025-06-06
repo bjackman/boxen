@@ -1,4 +1,5 @@
-{ config, ... }: {
+{ config, ... }:
+{
   home = {
     username = "jackmanb";
     homeDirectory = "/usr/local/google/home/jackmanb";
@@ -14,4 +15,11 @@
   };
 
   common.fishConfigDirs = [ ../files/jackmanb/config/fish ];
+
+  accounts.email.accounts.work = {
+    address = "jackmanb@google.com";
+    realName = "Brendan Jackman";
+    notmuch.enable = true;
+    primary = true;
+  };
 }

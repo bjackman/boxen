@@ -19,20 +19,28 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }:
+  outputs =
+    { nixpkgs, home-manager, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-    in {
-      homeConfigurations = let
-        mkConfig = { modules }:
-          home-manager.lib.homeManagerConfiguration {
-            inherit pkgs;
-            modules = [ ./modules/common.nix ./modules/lkml.nix ] ++ modules;
-          };
-      in {
-        brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
-        jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
-      };
+    in
+    {
+      homeConfigurations =
+        let
+          mkConfig =
+            { modules }:
+            home-manager.lib.homeManagerConfiguration {
+              inherit pkgs;
+              modules = [
+                ./modules/common.nix
+                ./modules/lkml.nix
+              ] ++ modules;
+            };
+        in
+        {
+          brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
+          jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
+        };
     };
 }

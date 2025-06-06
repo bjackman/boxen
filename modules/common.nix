@@ -1,4 +1,10 @@
-{ config, pkgs, lib, ... }: {
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+{
   options = {
     common.fishConfigDirs = lib.mkOption {
       type = lib.types.listOf lib.types.pathInStore;
@@ -16,32 +22,38 @@
 
       packages = with pkgs; [ hello ];
 
-      file = let
-        fishConfig = pkgs.symlinkJoin {
-          name = "fish-config";
-          paths = [ config.common.fishConfigDirs ];
+      file =
+        let
+          fishConfig = pkgs.symlinkJoin {
+            name = "fish-config";
+            paths = [ config.common.fishConfigDirs ];
+          };
+        in
+        {
+          # You can configure some Fish stuff through Nix, but experimentally it
+          # seems you can also just dump files into the home directory and things
+          # work OK.
+          ".config/fish/" = {
+            source = fishConfig;
+            recursive = true;
+          };
         };
-      in {
-        # You can configure some Fish stuff through Nix, but experimentally it
-        # seems you can also just dump files into the home directory and things
-        # work OK.
-        ".config/fish/" = {
-          source = fishConfig;
-          recursive = true;
-        };
-      };
 
-      sessionVariables = { EDITOR = "vim"; };
+      sessionVariables = {
+        EDITOR = "vim";
+      };
     };
 
     programs.home-manager.enable = true;
 
     programs.fish = {
       enable = true;
-      plugins = [{
-        name = "z";
-        src = pkgs.fishPlugins.z.src;
-      }];
+      plugins = [
+        {
+          name = "z";
+          src = pkgs.fishPlugins.z.src;
+        }
+      ];
     };
     programs.bash.enable = true;
 
