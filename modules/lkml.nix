@@ -125,10 +125,19 @@
             dontUnpack = true;
             installPhase = "install -Dm755 ${../src/notmuch_propagate_mute.py} $out/bin/notmuch-propagate-mute";
           };
+          # Dumb wrapper so I don't have to code args into the binds.conf
+          do-notmuch-propagate-mute = pkgs.writeShellApplication {
+            name = "do-notmuch-propagate-mute";
+            runtimeInputs = [ notmuch-propagate-mute ];
+            text = ''
+              notmuch-propagate-mute --email ${account.address} --db-path ${config.lkml.maildirBasePath}
+            '';
+          };
         in
         [
-          # Expose the package directly for testing.
+          # Expose the packages directly for testing.
           notmuch-propagate-mute
+          do-notmuch-propagate-mute
           (pkgs.writeShellApplication {
             name = "get-lkml";
             # For lei
@@ -136,14 +145,14 @@
               pkgs.public-inbox
               pkgs.notmuch
               notmuch-propagate-mute
+              do-notmuch-propagate-mute
             ];
             text = ''
               lei q -I https://lore.kernel.org/all/ -o ${config.lkml.maildirBasePath} \
                 --threads --dedupe=mid --augment \
                 'a:${account.address} AND d:2025-04'
               notmuch new
-              notmuch-propagate-mute \
-                --email ${account.address} --db-path ${config.lkml.maildirBasePath}
+              do-notmuch-propagate-mute
             '';
           })
         ];
