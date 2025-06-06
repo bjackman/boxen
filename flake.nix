@@ -28,7 +28,7 @@
         mkConfig = { modules }:
           home-manager.lib.homeManagerConfiguration {
             inherit pkgs;
-            modules = [ ./modules/common.nix ] ++ modules;
+            modules = [ ./modules/common.nix ./modules/lkml.nix ] ++ modules;
           };
       in {
         brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
