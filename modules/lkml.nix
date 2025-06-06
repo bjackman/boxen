@@ -5,7 +5,10 @@
     # is kinda special, define a separate one specifically for LKML.
     lkml.maildirBasePath = lib.mkOption {
       type = lib.types.path;
-      default = "${config.homeDirectory}/mail";
+      # Note in my old dotifles repo I was unable to set this due to notmuch not
+      # expanding ~ or $HOME. But in Nix I can can set it as an absolute path
+      # :).
+      default = "${config.home.homeDirectory}/lkml";
     };
   };
   config = {
