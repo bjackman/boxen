@@ -128,7 +128,7 @@
             text = ''
               lei q -I https://lore.kernel.org/all/ -o ${config.lkml.maildirBasePath} \
                 --threads --dedupe=mid --augment \
-                '(a:${account.address} OR a:linux-mm@kvack.org OR a:x86@kernel.org) AND d:2025-04'
+                'a:${account.address} AND d:2025-04'
               notmuch new
               notmuch-propagate-mute \
                 --email ${account.address} --db-path ${config.lkml.maildirBasePath}
