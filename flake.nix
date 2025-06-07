@@ -34,7 +34,10 @@
         pkgs.runCommand "check-nix-format"
           {
             nativeBuildInputs = [ pkgs.nixfmt-rfc-style ];
-            src = ./.;
+            src = nixpkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = nixpkgs.lib.fileset.gitTracked ./.;
+            };
             output = "/dev/null";
           }
           ''
