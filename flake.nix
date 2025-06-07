@@ -38,7 +38,9 @@
             output = "/dev/null";
           }
           ''
-            nixfmt --check $src/flake.nix
+            for file in $(find $src -name "*.nix"); do
+              nixfmt --check $file
+            done
             touch $out
           '';
 
