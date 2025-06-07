@@ -26,18 +26,20 @@
       extraAccounts =
         # This configures the "folders", i.e. the things in the side bar, by
         # mapping them to notmuch queries.
-        let queryMap = pkgs.writeText "query-map.conf" ''
-          Inbox=not tag:archived and not tag:thread-muted
-          All=true
-        '';
-        in {
+        let
+          queryMap = pkgs.writeText "query-map.conf" ''
+            Inbox=not tag:archived and not tag:thread-muted
+            All=true
+          '';
+        in
+        {
           source = "notmuch://${config.lkml.maildirBasePath}";
           # Needed for postponing messages:
           #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
           maildir-store = "${config.lkml.maildirBasePath}";
           query-map = "${queryMap}";
         };
-      };
+    };
     primary = true;
   };
 }
