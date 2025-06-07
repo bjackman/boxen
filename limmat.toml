@@ -1,0 +1,4 @@
+# https://github.com/bjackman/limmat
+[[tests]]
+name = "flake-check"
+command = "nix flake check"
