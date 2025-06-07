@@ -18,14 +18,30 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-
   outputs =
-    { nixpkgs, home-manager, ... }:
+    {
+      nixpkgs,
+      home-manager,
+      self,
+      ...
+    }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
+      checks."${system}".default =
+        pkgs.runCommand "check-nix-format"
+          {
+            nativeBuildInputs = [ pkgs.nixfmt-rfc-style ];
+            src = ./.;
+            output = "/dev/null";
+          }
+          ''
+            nixfmt --check $src/flake.nix
+            touch $out
+          '';
+
       homeConfigurations =
         let
           mkConfig =
