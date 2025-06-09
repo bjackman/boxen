@@ -35,7 +35,7 @@
       checks."${system}".default =
         pkgs.runCommand "check-nix-format"
           {
-            nativeBuildInputs = [ pkgs.nixfmt-rfc-style ];
+            nativeBuildInputs = [ pkgs.nixfmt-tree ];
             src = nixpkgs.lib.fileset.toSource {
               root = ./.;
               fileset = nixpkgs.lib.fileset.gitTracked ./.;
@@ -43,9 +43,7 @@
             output = "/dev/null";
           }
           ''
-            for file in $(find $src -name "*.nix"); do
-              nixfmt --check $file
-            done
+            ${pkgs.nixfmt-tree}/bin/treefmt --fail-on-change --no-cache --tree-root . .
             touch $out
           '';
 
