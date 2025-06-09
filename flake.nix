@@ -30,6 +30,8 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
+      formatter."${system}" = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
+
       checks."${system}".default =
         pkgs.runCommand "check-nix-format"
           {
@@ -63,15 +65,6 @@
           brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
           jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
         };
-
-      # This should be in "apps" but I dunno, I don't really understand apps.
-      # "nix run .#format" works when it's in packages, but when it's in apps it
-      # needs to be an actual store path instead of just a derivation.
-      packages."${system}".format = pkgs.writeShellApplication {
-        name = "format";
-        runtimeInputs = [ pkgs.nixfmt-rfc-style ];
-        text = ''find . -name "*.nix" -print0 | xargs -0 nix run nixpkgs#nixfmt-rfc-style --'';
-      };
     };
 
 }
