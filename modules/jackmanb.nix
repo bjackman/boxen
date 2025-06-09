@@ -19,27 +19,7 @@
   accounts.email.accounts.work = {
     address = "jackmanb@google.com";
     realName = "Brendan Jackman";
-    # TODO: This really badly needs to be configured in lkml.nix instead.
-    notmuch.enable = true;
-    aerc = {
-      enable = true;
-      extraAccounts =
-        # This configures the "folders", i.e. the things in the side bar, by
-        # mapping them to notmuch queries.
-        let
-          queryMap = pkgs.writeText "query-map.conf" ''
-            Inbox=not tag:archived and not tag:thread-muted
-            All=true
-          '';
-        in
-        {
-          source = "notmuch://${config.lkml.maildirBasePath}";
-          # Needed for postponing messages:
-          #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
-          maildir-store = "${config.lkml.maildirBasePath}";
-          query-map = "${queryMap}";
-        };
-    };
-    primary = true;
   };
+  # This tells the lkml module to update the rest of the account defined above.
+  lkml.accountName = "work";
 }
