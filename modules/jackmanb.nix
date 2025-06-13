@@ -38,6 +38,7 @@
           #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
           maildir-store = "${config.lkml.maildirBasePath}";
           query-map = "${queryMap}";
+          outgoing = "/usr/bin/sendgmr -i";
         };
     };
     primary = true;
