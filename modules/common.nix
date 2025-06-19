@@ -20,8 +20,6 @@
     home = {
       stateVersion = "25.05";
 
-      packages = with pkgs; [ hello ];
-
       file =
         let
           fishConfig = pkgs.symlinkJoin {
