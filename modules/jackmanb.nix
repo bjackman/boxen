@@ -12,6 +12,14 @@
       # until I can migrate to a proper package manager.
       "${config.home.homeDirectory}/.local/bin"
     ];
+
+  };
+
+  # Required by Zed.
+  nixGL.vulkan.enable = true;
+  programs.zed-editor = {
+    enable = true;
+    package = config.lib.nixGL.wrap pkgs.zed-editor;
   };
 
   common.fishConfigDirs = [ ../files/jackmanb/config/fish ];
