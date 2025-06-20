@@ -29,6 +29,8 @@ import notmuch
 
 MUTE_CMD_TAG = 'mute-thread'
 MUTED_TAG = 'thread-muted'
+# Internal tag to help avoid reprocessing zillions of threads.
+PROCESSED_TAG = 'mute-processed'
 
 def verbose_print(*args):
 	if VERBOSE:
@@ -79,6 +81,11 @@ def apply_mute(msg, parent_muted, parent_addressed):
 	"""
 	addressed = Addressed.from_msg(msg)
 
+	# We don't check for PROCESSED_TAG here because we might need to
+	# recurse past processed messages into unprocessed replies. The job of that
+	# tag is just to let us completely exclude threads that don't have any
+	# unprocessed messages in them.
+
 	# Mute unconditionally if this specific message has the command tag.
 	if MUTE_CMD_TAG in msg.get_tags():
 		mute = True
@@ -95,6 +102,7 @@ def apply_mute(msg, parent_muted, parent_addressed):
 
 	if mute:
 		msg.add_tag(MUTED_TAG)
+	msg.add_tag(PROCESSED_TAG)
 
 	for reply in msg.get_replies():
 		apply_mute(reply, mute, addressed)
@@ -112,7 +120,7 @@ if __name__ == '__main__':
 	EMAIL = args.email
 	VERBOSE = args.verbose
 
-	query_string = 'tag:mute-thread ' + args.query_extra
+	query_string = f'tag:{MUTE_CMD_TAG} AND NOT tag:{PROCESSED_TAG} ' + args.query_extra
 
 	# Need to secify path explicitly, otherwise it doesn't work if the database
 	# path isn't explicit in notmuch-config.
