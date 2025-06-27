@@ -1,1 +1,3 @@
+set history save on
+
 add-auto-load-safe-path ~/src/linux
