@@ -17,12 +17,17 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    limmat = {
+      url = "github:bjackman/limmat";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
+      self,
       nixpkgs,
       home-manager,
-      self,
+      limmat,
       ...
     }:
     let
@@ -65,6 +70,10 @@
           brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
           jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
         };
+
+      devShells."${system}".default = pkgs.mkShell {
+        packages = [ limmat.packages."${system}".default ];
+      };
     };
 
 }
