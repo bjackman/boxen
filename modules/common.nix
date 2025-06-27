@@ -20,22 +20,22 @@
     home = {
       stateVersion = "25.05";
 
-      file =
-        let
-          fishConfig = pkgs.symlinkJoin {
-            name = "fish-config";
-            paths = [ config.common.fishConfigDirs ];
-          };
-        in
-        {
-          # You can configure some Fish stuff through Nix, but experimentally it
-          # seems you can also just dump files into the home directory and things
-          # work OK.
-          ".config/fish/" = {
+      file = {
+        # You can configure some Fish stuff through Nix, but experimentally it
+        # seems you can also just dump files into the home directory and things
+        # work OK.
+        ".config/fish/" =
+          let
+            fishConfig = pkgs.symlinkJoin {
+              name = "fish-config";
+              paths = [ config.common.fishConfigDirs ];
+            };
+          in
+          {
             source = fishConfig;
             recursive = true;
           };
-        };
+      };
 
       sessionVariables = {
         EDITOR = "vim";
