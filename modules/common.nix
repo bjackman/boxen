@@ -35,6 +35,10 @@
             source = fishConfig;
             recursive = true;
           };
+
+        ".config/gdb/gdbinit" = {
+          source = ../files/common/config/gdb/gdbinit;
+        };
       };
 
       sessionVariables = {
