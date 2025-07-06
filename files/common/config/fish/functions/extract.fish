@@ -30,6 +30,8 @@ function extract
             7z x $argv
         case "*.cpio.xz"
             xzcat $argv | cpio -idmv
+        case "*.zst"
+            zstd -d $argv
         case "*"
             echo "'$argv' cannot be extracted via extract()" ;;
     end
