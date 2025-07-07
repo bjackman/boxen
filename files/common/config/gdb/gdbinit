@@ -1,3 +1,6 @@
 set history save on
 
 add-auto-load-safe-path ~/src/linux
+
+# Default to hex
+set output-radix 16
