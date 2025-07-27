@@ -57,6 +57,7 @@
         }
       ];
     };
+    home.packages = with pkgs; [ fortune cowsay clolcat ];
     programs.bash.enable = true;
 
     # Note awkward relative path here. Alternative would be to communicate a

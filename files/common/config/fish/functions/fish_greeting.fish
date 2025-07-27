@@ -1,6 +1,6 @@
 function fish_greeting
-  if which -s fortune cowsay lolcat
-    fortune | cowsay -f turtle | lolcat
+  if which -s fortune cowsay clolcat
+    fortune | cowsay -f turtle | clolcat
   else
         echo "\\
  ___________________________
