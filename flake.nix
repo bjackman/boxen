@@ -63,7 +63,8 @@
               modules = [
                 ./modules/common.nix
                 ./modules/lkml.nix
-              ] ++ modules;
+              ]
+              ++ modules;
             };
         in
         {
