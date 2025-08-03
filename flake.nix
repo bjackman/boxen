@@ -68,6 +68,7 @@
               modules = [
                 ./modules/common.nix
                 ./modules/lkml.nix
+                agenix.homeManagerModules.default
               ]
               ++ modules;
             };
