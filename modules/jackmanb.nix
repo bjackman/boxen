@@ -44,4 +44,9 @@
     primary = true;
   };
   lkml.enable = true;
+
+  programs.git = {
+    userEmail = "jackmanb@google.com";
+    url."sso://user".insteadOf = "https://user.git.corp.google.com";
+  };
 }
