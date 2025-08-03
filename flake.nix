@@ -21,6 +21,10 @@
       url = "github:bjackman/limmat";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -28,6 +32,7 @@
       nixpkgs,
       home-manager,
       limmat,
+      agenix,
       ...
     }:
     let
@@ -73,7 +78,10 @@
         };
 
       devShells."${system}".default = pkgs.mkShell {
-        packages = [ limmat.packages."${system}".default ];
+        packages = [
+          limmat.packages."${system}".default
+          agenix.packages."${system}".default
+        ];
       };
     };
 
