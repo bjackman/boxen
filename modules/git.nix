@@ -29,7 +29,7 @@
         updateRefs = "true";
       };
 
-      branch.sort = "-commiterdate";
+      branch.sort = "-committerdate";
       tag.sort = "version:refname";
 
       rerere = {
