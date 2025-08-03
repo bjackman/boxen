@@ -68,6 +68,7 @@
               modules = [
                 ./modules/common.nix
                 ./modules/lkml.nix
+                ./modules/chungito-ctrl.nix
                 agenix.homeManagerModules.default
               ]
               ++ modules;
