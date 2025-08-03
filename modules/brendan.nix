@@ -3,7 +3,7 @@
   home = {
     username = "brendan";
     homeDirectory = "/home/brendan";
-    packages = [ pkgs.gemini-cli ];
+    packages = with pkgs; [ gemini-cli mosh ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
 }
