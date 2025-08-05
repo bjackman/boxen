@@ -58,9 +58,12 @@
       ];
     };
     home.packages = with pkgs; [
+      # Stuff for The Turt
       fortune
       cowsay
       clolcat
+
+      nix-tree
     ];
     programs.bash.enable = true;
 
