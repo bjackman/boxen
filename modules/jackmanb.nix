@@ -55,6 +55,9 @@
       extraConfig = {
         # To be honest I'm not 100% sure exactly what this does.
         url."sso://user".insteadOf = "https://user.git.corp.google.com";
+        # Use the gLinux SSH since the Nix one doesn't know about Google
+        # weirdness.
+        core.sshCommand = "/usr/bin/ssh";
       };
     };
 }
