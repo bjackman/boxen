@@ -2,17 +2,8 @@
   description = "Home Manager configuration of brendan";
 
   inputs = {
-    # home-manager 25.05 is not working on Ubuntu for me:
-    #
-    # ❯❯  nix run home-manager/release-25.05 -- switch
-    # error:
-    # … while updating the lock file of flake 'github:nix-community/home-manager/282e1e029cb6ab4811114fc85110613d72771dea?narHash=sha256-RMhjnPKWtCoIIHiuR9QKD7xfsKb3agxzMfJY8V9MOew%3D'
-    #
-    # error: cannot write modified lock file of flake 'flake:home-manager/release-25.05' (use '--no-write-lock-file' to ignore)
-    #
-    # It's strongly recommended to match nixpkgs and home-manager versions. So
-    # use unstable for now.
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -30,6 +21,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       home-manager,
       limmat,
       agenix,
@@ -38,6 +30,7 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      pkgsUnstable = nixpkgs-unstable.legacyPackages.${system};
     in
     {
       formatter."${system}" = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
@@ -73,6 +66,7 @@
                 agenix.homeManagerModules.default
               ]
               ++ modules;
+              extraSpecialArgs = { inherit pkgsUnstable; };
             };
         in
         {

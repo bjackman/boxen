@@ -1,10 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, pkgsUnstable, ... }:
 {
   home = {
     username = "brendan";
     homeDirectory = "/home/brendan";
     packages = with pkgs; [
-      gemini-cli
+      pkgsUnstable.gemini-cli
       mosh
     ];
   };
