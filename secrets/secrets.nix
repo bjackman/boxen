@@ -8,9 +8,13 @@ let
     chungito
     brendan-thinkpad
   ];
+  # This key was originally from a Google corp laptop. I no longer have that
+  # laptop but it also ended up on lots of other machines too.
+  jackmanb-zrh = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLVpV3PnFV5AW4G0aizNgoVu0Wtn3A3arUEJHaEsxy3iFgvvENBcYb+I00HRnYV4FZX1EGD0Fh6lIJcm9YUCm2EKkv9V/mMfV5xaiKcKGZYOLLpaIZw8J3tsuc+iIrl/8Qk1++l6pYIgOCpAgRAY1MxSD/Syg7rZMKiIH2/3CAzzjQej3SCf0Wc2I2/Sv1YUUhNxKGkMi7P4lG8R2erRG8DuPsglEhHW0ua3Hkygy3lfBO9j32JdOXB6+xswWOljiUwnVMt4AbBrZPxn/29BlS/olEgdfxt+jBNM33h9ofKwM+h5oGXomNedgr9qQVha4xj+dbqD7YB/lB/9HMjd1X jackmanb@jackmanb.zrh.corp.google.com";
+  all = all-personal ++ [ jackmanb-zrh ];
 in
 {
   # This is the password for the 'admin' user, configured via the PiKVM UI or
   # something I can't remember.
-  "eadbald-pikvm-password.age".publicKeys = all-personal;
+  "eadbald-pikvm-password.age".publicKeys = all;
 }
