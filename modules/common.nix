@@ -64,6 +64,8 @@
       clolcat
 
       nix-tree
+
+      hunspell
     ];
     programs.bash.enable = true;
 
