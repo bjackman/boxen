@@ -120,7 +120,7 @@ if __name__ == '__main__':
 	EMAIL = args.email
 	VERBOSE = args.verbose
 
-	query_string = f'tag:{MUTE_CMD_TAG} AND NOT tag:{PROCESSED_TAG} ' + args.query_extra
+	query_string = f'(tag:{MUTE_CMD_TAG} AND NOT tag:{PROCESSED_TAG}) ' + args.query_extra
 
 	# Need to secify path explicitly, otherwise it doesn't work if the database
 	# path isn't explicit in notmuch-config.
