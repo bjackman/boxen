@@ -168,6 +168,29 @@
             '';
           })
         ];
+
+      systemd.user.services.get-lkml = {
+        Unit = {
+          Description = "Get LKML";
+        };
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${config.home.path}/bin/get-lkml";
+        };
+      };
+
+      systemd.user.timers.get-lkml = {
+        Unit = {
+          Description = "Timer for get-lkml";
+        };
+        Timer = {
+          OnCalendar = "hourly";
+          Persistent = true;
+        };
+        Install = {
+          WantedBy = [ "timers.target" ];
+        };
+      };
     }
   );
 }
