@@ -82,5 +82,25 @@
     age.secrets = {
       eadbald-pikvm-password.file = ../secrets/eadbald-pikvm-password.age;
     };
+
+    programs.tmux = {
+      enable = true;
+      mouse = true;
+      historyLimit = 50000;
+      terminal = "xterm-256color";
+      shell = "${pkgs.fish}/bin/fish";
+      # I don't know what xterm-keys does, copied it blindly from my old
+      # dotfiles.
+      extraConfig = ''
+        set-window-option -g xterm-keys on
+
+        bind-key h select-pane -L
+        bind-key l select-pane -R
+        bind-key k select-pane -U
+        bind-key j select-pane -D
+
+        set -as terminal-features ",*:hyperlinks"
+      '';
+    };
   };
 }
