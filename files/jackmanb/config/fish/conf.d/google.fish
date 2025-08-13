@@ -11,4 +11,5 @@ if status is-interactive
     alias kbug='/google/bin/releases/kernel-security-team/kbug'
     alias msv='/google/bin/releases/msv-sre/clis/msv'
     alias update_fresh.sh='/google/src/files/head/depot/google3/java/com/google/devtools/fresh/tools/update-fresh/update_fresh.sh'
+    alias gemini='/google/bin/releases/gemini-cli/tools/gemini'
 end
