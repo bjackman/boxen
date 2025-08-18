@@ -136,8 +136,15 @@
           do-notmuch-propagate-mute = pkgs.writeShellApplication {
             name = "do-notmuch-propagate-mute";
             runtimeInputs = [ notmuch-propagate-mute ];
+            # Don't want errexit/pipefail as we'll be hiding the SIGABRT below.
+            bashOptions = [ "nounset" ];
             text = ''
               notmuch-propagate-mute --email ${account.address} --db-path ${config.lkml.maildirBasePath} "$@"
+              # Due to garbage Python bindings, the script always gets SIGABRT.
+              # Hide that from this script's exit code since this will
+              # eventually be used in a systemd service and it's annoying if
+              # that shows as failing.
+              exit 0
             '';
           };
         in
