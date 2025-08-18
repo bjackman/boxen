@@ -13,4 +13,6 @@ if status is-interactive
     alias update_fresh.sh='/google/src/files/head/depot/google3/java/com/google/devtools/fresh/tools/update-fresh/update_fresh.sh'
     alias gemini='/google/bin/releases/gemini-cli/tools/gemini'
     alias netboot-ovss='/google/bin/releases/platforms-ovss/netboot-ovss'
+    alias kdt='/google/bin/releases/kernel-release/tools/kdt/kdt.par'
+    alias ice='/google/bin/releases/kernel-tools/icebreaker-release/ice'
 end
