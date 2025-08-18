@@ -42,3 +42,7 @@ abbr --add hrirp "hg revert -i -r p4head"
 abbr --add hap "hg amend && hg presubmit -d"
 abbr --add hp "hg presubmit -d"
 abbr --add hrt "hg rebase -d tip"
+
+abbr --add jsa "jj sync --all"
+abbr --add jnp "jj new p4base"
+abbr --add jrp "jj rebase --destination p4base -r @"
