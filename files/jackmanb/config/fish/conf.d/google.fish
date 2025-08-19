@@ -3,6 +3,9 @@ if status is-interactive
         cd (p4 g4d $argv)
     end
 
+    # Nix build of Fish doesn't seem to include this path
+    set -g fish_function_path $fish_function_path /usr/share/fish/vendor_functions.d
+
     # sudo glinux-add-repo fish-google
     # sudo apt update
     # sudo apt install fish-google-config
