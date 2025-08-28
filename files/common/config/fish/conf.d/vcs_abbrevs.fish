@@ -5,7 +5,7 @@ abbr --add gcaamend "git commit -a --amend"
 abbr --add gcaan "git commit -a --amend --no-edit"
 abbr --add gcm "git commit -m "
 abbr --add gsign "git commit --amend --signoff --no-edit "
-abbr --add gcf "git clean -f "
+abbr --add gcf "git commit --fixup"
 abbr --add gs "git status"
 abbr --add gc "git checkout "
 abbr --add gcb "git checkout -b"
@@ -19,6 +19,7 @@ abbr --add gr 'git rebase'
 abbr --add gri 'git rebase --interactive'
 abbr --add grm 'git rebase --interactive master'
 abbr --add grc 'git rebase --continue'
+abbr --add gra 'git rebase --abort'
 abbr --add grskip 'git rebase --skip'
 abbr --add grhard "git reset --hard "
 abbr --add gl "git lgg"
@@ -46,3 +47,4 @@ abbr --add hrt "hg rebase -d tip"
 abbr --add jsa "jj sync --all"
 abbr --add jnp "jj new p4base"
 abbr --add jrp "jj rebase --destination p4base -r @"
+abbr --add jua "jj upload --all"
