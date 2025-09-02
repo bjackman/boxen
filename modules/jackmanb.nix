@@ -60,4 +60,13 @@
         core.sshCommand = "/usr/bin/ssh";
       };
     };
+
+  # There is some confusing mess with different versions of tmux doing different
+  # things in different environments (login vs non login shell). Part of this
+  # may or may not be related to programs.tmux.secureSocket but I still get
+  # issues even if I never set TMUX_TMPDIR.
+  # Hack to just set TMUX_TMPDIR everywhere, even in non-interactive shells:
+  programs.bash.bashrcExtra = ''
+    export TMUX_TMPDIR="$XDG_RUNTIME_DIR"
+  '';
 }
