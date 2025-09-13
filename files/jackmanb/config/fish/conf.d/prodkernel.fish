@@ -32,5 +32,3 @@ if status is-interactive
     # See set_devrez_machines.fish
     abbr --add sm 'ssh root@$MACHINE'
 end
-
-export LIMMAT_CONFIG=$HOME/src/limmat-kernel/limmat.toml
