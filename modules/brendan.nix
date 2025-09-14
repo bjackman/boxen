@@ -5,6 +5,7 @@
     homeDirectory = "/home/brendan";
     packages = with pkgs; [
       pkgsUnstable.gemini-cli
+      pkgsUnstable.claude-code
       mosh
     ];
   };

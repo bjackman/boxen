@@ -29,8 +29,15 @@
     }:
     let
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-      pkgsUnstable = nixpkgs-unstable.legacyPackages.${system};
+      pkgs = import nixpkgs { inherit system; };
+      pkgsUnstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfreePredicate =
+          pkg:
+          builtins.elem (pkgs.lib.getName pkg) [
+            "claude-code"
+          ];
+      };
     in
     {
       formatter."${system}" = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
