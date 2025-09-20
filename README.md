@@ -14,3 +14,16 @@ in the home-manager config.
 To add a recipient key for a secret, update `secrets.nix` to include it in that
 secret's `publicKeys`setting, then run `RULES=secrets/secrets.nix nix develop -c
 agenix -r` from the root of the repo.
+
+## Diffing configs
+
+I haven't found a nice way to diff evaluated HM condigurations. Here's the
+closest thing I found so far:
+
+```bash
+nix eval --json .#homeConfigurations.brendan.config.home.file | jq > before.json
+
+nix eval --json .#homeConfigurations.brendan.config.home.file | jq > after.json
+
+diff before.json after.json
+```
