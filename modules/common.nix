@@ -6,12 +6,13 @@
 }:
 {
   options = {
-    common.fishConfigDirs = lib.mkOption {
-      type = lib.types.listOf lib.types.pathInStore;
-      default = [ ];
+    common.appConfigDirs = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.listOf lib.types.pathInStore);
+      default = { };
       description = ''
-        Derivations producing directories with fish configs, will be combined
-        into a single config using symlinkJoin.
+        Attribute set mapping application names to lists of config directories.
+        Each directory will be merged using symlinkJoin and deployed to
+        ~/.config/$appName/.
       '';
     };
   };
@@ -20,21 +21,23 @@
     home = {
       stateVersion = "25.05";
 
-      file = {
-        # You can configure some Fish stuff through Nix, but experimentally it
-        # seems you can also just dump files into the home directory and things
-        # work OK.
-        ".config/fish/" =
-          let
-            fishConfig = pkgs.symlinkJoin {
-              name = "fish-config";
-              paths = [ config.common.fishConfigDirs ];
-            };
-          in
-          {
-            source = fishConfig;
-            recursive = true;
+      # This implements the appConfigDirs thing. lib.mapAttrs' and
+      # lib.nameValuePair are sorta complementary functions, the former takes an
+      # attrset and for each key/value pair it calls the callback with those as
+      # the two args (here appName and configDirs). Then nameValuePair gives you
+      # the right format to return from this callback so that lib.mapAttrs' can
+      # combine the results into an attrset. So we end up setting
+      # file.".config/${appName}" = { source = ... }.
+      file = lib.mapAttrs' (appName: configDirs:
+        lib.nameValuePair ".config/${appName}/" {
+          source = pkgs.symlinkJoin {
+            name = "${appName}-config";
+            paths = configDirs;
           };
+          recursive = true;
+        }
+      ) config.common.appConfigDirs //
+      {
 
         ".config/gdb/gdbinit" = {
           source = ../files/common/config/gdb/gdbinit;
@@ -71,7 +74,9 @@
 
     # Note awkward relative path here. Alternative would be to communicate a
     # base path for these files via specialArgs based on the flake's `self`.
-    common.fishConfigDirs = [ ../files/common/config/fish ];
+    common.appConfigDirs = {
+      fish = [ ../files/common/config/fish ];
+    };
 
     # This is the configuration for decrypting secrets. This will cause the
     # secrets to be decrypted and dumped into a tmpfs as plaintext. The path of

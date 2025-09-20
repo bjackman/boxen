@@ -14,7 +14,9 @@
     ];
   };
 
-  common.fishConfigDirs = [ ../files/jackmanb/config/fish ];
+  common.appConfigDirs = {
+    fish = [ ../files/jackmanb/config/fish ];
+  };
 
   accounts.email.accounts.work = {
     address = "jackmanb@google.com";
