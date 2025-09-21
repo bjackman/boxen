@@ -17,13 +17,16 @@ agenix -r` from the root of the repo.
 
 ## Diffing configs
 
-I haven't found a nice way to diff evaluated HM condigurations. Here's the
-closest thing I found so far:
+You can use [`nix-diff`](https://github.com/Gabriella439/nix-diff) (with
+`NIX_REMOTE` unset to work around a
+[bug](https://github.com/Gabriella439/nix-diff/issues/98) to compare the result:
 
 ```bash
-nix eval --json .#homeConfigurations.brendan.config.home.file | jq > before.json
+home-manager build
+mv result result.old
 
-nix eval --json .#homeConfigurations.brendan.config.home.file | jq > after.json
+# ... Make changes
 
-diff before.json after.json
+home-manager build
+NIX_REMOTE= nix-diff result result.old
 ```

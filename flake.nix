@@ -85,6 +85,7 @@
         packages = [
           limmat.packages."${system}".default
           agenix.packages."${system}".default
+          pkgs.nix-diff
         ];
       };
     };
