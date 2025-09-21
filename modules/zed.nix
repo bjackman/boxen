@@ -1,4 +1,7 @@
-{ ... }:
+{
+  config,
+  ...
+}:
 {
   programs.zed-editor = {
     enable = true;
@@ -36,5 +39,11 @@
         };
       }
     ];
+  };
+
+  # Link the global config directory into the flatpak's local config
+  # directory.
+  home.file.".var/app/dev.zed.Zed/config/zed" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/zed";
   };
 }
