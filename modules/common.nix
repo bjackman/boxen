@@ -51,15 +51,6 @@
 
     programs.home-manager.enable = true;
 
-    programs.fish = {
-      enable = true;
-      plugins = [
-        {
-          name = "z";
-          src = pkgs.fishPlugins.z.src;
-        }
-      ];
-    };
     home.packages = with pkgs; [
       # Stuff for The Turt
       fortune
@@ -72,6 +63,15 @@
     ];
     programs.bash.enable = true;
 
+    programs.fish = {
+      enable = true;
+      plugins = [
+        {
+          name = "z";
+          src = pkgs.fishPlugins.z.src;
+        }
+      ];
+    };
     # Note awkward relative path here. Alternative would be to communicate a
     # base path for these files via specialArgs based on the flake's `self`.
     common.appConfigDirs = {
