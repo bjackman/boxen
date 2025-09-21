@@ -70,6 +70,7 @@
                 ./modules/lkml.nix
                 ./modules/chungito-ctrl.nix
                 ./modules/git.nix
+                ./modules/zed.nix
                 agenix.homeManagerModules.default
               ]
               ++ modules;
