@@ -15,6 +15,17 @@
         ~/.config/$appName/.
       '';
     };
+
+    # So that we can place links directly to the contents of the home-manager
+    # config checkout, we define an option to tell the system where that is.
+    # Code cribbed from:
+    # https://github.com/nix-community/home-manager/issues/2085#issuecomment-2022239332
+    config-checkout = lib.mkOption {
+      type = lib.types.path;
+      apply = toString;
+      default = "${config.xdg.configHome}/home-manager";
+      description = "Place where the home-manager configuration is checked out locally.";
+    };
   };
 
   config = {

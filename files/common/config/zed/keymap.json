@@ -1,0 +1,31 @@
+[
+  {
+    "bindings": {
+      "ctrl-x 1": "pane::JoinAll",
+      "ctrl-x 2": "pane::SplitVertical",
+      "ctrl-x k": "pane::CloseActiveItem"
+    },
+    "context": "Workspace"
+  },
+  {
+    "bindings": {
+      "alt-.": "editor::GoToDefinition",
+      "alt-?": "editor::FindAllReferences",
+      "ctrl-R": [
+        "projects::OpenRecent",
+        {
+          "create_new_window": false
+        }
+      ],
+      "ctrl-c /": "editor::ToggleComments",
+      "ctrl-d": "editor::SelectNext",
+      "ctrl-f": "buffer_search::Deploy",
+      "ctrl-t": "pane::GoBack",
+      "ctrl-v": "vim::Paste",
+      "ctrl-x": null,
+      "ctrl-x o": "workspace::ActivateNextPane",
+      "ctrl-x r": "editor::ReloadFile"
+    },
+    "context": "Editor"
+  }
+]
