@@ -14,7 +14,7 @@
       "ctrl-R": [
         "projects::OpenRecent",
         {
-          "create_new_window": false
+          "create_new_window": true
         }
       ],
       "ctrl-c /": "editor::ToggleComments",
