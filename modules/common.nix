@@ -28,21 +28,23 @@
       # the right format to return from this callback so that lib.mapAttrs' can
       # combine the results into an attrset. So we end up setting
       # file.".config/${appName}" = { source = ... }.
-      file = lib.mapAttrs' (appName: configDirs:
-        lib.nameValuePair ".config/${appName}/" {
-          source = pkgs.symlinkJoin {
-            name = "${appName}-config";
-            paths = configDirs;
-          };
-          recursive = true;
-        }
-      ) config.common.appConfigDirs //
-      {
+      file =
+        lib.mapAttrs' (
+          appName: configDirs:
+          lib.nameValuePair ".config/${appName}/" {
+            source = pkgs.symlinkJoin {
+              name = "${appName}-config";
+              paths = configDirs;
+            };
+            recursive = true;
+          }
+        ) config.common.appConfigDirs
+        // {
 
-        ".config/gdb/gdbinit" = {
-          source = ../files/common/config/gdb/gdbinit;
+          ".config/gdb/gdbinit" = {
+            source = ../files/common/config/gdb/gdbinit;
+          };
         };
-      };
 
       sessionVariables = {
         EDITOR = "vim";
