@@ -3,7 +3,7 @@
 ## Secrets
 
 Secrets are stored using [agenix](https://github.com/ryantm/agenix). At runtime
-they get decrypted and dumpted into a tmpfs as plaintext (lol).
+they get decrypted and dumped into a tmpfs as plaintext (lol).
 
 To add a secret, run `nix develop` to get the `agenix` CLI, then go into
 `secrets/` and add it to `secrets.nix` following the existing pattern in there.
