@@ -19,7 +19,7 @@ agenix -r` from the root of the repo.
 
 You can use [`nix-diff`](https://github.com/Gabriella439/nix-diff) (with
 `NIX_REMOTE` unset to work around a
-[bug](https://github.com/Gabriella439/nix-diff/issues/98) to compare the result:
+[bug](https://github.com/Gabriella439/nix-diff/issues/98)) to compare the result:
 
 ```bash
 home-manager build
