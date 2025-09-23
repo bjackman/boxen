@@ -20,7 +20,7 @@
           pkgs.gnused
           pkgs.git
         ];
-        text = builtins.readFile ../src/spellcheck_commitmsg.sh;
+        text = builtins.readFile ../src/spellcheck_commitmsgs.sh;
       };
     in
     [

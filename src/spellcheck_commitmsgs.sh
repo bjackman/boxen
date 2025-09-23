@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Sole arg is base commit. Optional - defaults to b4 base.
+set +u
 
 die() {
     echo "$@"
@@ -17,7 +18,7 @@ fi
 
 set -eu
 
-if [ ! -z "$B4" ]; then
+if [ -n "$B4" ]; then
     # || true because there's a bug in the git-filter-branch lib that causes it
     # to exit with an error.
     EDITOR=spellcheck_commitmsg.sh b4 prep --edit-cover || true
