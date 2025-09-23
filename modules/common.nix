@@ -71,8 +71,8 @@
       clolcat
 
       nix-tree
-
       hunspell
+      bat
     ];
     programs.bash.enable = true;
 
