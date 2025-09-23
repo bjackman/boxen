@@ -1,4 +1,21 @@
 {
   "base_keymap": "VSCode",
-  "vim_mode": true
+  "vim_mode": true,
+  "file_types": {
+    "makefile": ["*.makefile"]
+  },
+  "show_whitespaces": "boundary",
+  "soft_wrap": "editor_width",
+  "use_smartcase_search": true,
+  "cursor_blink": false,
+  "auto_update": false,
+  "telemetry": {
+    "metrics": false
+  },
+  "wrap_guides": [80],
+  "languages": {
+    "Nix": {
+      "show_whitespaces": "none"
+    }
+  }
 }

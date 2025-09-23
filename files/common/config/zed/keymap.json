@@ -27,5 +27,11 @@
       "ctrl-x r": "editor::ReloadFile"
     },
     "context": "Editor"
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      "j k": "vim::NormalBefore"
+    }
   }
 ]
