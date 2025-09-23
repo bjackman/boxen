@@ -15,7 +15,8 @@
   "wrap_guides": [80],
   "languages": {
     "Nix": {
-      "show_whitespaces": "none"
+      "show_whitespaces": "none",
+      "tab_size": 2
     }
   }
 }
