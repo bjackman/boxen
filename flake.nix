@@ -71,6 +71,7 @@
                 ./modules/chungito-ctrl.nix
                 ./modules/git.nix
                 ./modules/zed.nix
+                ./modules/scripts.nix
                 agenix.homeManagerModules.default
               ]
               ++ modules;
