@@ -24,7 +24,8 @@
       "ctrl-v": "vim::Paste",
       "ctrl-x": null,
       "ctrl-x o": "workspace::ActivateNextPane",
-      "ctrl-x r": "editor::ReloadFile"
+      "ctrl-x r": "editor::ReloadFile",
+      "ctrl-alt-.": "editor::GoToDefinitionSplit"
     },
     "context": "Editor"
   },
