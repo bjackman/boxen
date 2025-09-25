@@ -101,6 +101,11 @@
           jackmanb = mkConfig { modules = [ ./hm_modules/jackmanb.nix ]; };
         };
 
+      nixosConfigurations.chungito = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [ ./nixos_modules/chungito ];
+      };
+
       devShells."${system}".default = pkgs.mkShell {
         packages = [
           home-manager.packages."${system}".default
