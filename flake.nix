@@ -97,13 +97,34 @@
         in
         {
           brendan = mkConfig { modules = [ ./hm_modules/brendan.nix ]; };
-          "brendan@chungito" = mkConfig { modules = [ ./hm_modules/chungito.nix ]; };
           jackmanb = mkConfig { modules = [ ./hm_modules/jackmanb.nix ]; };
         };
 
       nixosConfigurations.chungito = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [ ./nixos_modules/chungito ];
+        modules = [
+          ./nixos_modules/chungito
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              extraSpecialArgs = { inherit pkgsUnstable; };
+              users.brendan = {
+                imports = [
+                  ./hm_modules/chungito.nix
+                  # TODO: These bits are duplicated with mkConfig above. I'm not
+                  # sure if this means I'm doing something wrong or if it's just a
+                  # foible of HM that configuration via homeManagerConfiguration
+                  # (standalone) is completely different from via the NixOS
+                  # module?
+                  agenix.homeManagerModules.default
+                  ./hm_modules/common.nix
+                ];
+              };
+            };
+          }
+        ];
       };
 
       devShells."${system}".default = pkgs.mkShell {
