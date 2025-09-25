@@ -102,11 +102,18 @@
         in
         {
           brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
+          "brendan@chungito" = mkConfig {
+            modules = [
+              ./modules/brendan.nix
+              ./modules/chungito.nix
+            ];
+          };
           jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
         };
 
       devShells."${system}".default = pkgs.mkShell {
         packages = [
+          home-manager.packages."${system}".default
           limmat.packages."${system}".default
           agenix.packages."${system}".default
           pkgs.nix-diff
