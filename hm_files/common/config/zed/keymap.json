@@ -5,7 +5,8 @@
       "ctrl-x 2": "pane::SplitVertical",
       "ctrl-x k": "pane::CloseActiveItem",
       "ctrl-x ctrl-s": "workspace::Save",
-      "ctrl-x shift-s": "workspace::SaveAll"
+      "ctrl-x shift-s": "workspace::SaveAll",
+      "ctrl-b": "workspace::ToggleLeftDock"
     },
     "context": "Workspace"
   },
