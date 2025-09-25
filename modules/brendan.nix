@@ -7,7 +7,9 @@
       pkgsUnstable.gemini-cli
       pkgsUnstable.claude-code
       mosh
+      file
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
+  programs.vim.enable = true;
 }
