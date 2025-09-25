@@ -8,6 +8,7 @@
       pkgsUnstable.claude-code
       mosh
       file
+      tree
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
