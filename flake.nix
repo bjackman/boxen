@@ -88,7 +88,7 @@
             home-manager.lib.homeManagerConfiguration {
               inherit pkgs;
               modules = [
-                ./modules/common.nix
+                ./hm_modules/common.nix
                 agenix.homeManagerModules.default
               ]
               ++ modules;
@@ -96,9 +96,9 @@
             };
         in
         {
-          brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
-          "brendan@chungito" = mkConfig { modules = [ ./modules/chungito.nix ]; };
-          jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
+          brendan = mkConfig { modules = [ ./hm_modules/brendan.nix ]; };
+          "brendan@chungito" = mkConfig { modules = [ ./hm_modules/chungito.nix ]; };
+          jackmanb = mkConfig { modules = [ ./hm_modules/jackmanb.nix ]; };
         };
 
       devShells."${system}".default = pkgs.mkShell {
