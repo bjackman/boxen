@@ -117,8 +117,6 @@
         source = ../files/lkml/config/aerc/binds.conf;
       };
 
-      # TODO: Defining packages directly here is messy. But I haven't figured out
-      # the proper way to organise this.
       home.packages =
         let
           # Dumb wrapper so I don't have to code args into the binds.conf
