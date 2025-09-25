@@ -9,7 +9,10 @@
     let
       spellcheck_commitmsg = pkgs.writeShellApplication {
         name = "spellcheck_commitmsg.sh";
-        runtimeInputs = [ pkgs.gnused pkgs.hunspell ];
+        runtimeInputs = [
+          pkgs.gnused
+          pkgs.hunspell
+        ];
         text = builtins.readFile ../src/spellcheck_commitmsg.sh;
       };
       spellcheck_commitmsgs = pkgs.writeShellApplication {

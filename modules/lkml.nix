@@ -121,21 +121,10 @@
       # the proper way to organise this.
       home.packages =
         let
-          # Copied from
-          # https://stackoverflow.com/questions/43837691/how-to-package-a-single-python-script-with-nix
-          # Seems reasonably sensible??
-          notmuch-propagate-mute = pkgs.stdenv.mkDerivation {
-            name = "notmuch-propagate-mute";
-            propagatedBuildInputs = [
-              (pkgs.python3.withPackages (pythonPackages: [ pythonPackages.notmuch ]))
-            ];
-            dontUnpack = true;
-            installPhase = "install -Dm755 ${../src/notmuch_propagate_mute.py} $out/bin/notmuch-propagate-mute";
-          };
           # Dumb wrapper so I don't have to code args into the binds.conf
           do-notmuch-propagate-mute = pkgs.writeShellApplication {
             name = "do-notmuch-propagate-mute";
-            runtimeInputs = [ notmuch-propagate-mute ];
+            runtimeInputs = [ pkgs.bjackman.notmuch-propagate-mute ];
             # Don't want errexit/pipefail as we'll be hiding the SIGABRT below.
             bashOptions = [ "nounset" ];
             text = ''
@@ -150,7 +139,6 @@
         in
         [
           # Expose the packages directly for testing.
-          notmuch-propagate-mute
           do-notmuch-propagate-mute
           (pkgs.writeShellApplication {
             name = "get-lkml";
@@ -158,7 +146,6 @@
             runtimeInputs = [
               pkgs.public-inbox
               pkgs.notmuch
-              notmuch-propagate-mute
               do-notmuch-propagate-mute
             ];
             # lei q does undocumented fucked up things inserting quotes into its
