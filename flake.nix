@@ -89,11 +89,6 @@
               inherit pkgs;
               modules = [
                 ./modules/common.nix
-                ./modules/lkml.nix
-                ./modules/chungito-ctrl.nix
-                ./modules/git.nix
-                ./modules/zed.nix
-                ./modules/scripts.nix
                 agenix.homeManagerModules.default
               ]
               ++ modules;
@@ -102,12 +97,7 @@
         in
         {
           brendan = mkConfig { modules = [ ./modules/brendan.nix ]; };
-          "brendan@chungito" = mkConfig {
-            modules = [
-              ./modules/brendan.nix
-              ./modules/chungito.nix
-            ];
-          };
+          "brendan@chungito" = mkConfig { modules = [ ./modules/chungito.nix ]; };
           jackmanb = mkConfig { modules = [ ./modules/jackmanb.nix ]; };
         };
 

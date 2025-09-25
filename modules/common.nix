@@ -5,6 +5,14 @@
   ...
 }:
 {
+  imports = [
+    ./lkml.nix
+    ./chungito-ctrl.nix
+    ./git.nix
+    ./zed.nix
+    ./scripts.nix
+  ];
+
   options = {
     common.appConfigDirs = lib.mkOption {
       type = lib.types.attrsOf (lib.types.listOf lib.types.pathInStore);
