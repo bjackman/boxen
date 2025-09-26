@@ -67,5 +67,18 @@
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia.open = true;
 
+  # EXPERIMENTAL: Enable hyprland
+  # This is nowhere near working. I managed to get the monitors working properly
+  # wih this in my config (which isn't checked in):
+  # monitor=HDMI-A-1,preferred,auto,auto
+  # monitor=HDMI-A-2,preferred,auto-left,auto
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+  environment.systemPackages = [
+    pkgs.kitty # required for the default Hyprland config
+  ];
+
   system.stateVersion = "25.05";
 }
