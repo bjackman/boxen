@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ../brendan.nix
   ];
 
   nix.settings.experimental-features = [
@@ -57,15 +58,6 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-  };
-
-  users.users.brendan = {
-    isNormalUser = true;
-    description = "Brendan Jackman";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-    ];
   };
 
   nixpkgs.config.allowUnfree = true;
