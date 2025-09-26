@@ -1,9 +1,13 @@
 {
   config,
+  pkgsUnstable,
   ...
 }:
 {
   imports = [ ./brendan.nix ];
-  programs.zed-editor.enable = true;
   common.config-checkout = "${config.home.homeDirectory}/src/boxen";
+  programs.zed-editor = {
+    enable = true;
+    package = pkgsUnstable.zed-editor;
+  };
 }
