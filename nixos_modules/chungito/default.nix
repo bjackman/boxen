@@ -68,8 +68,6 @@
     ];
   };
 
-  programs.firefox.enable = true;
-
   nixpkgs.config.allowUnfree = true;
 
   # Copied from https://wiki.nixos.org/wiki/NVIDIA

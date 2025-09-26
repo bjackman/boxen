@@ -23,7 +23,7 @@
 
 - [x] Update Zed
 - [x] Set up Zed alias for NixOS
-- [ ] Move remaining Chungito configuration into Home Manager as appropriate
+- [x] Move remaining Chungito configuration into Home Manager as appropriate
 - [ ] Split up NixOS config into modules?
 - [ ] Make Fish default shell
 - [ ] Move Chungito to WAYLAND???
