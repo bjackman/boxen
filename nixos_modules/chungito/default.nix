@@ -10,11 +10,15 @@
     "flakes"
   ];
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader = {
+    systemd-boot.enable = true;
+    efi.canTouchEfiVariables = true;
+  };
 
-  networking.hostName = "chungito";
-  networking.networkmanager.enable = true;
+  networking = {
+    hostName = "chungito";
+    networkmanager.enable = true;
+  };
 
   time.timeZone = "Europe/Zurich";
 
@@ -32,10 +36,11 @@
     LC_TIME = "en_GB.UTF-8";
   };
 
-  services.xserver.enable = true;
-
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  services.xserver = {
+    enable = true;
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
+  };
 
   services.xserver.xkb = {
     layout = "us";
@@ -60,9 +65,6 @@
       "networkmanager"
       "wheel"
     ];
-    packages = with pkgs; [
-      #  thunderbird
-    ];
   };
 
   programs.firefox.enable = true;
@@ -74,8 +76,5 @@
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia.open = true;
 
-  environment.systemPackages = with pkgs; [ ];
-
   system.stateVersion = "25.05";
-
 }
