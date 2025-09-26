@@ -1,4 +1,35 @@
-# My Home Manager config
+# My boxen
+
+```
+ _________________________________________
+/ THIS IS MY PILE OF NIXOS AND HOME       \
+| MANAGER MODULES AND SHIT                 |
+|                                         |
+| THERE ARE MANY LIKE IT BUT THIS ONE     |
+| IS MINE                                 |
+|                                         |
+| MY NIX CODE IS MY BEST FRIEND           |
+|                                         |
+\ IT IS  MY LIFE                          /
+ -----------------------------------------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+```
+
+## TODO
+
+- [ ] Update Zed
+- [ ] Set up Zed alias for NixOS
+- [ ] Move remaining Chungito configuration into Home Manager as appropriate
+- [ ] Split up NixOS config into modules?
+- [ ] Make Fish default shell
+- [ ] Move Chungito to WAYLAND???
+- [ ] Figure out impermanence for Chungito
+- [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
+- [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
 
 ## Secrets
 
