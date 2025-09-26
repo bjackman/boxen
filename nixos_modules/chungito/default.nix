@@ -7,7 +7,7 @@
 
   nix.settings.experimental-features = [
     "nix-command"
-    "flakes "
+    "flakes"
   ];
 
   boot.loader.systemd-boot.enable = true;
