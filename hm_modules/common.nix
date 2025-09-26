@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  agenix,
   ...
 }:
 {
@@ -11,6 +12,7 @@
     ./git.nix
     ./zed.nix
     ./scripts.nix
+    agenix.homeManagerModules.default
   ];
 
   options = {

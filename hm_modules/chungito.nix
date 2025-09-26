@@ -1,13 +1,11 @@
 {
   config,
   pkgsUnstable,
-  agenix,
   ...
 }:
 {
   imports = [
     ./common.nix
-    agenix.homeManagerModules.default
     ./brendan.nix
   ];
   common.config-checkout = "${config.home.homeDirectory}/src/boxen";

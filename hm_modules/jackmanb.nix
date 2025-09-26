@@ -1,8 +1,7 @@
-{ pkgs, config, agenix, ... }:
+{ pkgs, config, ... }:
 {
   imports = [
     ./common.nix
-    agenix.homeManagerModules.default
     ./non-nixos.nix
   ];
 
