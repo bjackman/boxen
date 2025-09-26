@@ -69,6 +69,11 @@
 
   nixpkgs.config.allowUnfree = true;
 
+  # Copied from https://wiki.nixos.org/wiki/NVIDIA
+  hardware.graphics.enable = true;
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.nvidia.open = true;
+
   environment.systemPackages = with pkgs; [ ];
 
   system.stateVersion = "25.05";
