@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   users.users.brendan = {
     isNormalUser = true;
@@ -7,5 +7,7 @@
       "networkmanager"
       "wheel"
     ];
+    shell = pkgs.fish;
   };
+  programs.fish.enable = true;
 }
