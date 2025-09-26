@@ -17,6 +17,9 @@
 
   networking = {
     hostName = "chungito";
+    # NixOS wiki recommends sticking to NetworkManager for laptoppy usecases,
+    # this is not a laptop but it's still kinda laptoppy so let's stick to it I
+    # guess.
     networkmanager.enable = true;
   };
 
