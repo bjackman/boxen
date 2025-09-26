@@ -114,7 +114,7 @@
       # setup on first run. Therefore we don't set it here and instead we just
       # have a config file checked in.
       home.file."${config.xdg.configHome}/aerc/binds.conf" = {
-        source = ../files/lkml/config/aerc/binds.conf;
+        source = ../hm_files/lkml/config/aerc/binds.conf;
       };
 
       home.packages =

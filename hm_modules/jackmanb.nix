@@ -15,7 +15,7 @@
   };
 
   common.appConfigDirs = {
-    fish = [ ../files/jackmanb/config/fish ];
+    fish = [ ../hm_files/jackmanb/config/fish ];
   };
 
   accounts.email.accounts.work = {

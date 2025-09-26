@@ -61,7 +61,7 @@
         // {
 
           ".config/gdb/gdbinit" = {
-            source = ../files/common/config/gdb/gdbinit;
+            source = ../hm_files/common/config/gdb/gdbinit;
           };
         };
 
@@ -96,7 +96,7 @@
     # Note awkward relative path here. Alternative would be to communicate a
     # base path for these files via specialArgs based on the flake's `self`.
     common.appConfigDirs = {
-      fish = [ ../files/common/config/fish ];
+      fish = [ ../hm_files/common/config/fish ];
     };
 
     # This is the configuration for decrypting secrets. This will cause the
