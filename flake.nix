@@ -41,6 +41,13 @@
             "claude-code"
           ];
       };
+      # Hm. This is how I'm passing in stuff to my home manager modules that
+      # needs to be a flake input. This seems kinda yucky, I think I'm doing
+      # something wrong here.
+      hmSpecialArgs = {
+        inherit pkgsUnstable;
+        inherit agenix;
+      };
     in
     {
       formatter."${system}" = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
@@ -81,34 +88,21 @@
 
       packages."${system}" = pkgs.bjackman;
 
-      homeConfigurations =
-        let
-          mkConfig =
-            { modules }:
-            home-manager.lib.homeManagerConfiguration {
-              inherit pkgs;
-              modules = [
-                ./hm_modules/common.nix
-                agenix.homeManagerModules.default
-              ]
-              ++ modules;
-              extraSpecialArgs = { inherit pkgsUnstable; };
-            };
-        in
-        {
-          # TODO: This seems like a mess, probably we should have a root module
-          # for each setup that does the rest via imports. Not sure about how to
-          # do the agenix thing though.
-          "brendan@brendan-thinkpad" = mkConfig {
-            modules = [
-              ./hm_modules/brendan.nix
-              ./hm_modules/non-nixos.nix
-            ];
-          };
-          # This one doesn't need to include non-nixos.nix here because jackmanb
-          # will never be on NixOS so it just imports it.
-          jackmanb = mkConfig { modules = [ ./hm_modules/jackmanb.nix ]; };
+      homeConfigurations = {
+        "brendan@brendan-thinkpad" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            ./hm_modules/brendan.nix
+            ./hm_modules/non-nixos.nix
+          ];
+          extraSpecialArgs = hmSpecialArgs;
         };
+        jackmanb = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./hm_modules/jackmanb.nix ];
+          extraSpecialArgs = hmSpecialArgs;
+        };
+      };
 
       nixosConfigurations.chungito = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -119,18 +113,11 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit pkgsUnstable; };
+              extraSpecialArgs = hmSpecialArgs;
               users.brendan = {
                 imports = [
                   ./hm_modules/chungito.nix
                   ./hm_modules/nixos.nix
-                  # TODO: These bits are duplicated with mkConfig above. I'm not
-                  # sure if this means I'm doing something wrong or if it's just a
-                  # foible of HM that configuration via homeManagerConfiguration
-                  # (standalone) is completely different from via the NixOS
-                  # module?
-                  agenix.homeManagerModules.default
-                  ./hm_modules/common.nix
                 ];
               };
             };

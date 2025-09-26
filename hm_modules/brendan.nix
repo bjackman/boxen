@@ -1,5 +1,9 @@
-{ pkgs, pkgsUnstable, ... }:
+{ pkgs, pkgsUnstable, agenix, ... }:
 {
+  imports = [
+    ./common.nix
+    agenix.homeManagerModules.default
+  ];
   home = {
     username = "brendan";
     homeDirectory = "/home/brendan";

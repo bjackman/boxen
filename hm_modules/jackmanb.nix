@@ -1,6 +1,10 @@
-{ pkgs, config, ... }:
+{ pkgs, config, agenix, ... }:
 {
-  imports = [ ./non-nixos.nix ];
+  imports = [
+    ./common.nix
+    agenix.homeManagerModules.default
+    ./non-nixos.nix
+  ];
 
   home = {
     username = "jackmanb";

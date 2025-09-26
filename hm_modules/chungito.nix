@@ -1,10 +1,15 @@
 {
   config,
   pkgsUnstable,
+  agenix,
   ...
 }:
 {
-  imports = [ ./brendan.nix ];
+  imports = [
+    ./common.nix
+    agenix.homeManagerModules.default
+    ./brendan.nix
+  ];
   common.config-checkout = "${config.home.homeDirectory}/src/boxen";
   programs.zed-editor = {
     enable = true;
