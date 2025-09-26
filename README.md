@@ -28,6 +28,7 @@
 - [ ] Make Fish default shell
 - [ ] Move Chungito to WAYLAND???
 - [ ] Figure out impermanence for Chungito
+- [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
 - [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
 
