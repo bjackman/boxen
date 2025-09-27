@@ -390,6 +390,21 @@
         # Scroll through existing workspaces with mainMod + scroll
         "$mainMod, mouse_down, workspace, e+1"
         "$mainMod, mouse_up, workspace, e-1"
+
+        # Hardcoded named workspaces for my absolute boys
+        "$mainMod SHIFT, B, movetoworkspace, name:browser"
+        "$mainMod SHIFT, N, movetoworkspace, name:terminal"
+        "$mainMod SHIFT, M, movetoworkspace, name:editor"
+        "$mainMod, B, workspace, name:browser"
+        "$mainMod, N, workspace, name:terminal"
+        "$mainMod, M, workspace, name:editor"
+      ];
+
+      # Open my absolute boys on their named workspaces
+      windowrulev2 = [
+        "workspace name:browser, class:^(firefox)$"
+        "workspace name:terminal, class:^(kitty)$"
+        "workspace name:editor, class:^(Zed)$"
       ];
 
       # Laptop multimedia keys for volume and LCD brightness
