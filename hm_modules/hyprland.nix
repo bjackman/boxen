@@ -191,6 +191,9 @@
         # TODO: what do these do?
         "XCURSOR_SIZE,24"
         "HYPRCURSOR_SIZE,24"
+        # Dark theme configuration
+        "GTK_THEME,Adwaita:dark"
+        "QT_STYLE_OVERRIDE,adwaita-dark"
       ];
       general = {
         gaps_in = 5;

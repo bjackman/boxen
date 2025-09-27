@@ -29,7 +29,7 @@
 - [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
   - [x] Move hyprland config to Nix
   - [x] Figure out if I need an XDG portal and set one up.
-  - [ ] Make it derk mode
+  - [x] Make it derk mode
   - [ ] Get a status bar working.
     - [ ] Set up battery icon if on laptop
     - [ ] Make power control work
