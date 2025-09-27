@@ -358,6 +358,11 @@
         "$mainMod, right, movefocus, r"
         "$mainMod, up, movefocus, u"
         "$mainMod, down, movefocus, d"
+        # And with vim binds
+        "$mainMod, H, movefocus, l"
+        "$mainMod, L, movefocus, r"
+        "$mainMod, K, movefocus, d"
+        "$mainMod, J, movefocus, d"
 
         # Switch workspaces with mainMod + [0-9]
         "$mainMod, 1, workspace, 1"
@@ -383,10 +388,6 @@
         "$mainMod SHIFT, 9, movetoworkspace, 9"
         "$mainMod SHIFT, 0, movetoworkspace, 10"
 
-        # Example special workspace (scratchpad)
-        "$mainMod, S, togglespecialworkspace, magic"
-        "$mainMod SHIFT, S, movetoworkspace, special:magic"
-
         # Scroll through existing workspaces with mainMod + scroll
         "$mainMod, mouse_down, workspace, e+1"
         "$mainMod, mouse_up, workspace, e-1"
@@ -398,6 +399,11 @@
         "$mainMod, B, workspace, name:browser"
         "$mainMod, N, workspace, name:terminal"
         "$mainMod, M, workspace, name:editor"
+
+        # Bindings to move workspaces between monitors
+        "$mainMod SHIFT, L, movecurrentworkspacetomonitor, r"
+        "$mainMod SHIFT, H, movecurrentworkspacetomonitor, l"
+        "bind = $mainMod, S, swapactiveworkspaces, current +1"
       ];
 
       # Open my absolute boys on their named workspaces
