@@ -1,4 +1,5 @@
 {
+  "theme": "One Dark",
   "base_keymap": "VSCode",
   "vim_mode": true,
   "file_types": {
