@@ -3,7 +3,9 @@
     "bindings": {
       "ctrl-x 1": "pane::JoinAll",
       "ctrl-x 2": "pane::SplitVertical",
-      "ctrl-x k": "pane::CloseActiveItem"
+      "ctrl-x k": "pane::CloseActiveItem",
+      "ctrl-x ctrl-s": "workspace::Save",
+      "ctrl-x shift-s": "workspace::SaveAll"
     },
     "context": "Workspace"
   },
