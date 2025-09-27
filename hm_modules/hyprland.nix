@@ -9,16 +9,11 @@
       spacing = 4;
       modules-left = [
         "hyprland/workspaces"
-        "sway/mode"
-        "sway/scratchpad"
-        "custom/media"
       ];
       modules-center = [
         "hyprland/window"
       ];
       modules-right = [
-        "mpd"
-        "idle_inhibitor"
         "pulseaudio"
         "network"
         "power-profiles-daemon"
@@ -27,9 +22,6 @@
         "temperature"
         "backlight"
         "keyboard-state"
-        "sway/language"
-        "battery"
-        "battery#bat2"
         "clock"
         "tray"
         "custom/power"
@@ -41,52 +33,6 @@
         format-icons = {
           locked = "";
           unlocked = "";
-        };
-      };
-      "sway/mode" = {
-        format = "<span style=\"italic\">{}</span>";
-      };
-      "sway/scratchpad" = {
-        format = "{icon} {count}";
-        show-empty = false;
-        format-icons = [
-          ""
-          ""
-        ];
-        tooltip = true;
-        tooltip-format = "{app}: {title}";
-      };
-      mpd = {
-        format = "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ⸨{songPosition}|{queueLength}⸩ {volume}% ";
-        format-disconnected = "Disconnected ";
-        format-stopped = "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ";
-        unknown-tag = "N/A";
-        interval = 5;
-        consume-icons = {
-          on = " ";
-        };
-        random-icons = {
-          off = "<span color=\"#f53c3c\"></span> ";
-          on = " ";
-        };
-        repeat-icons = {
-          on = " ";
-        };
-        single-icons = {
-          on = "1 ";
-        };
-        state-icons = {
-          paused = "";
-          playing = "";
-        };
-        tooltip-format = "MPD (connected)";
-        tooltip-format-disconnected = "MPD (disconnected)";
-      };
-      idle_inhibitor = {
-        format = "{icon}";
-        format-icons = {
-          activated = "";
-          deactivated = "";
         };
       };
       tray = {
@@ -187,17 +133,6 @@
           ];
         };
         on-click = "pavucontrol";
-      };
-      "custom/media" = {
-        format = "{icon} {text}";
-        return-type = "json";
-        max-length = 40;
-        format-icons = {
-          spotify = "";
-          default = "🎜";
-        };
-        escape = true;
-        exec = "$HOME/.config/waybar/mediaplayer.py 2> /dev/null";
       };
       "custom/power" = {
         format = "⏻ ";
