@@ -220,8 +220,8 @@
       ];
       # The rest of this is adapted from the default configuration file.
       "$terminal" = "kitty";
-      "$fileManager" = "dolphin"; # TODO - wrong
-      "$menu" = "wofi --show drun"; # TODO - wrong
+      "$fileManager" = "nautilus";
+      "$menu" = "wofi --show drun";
       env = [
         # TODO: what do these do?
         "XCURSOR_SIZE,24"
