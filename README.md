@@ -35,7 +35,10 @@
     - [ ] Make power control work
     - [ ] Make it look nice
   - [x] Get a launcher working
-  - [ ] Figure out workspace workflow for desktop
+  - [x] Figure out workspace workflow for desktop:
+        - super+b/n/m to switch to browser/terminal/editor workspaces
+        - super+shift+b/n/m to move a window to the corresponding workspace
+        - super+shift+h/l to move workspaces left and right between monitors
   - [ ] Figure out monitor workflow
   - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [ ] Make notifications work
