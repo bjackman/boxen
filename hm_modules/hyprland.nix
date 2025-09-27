@@ -2,6 +2,7 @@
 {
   programs.waybar = {
     enable = true;
+    systemd.enable = true;
     settings.main = {
       # This is basically just the default config with bits deleted or switched
       # out for hyprland stuff instead of sway.
@@ -181,8 +182,6 @@
         "HDMI-A-1,preferred,auto,auto"
         "HDMI-A-2,preferred,auto-left,auto"
       ];
-      # TODO: not sure I really want this in the compositor config...
-      exec-once = [ "waybar" ];
       # The rest of this is adapted from the default configuration file.
       "$terminal" = "kitty";
       "$fileManager" = "dolphin"; # TODO - wrong

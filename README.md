@@ -37,7 +37,7 @@
   - [ ] Figure out workspace workflow for desktop
   - [ ] Figure out monitor workflow
   - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
-  - [ ] Figure out if I really wanna start services from hyprland, see about
+  - [x] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
   - [ ] Fix the cursor
   - [ ] Make it look like windows 98
