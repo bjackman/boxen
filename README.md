@@ -29,8 +29,10 @@
 - [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
   - [x] Move hyprland config to Nix
   - [x] Figure out if I need an XDG portal and set one up.
+  - [ ] Make it derk mode
   - [ ] Get a status bar working.
     - [ ] Set up battery icon if on laptop
+    - [ ] Make power control work
   - [ ] Get a launcher working
   - [ ] Figure out workspace workflow for desktop
   - [ ] Figure out monitor workflow
@@ -39,6 +41,7 @@
         using systemd properly.
   - [ ] Fix the cursor
   - [ ] Make it look like windows 98
+  - [ ] Make volume/backlight control buttons work.
 - [ ] Figure out impermanence for Chungito
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
