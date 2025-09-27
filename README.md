@@ -26,19 +26,34 @@
 - [x] Move remaining Chungito configuration into Home Manager as appropriate
 - [x] Split up NixOS config into modules?
 - [x] Make Fish default shell
-- [ ] Move Chungito to WAYLAND???
+- [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
+  - [x] Move hyprland config to Nix
+  - [ ] Figure out if I need an XDG portal and set one up. Deal with this warning:
+
+        ```
+        evaluation warning: brendan profile: xdg-desktop-portal 1.17 reworked how portal implementations are loaded, you
+        should either set `xdg.portal.config` or `xdg.portal.configPackages`
+        to specify which portal backend to use for the requested interface.
+
+        https://github.com/flatpak/xdg-desktop-portal/blob/1.18.1/doc/portals.conf.rst.in
+
+        If you simply want to keep the behaviour in < 1.17, which uses the first
+        portal implementation found in lexicographical order, use the following:
+
+        xdg.portal.config.common.default = "*";
+```
   - [ ] Get a status bar working.
   - [ ] Get a launcher working
-  - [ ] Move config to Nix
   - [ ] Figure out workspace workflow for desktop
   - [ ] Figure out monitor workflow
   - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [ ] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
+  - [ ] Fix the cursor
+  - [ ] Make it look like windows 98
 - [ ] Figure out impermanence for Chungito
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
-- [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
 
 ## Secrets
 
