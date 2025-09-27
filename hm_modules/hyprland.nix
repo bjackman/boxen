@@ -8,13 +8,13 @@
       height = 30;
       spacing = 4;
       modules-left = [
-        "sway/workspaces"
+        "hyprland/workspaces"
         "sway/mode"
         "sway/scratchpad"
         "custom/media"
       ];
       modules-center = [
-        "sway/window"
+        "hyprland/window"
       ];
       modules-right = [
         "mpd"
