@@ -27,6 +27,14 @@
 - [x] Split up NixOS config into modules?
 - [x] Make Fish default shell
 - [ ] Move Chungito to WAYLAND???
+  - [ ] Get a status bar working.
+  - [ ] Get a launcher working
+  - [ ] Move config to Nix
+  - [ ] Figure out workspace workflow for desktop
+  - [ ] Figure out monitor workflow
+  - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
+  - [ ] Figure out if I really wanna start services from hyprland, see about
+        using systemd properly.
 - [ ] Figure out impermanence for Chungito
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
