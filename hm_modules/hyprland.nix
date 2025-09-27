@@ -3,6 +3,24 @@
   programs.waybar.enable = true;
   # To make default Waybar configuration usable;
   home.packages = [ pkgs.font-awesome ];
+
+  # I don't really understand this bit. IIUC this only matters for Flatpak apps,
+  # I haven't tried any so I don't know if this works, but adding it made a
+  # warning go away when evaluating the config. Claude came up with this, I
+  # think it may have cribbed it from here:
+  # https://discourse.nixos.org/t/configuring-xdg-desktop-portal-with-home-manager-on-ubuntu-hyprland-via-nixgl/65287
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
+    config = {
+      common.default = "*";
+      hyprland.default = [
+        "hyprland"
+        "gtk"
+      ];
+    };
+  };
+
   wayland.windowManager.hyprland = {
     enable = true;
     # Assume installed elsewhere, eithehr by NixOS module or non-Nix setup.
