@@ -30,6 +30,7 @@
   - [x] Move hyprland config to Nix
   - [x] Figure out if I need an XDG portal and set one up.
   - [ ] Get a status bar working.
+    - [ ] Set up battery icon if on laptop
   - [ ] Get a launcher working
   - [ ] Figure out workspace workflow for desktop
   - [ ] Figure out monitor workflow
