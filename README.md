@@ -33,13 +33,15 @@
   - [ ] Get a status bar working.
     - [ ] Set up battery icon if on laptop
     - [ ] Make power control work
-  - [ ] Get a launcher working
+    - [ ] Make it look nice
+  - [x] Get a launcher working
   - [ ] Figure out workspace workflow for desktop
   - [ ] Figure out monitor workflow
   - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [x] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
   - [ ] Fix the cursor
+  - [ ] Make hyperlinks work in terminal
   - [ ] Make it look like windows 98
   - [ ] Make volume/backlight control buttons work.
 - [ ] Figure out impermanence for Chungito
