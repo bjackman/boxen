@@ -38,6 +38,8 @@
   - [ ] Figure out workspace workflow for desktop
   - [ ] Figure out monitor workflow
   - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
+  - [ ] Make notifications work
+  - [ ] Make screensharing work
   - [x] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
   - [ ] Fix the cursor
