@@ -17,7 +17,7 @@
 
   # TODO: Switch to monitorv2 once we have 0.50.
   wayland.windowManager.hyprland.settings.monitor = [
-    "HDMI-A-1,preferred,auto,auto"
-    "HDMI-A-2,preferred,auto-left,auto"
+    "desc:Dell Inc. DELL P2720DC 81WTK01403MS,preferred,auto,auto"
+    "desc:Google Inc. P2718EC C9240002,preferred,auto-left,auto"
   ];
 }
