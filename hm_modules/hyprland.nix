@@ -151,6 +151,9 @@
   # To make default Waybar configuration usable;
   home.packages = [ pkgs.font-awesome ];
 
+  # The launcher that hyprland is configured to use below.
+  programs.wofi.enable = true;
+
   # I don't really understand this bit. IIUC this only matters for Flatpak apps,
   # I haven't tried any so I don't know if this works, but adding it made a
   # warning go away when evaluating the config. Claude came up with this, I
