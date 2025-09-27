@@ -213,11 +213,8 @@
     # Assume installed elsewhere, eithehr by NixOS module or non-Nix setup.
     package = null;
     settings = {
-      # TODO: This is specific to Chungito as it's currently laid out...
       # TODO: Switch to monitorv2 once we have 0.50.
       monitor = [
-        "HDMI-A-1,preferred,auto,auto"
-        "HDMI-A-2,preferred,auto-left,auto"
         # https://wiki.hypr.land/Configuring/Monitors/ recommends this, which
         # apparently defines a fallback rule that puts any unknown monitor to
         # the right of the others

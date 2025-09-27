@@ -14,4 +14,10 @@
     enable = true;
     package = pkgsUnstable.zed-editor;
   };
+
+  # TODO: Switch to monitorv2 once we have 0.50.
+  wayland.windowManager.hyprland.settings.monitor = [
+    "HDMI-A-1,preferred,auto,auto"
+    "HDMI-A-2,preferred,auto-left,auto"
+  ];
 }
