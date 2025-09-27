@@ -218,6 +218,10 @@
       monitor = [
         "HDMI-A-1,preferred,auto,auto"
         "HDMI-A-2,preferred,auto-left,auto"
+        # https://wiki.hypr.land/Configuring/Monitors/ recommends this, which
+        # apparently defines a fallback rule that puts any unknown monitor to
+        # the right of the others
+        ", preferred, auto, 1"
       ];
       # The rest of this is adapted from the default configuration file.
       "$terminal" = "kitty";
