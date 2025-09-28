@@ -29,7 +29,9 @@ in
       # out for hyprland stuff instead of sway.
       height = 30;
       spacing = 4;
+      position = "bottom";
       modules-left = [
+        "custom/power"
         "hyprland/workspaces"
       ];
       modules-center = [
@@ -48,7 +50,6 @@ in
         # put the network module next to it since it has some nice info there.
         "network"
         "tray"
-        "custom/power"
       ];
       keyboard-state = {
         capslock = true;
