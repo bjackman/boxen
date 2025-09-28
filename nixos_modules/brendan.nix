@@ -1,5 +1,6 @@
 { pkgs, ... }:
 {
+  imports = [ ./common.nix ];
   users.users.brendan = {
     isNormalUser = true;
     description = "Brendan Jackman";
