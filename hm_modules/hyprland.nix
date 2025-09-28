@@ -192,11 +192,12 @@
   home.packages = with pkgs; [
     # To make default Waybar configuration usable;
     font-awesome
-    # Installing this package explicitly (instead of just referring to the
+    # Installing these packages explicitly (instead of just referring to the
     # binary from the systemd service definition) seems to make sure the
     # nm-applet icons are available for the tray, I haven't looked into why nor
     # even proven this hypothesis properly.
     networkmanagerapplet
+    blueman
   ];
 
   # This makes sure stuff like waybar is configured as part of the correct
@@ -233,6 +234,8 @@
   {
     # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
     nm-applet = mkService "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
+    # This is kinda yucky and ugly but whatever, need something that works.
+    blueman-applet = mkService "${pkgs.blueman}/bin/blueman-applet";
   };
 
   # I don't really understand this bit. IIUC this only matters for Flatpak apps,
@@ -450,11 +453,14 @@
         "bind = $mainMod, S, swapactiveworkspaces, current +1"
       ];
 
-      # Open my absolute boys on their named workspaces
       windowrulev2 = [
+        # Open my absolute boys on their named workspaces
         "workspace name:browser, class:^(firefox)$"
         "workspace name:terminal, class:^(kitty)$"
         "workspace name:editor, class:^(dev.zed.Zed)$"
+
+        # Don't tile the blueman window
+        "float, class:^(.blueman-manager-wrapped)$"
       ];
 
       # Laptop multimedia keys for volume and LCD brightness
