@@ -33,16 +33,20 @@
   - [ ] Get a status bar working.
     - [ ] Set up battery icon if on laptop
     - [ ] Make power control work
-    - [ ] Make it look nice
+    - [x] Make it look nice
+  - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [x] Get a launcher working
   - [x] Figure out workspace workflow for desktop:
         - super+b/n/m to switch to browser/terminal/editor workspaces
         - super+shift+b/n/m to move a window to the corresponding workspace
         - super+shift+h/l to move workspaces left and right between monitors
-  - [ ] Figure out monitor workflow
-  - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
+  - [ ] Document it for myself
+  - [ ] Figure out how to dynamically create workspaces
+  - [ ] Figure out how to dynamically enable/disable third monitor
+  - [ ] Set up a lock screen
   - [ ] Make notifications work
   - [ ] Make screensharing work
+  - [ ] Make Spotify work
   - [x] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
   - [ ] Fix the cursor
