@@ -14,6 +14,7 @@
       tree
       pstree
       btop
+      libnotify  # Useful for testing when faffing around with hyprnotify
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
