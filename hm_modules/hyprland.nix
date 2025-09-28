@@ -291,6 +291,9 @@ in
       nm-applet = mkService "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
       # This is kinda yucky and ugly but whatever, need something that works.
       blueman-applet = mkService "${pkgs.blueman}/bin/blueman-applet";
+      # This daemon translates DBus notification messages into "hyprctl notify"
+      # calls, which just creates a notification natively inside hyprland.
+      hyprnotify = mkService "${pkgs.hyprnotify}/bin/hyprnotify";
     };
 
   # I don't really understand this bit. IIUC this only matters for Flatpak apps,
