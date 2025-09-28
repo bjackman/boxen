@@ -14,6 +14,10 @@ in
       assertion = osConfig.programs.hyprland.enable;
       message = "Must enable programs.hyprland.enable in NixOS config";
     }
+    {
+      assertion = osConfig.programs.hyprlock.enable;
+      message = "Must enable programs.hyprlock.enable in NixOS config";
+    }
   ];
   programs.waybar = {
     enable = true;
@@ -222,6 +226,37 @@ in
 
   # The launcher that hyprland is configured to use below.
   programs.wofi.enable = true;
+
+  programs.hyprlock = {
+    enable = true;
+    settings = {
+      backgrounds = [
+        {
+          path = "color";
+          color = "rgba(100, 100, 100, 1.0)";
+        }
+      ];
+
+      input-field = [
+        {
+          monitor = "";
+          size = "50, 50";
+          position = "0, -100";
+          halign = "center";
+          valign = "center";
+
+          # Show the user something is happening when they type
+          on_key_press = "color: rgba(255, 255, 255, 1.0)";
+          fade_duration = 0.1;
+
+          capslock_color = "rgba(0, 0, 255, 1.0)";
+          fail_color = "rgba(255, 0, 0, 1.0)";
+          fail_transition_on_fail = true;
+          fail_transition_duration = 0.5;
+        }
+      ];
+    };
+  };
 
   # Inspired by https://github.com/nix-community/home-manager/blob/3b955f5f0a942f9f60cdc9cacb7844335d0f21c3/modules/programs/waybar.nix#L346
   # Note this will probably also be affected by the flakiness commented on
@@ -472,6 +507,9 @@ in
         "$mainMod SHIFT, L, movecurrentworkspacetomonitor, r"
         "$mainMod SHIFT, H, movecurrentworkspacetomonitor, l"
         "$mainMod, S, swapactiveworkspaces, current +1"
+
+        # Locky locky
+        "$mainMod, O, exec, hyprlock"
       ];
 
       windowrulev2 = [

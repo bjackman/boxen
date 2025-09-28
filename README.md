@@ -48,7 +48,7 @@
         which is an official plugin that's supposed to this but I just got an
         error saying "hyrexpo:expo" wasn't valid, I guess I didn't install it
         properly.
-  - [ ] Set up a lock screen
+  - [x] Set up a lock screen
   - [ ] Make notifications work
   - [ ] Make screensharing work
   - [ ] Make Spotify work
