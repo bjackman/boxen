@@ -1,6 +1,9 @@
 { pkgs, ... }:
 {
-  imports = [ ./common.nix ];
+  imports = [
+    ./common.nix
+    ./hyprland.nix
+  ];
   users.users.brendan = {
     isNormalUser = true;
     description = "Brendan Jackman";
