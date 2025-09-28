@@ -50,6 +50,8 @@
         properly.
   - [x] Set up a lock screen
   - [ ] Make notifications work
+    - I can get notifications via `notify-send` but Firefox won't send them via
+      DBus.
   - [ ] Make screensharing work
   - [ ] Make Spotify work
   - [x] Figure out if I really wanna start services from hyprland, see about
