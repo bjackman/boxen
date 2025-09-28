@@ -13,6 +13,7 @@
       file
       tree
       pstree
+      btop
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
