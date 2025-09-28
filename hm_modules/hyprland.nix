@@ -159,11 +159,9 @@ in
         on-click = "pavucontrol";
       };
       "custom/power" = {
-        # I'm not sure why I need the spaces around this icon, the other modules
-        # don't need it. I think maybe something to do with the custom module
-        # not having default styling? I'm not sure whether I've actually applied
-        # styling.
-        format = " ⏻ ";
+        # The spaces are so that the icon can be added as the CSS
+        # background-image, lmao
+        format = "<b>      Start</b>";
         tooltip = false;
         menu = "on-click";
 
