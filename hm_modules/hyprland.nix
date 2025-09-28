@@ -410,7 +410,7 @@
       windowrulev2 = [
         "workspace name:browser, class:^(firefox)$"
         "workspace name:terminal, class:^(kitty)$"
-        "workspace name:editor, class:^(Zed)$"
+        "workspace name:editor, class:^(dev.zed.Zed)$"
       ];
 
       # Laptop multimedia keys for volume and LCD brightness
