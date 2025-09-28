@@ -51,7 +51,6 @@ in
         "custom/power"
       ];
       keyboard-state = {
-        numlock = true;
         capslock = true;
         format = "{name} {icon}";
         format-icons = {
