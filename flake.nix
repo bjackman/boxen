@@ -32,6 +32,11 @@
       pkgs = import nixpkgs {
         inherit system;
         overlays = [ self.overlays.default ];
+        config.allowUnfreePredicate =
+          pkg:
+          builtins.elem (pkgs.lib.getName pkg) [
+            "spotify"
+          ];
       };
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
