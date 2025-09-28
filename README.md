@@ -61,6 +61,8 @@
 - [ ] Figure out impermanence for Chungito
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
+- [ ] Make hyprlock work on non-NixOS:
+    - Basically do the non-NixOS equivalent of `security.pam.services.hyprlock = {};`
 
 ## Inspecting the config
 
