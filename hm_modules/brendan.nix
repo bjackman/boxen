@@ -12,6 +12,7 @@
       mosh
       file
       tree
+      pstree
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
