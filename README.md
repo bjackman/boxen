@@ -32,9 +32,9 @@
   - [x] Make it derk mode
   - [ ] Get a status bar working.
     - [ ] Set up battery icon if on laptop
-    - [ ] Make power control work
+    - [x] Make power control work
     - [x] Make it look nice
-  - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
+  - [x] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [x] Get a launcher working
   - [x] Figure out workspace workflow for desktop:
         - super+b/n/m to switch to browser/terminal/editor workspaces
@@ -43,6 +43,11 @@
   - [ ] Document it for myself
   - [ ] Figure out how to dynamically create workspaces
   - [ ] Figure out how to dynamically enable/disable third monitor
+  - [ ] Figure out an "overview" mechanism like Gnome has. I tried this:
+        https://code.hyprland.org/hyprwm/hyprland-plugins/src/branch/main/hyprexpo
+        which is an official plugin that's supposed to this but I just got an
+        error saying "hyrexpo:expo" wasn't valid, I guess I didn't install it
+        properly.
   - [ ] Set up a lock screen
   - [ ] Make notifications work
   - [ ] Make screensharing work
