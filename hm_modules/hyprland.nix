@@ -346,9 +346,13 @@ in
         gaps_in = 5;
         gaps_out = 5;
         border_size = 2;
-        # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-        "col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
-        "col.inactive_border" = "rgba(595959aa)";
+
+        # Damn, can't figure out how to make window borders have the "raised
+        # border effect". You can only give them a single colour or global
+        # gradient :(
+        "col.active_border" = "rgba(c0c0c0ff)";
+        "col.inactive_border" = "rgba(909090ff)";
+
         # Set to true enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = false;
         # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
