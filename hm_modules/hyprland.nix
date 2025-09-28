@@ -1,5 +1,15 @@
-{ pkgs, config, ... }:
+{ pkgs, config, lib, ... }@args:
+let
+  isNixOS = args ? osConfig;
+  osConfig = if isNixOS then args.osConfig else {};
+in
 {
+  assertions = lib.optionals isNixOS [
+    {
+      assertion = osConfig.programs.hyprland.enable;
+      message = "Must enable programs.hyprland.enable in NixOS config";
+    }
+  ];
   programs.waybar = {
     enable = true;
     # Note: this is kinda flaky, hmm:
