@@ -11,6 +11,8 @@
         autoSetupRemote = true;
       };
 
+      pull.rebase = true;
+
       diff = {
         renames = "true";
         mnemonicPrefix = "true";
