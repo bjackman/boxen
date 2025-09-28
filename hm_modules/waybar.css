@@ -13,17 +13,6 @@ window#waybar {
     border-bottom: solid 1px #404040;
 }
 
-.module-common {
-    padding: 5px 5px;
-    margin: 5px 3px;
-    background-color: #c0c0c0;
-    color: #000000;
-    border-left: 1px solid #ffffff;
-    border-top: 1px solid #ffffff;
-    border-bottom: 1px solid #404040;
-    box-shadow: 1px 1px 1px 0px #000000;
-}
-
 #custom-power,
 #workspaces button {
     padding: 5px 10px;
