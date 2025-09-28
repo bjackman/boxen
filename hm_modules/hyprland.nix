@@ -450,7 +450,7 @@
         # Bindings to move workspaces between monitors
         "$mainMod SHIFT, L, movecurrentworkspacetomonitor, r"
         "$mainMod SHIFT, H, movecurrentworkspacetomonitor, l"
-        "bind = $mainMod, S, swapactiveworkspaces, current +1"
+        "$mainMod, S, swapactiveworkspaces, current +1"
       ];
 
       windowrulev2 = [
