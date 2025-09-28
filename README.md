@@ -55,7 +55,7 @@
   - [ ] Make screensharing work
     - [x] In Firefox
     - [ ] In Chrome
-  - [ ] Make Spotify work
+  - [x] Make Spotify work
   - [x] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
   - [ ] Fix the cursor
