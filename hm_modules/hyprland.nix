@@ -206,6 +206,7 @@ in
         };
       };
     };
+    style = builtins.readFile ./waybar.css;
   };
   home.packages = with pkgs; [
     # To make default Waybar configuration usable;
