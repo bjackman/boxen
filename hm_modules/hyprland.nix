@@ -198,7 +198,7 @@ in
           </interface>
         '';
         menu-actions = {
-          shutdown = "shutdown";
+          shutdown = "poweroff";
           reboot = "reboot";
           suspend = "systemctl suspend";
           hibernate = "systemctl hibernate";
