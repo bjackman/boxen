@@ -2,6 +2,8 @@
 {
   programs.waybar = {
     enable = true;
+    # Note: this is kinda flaky, hmm:
+    # https://github.com/nix-community/home-manager/issues/7895
     systemd.enable = true;
     settings.main = {
       # This is basically just the default config with bits deleted or switched
