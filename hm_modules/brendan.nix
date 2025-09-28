@@ -15,6 +15,7 @@
       btop
       libnotify  # Useful for testing when faffing around with hyprnotify
       spotify
+      imagemagick
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
