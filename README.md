@@ -57,6 +57,23 @@
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
 
+## Inspecting the config
+
+NixOS options are under `.#nixosConfigurations.<config>.config`. So for example:
+
+```sh
+# Show security.pam.loginLimits option
+nix eval .#nixosConfigurations.chungito.config.security.pam.loginLimits
+```
+
+For NixOS hosts, Home Manager options are under
+`.#nixosConfigurations.<config>.config.home-manager.users.<user>` So for example:
+
+```sh
+# Show programs.waybar.enable option
+nix eval .#nixosConfigurations.chungito.config.home-manager.users.brendan.programs.waybar.enable
+```
+
 ## Secrets
 
 Secrets are stored using [agenix](https://github.com/ryantm/agenix). At runtime
