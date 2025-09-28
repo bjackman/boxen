@@ -1,15 +1,17 @@
 * {
-    /* `otf-font-awesome` is required to be installed for icons */
-    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
-    font-size: 13px;
+    font-family: "MS Sans Serif", FontAwesome, sans-serif;
+    font-size: 11px;
+    font-weight: normal;
 }
 
 window#waybar {
-    background-color: rgba(43, 48, 59, 0.5);
-    border-bottom: 3px solid rgba(100, 114, 125, 0.5);
-    color: #ffffff;
-    transition-property: background-color;
-    transition-duration: .5s;
+    background: linear-gradient(to bottom, #c0c0c0 0%, #c0c0c0 1px, #dfdfdf 1px, #dfdfdf 100%);
+    border-top: 1px solid #dfdfdf;
+    border-left: 1px solid #dfdfdf;
+    border-right: 1px solid #808080;
+    border-bottom: 1px solid #808080;
+    color: #000000;
+    box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #808080;
 }
 
 window#waybar.hidden {
@@ -17,46 +19,57 @@ window#waybar.hidden {
 }
 
 button {
-    /* Use box-shadow instead of border so the text isn't offset */
-    box-shadow: inset 0 -3px transparent;
-    /* Avoid rounded borders under each button name */
-    border: none;
+    background: #c0c0c0;
+    border: 1px outset #c0c0c0;
     border-radius: 0;
+    color: #000000;
+    padding: 2px 4px;
+    margin: 1px;
+    box-shadow: none;
 }
 
-/* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
 button:hover {
-    background: inherit;
-    box-shadow: inset 0 -3px #ffffff;
+    background: #e0e0e0;
+    border: 1px outset #c0c0c0;
 }
 
-/* you can set a style on hover for any module like this */
-#pulseaudio:hover {
-    background-color: #a37800;
+button:active {
+    background: #a0a0a0;
+    border: 1px inset #c0c0c0;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 #workspaces button {
-    padding: 0 5px;
-    background-color: transparent;
-    color: #ffffff;
+    background: #c0c0c0;
+    border: 1px outset #c0c0c0;
+    color: #000000;
+    padding: 2px 6px;
+    margin: 1px;
+    min-width: 20px;
 }
 
 #workspaces button:hover {
-    background: rgba(0, 0, 0, 0.2);
+    background: #e0e0e0;
+    border: 1px outset #c0c0c0;
 }
 
 #workspaces button.focused {
-    background-color: #64727D;
-    box-shadow: inset 0 -3px #ffffff;
+    background: #a0a0a0;
+    border: 1px inset #c0c0c0;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 #workspaces button.urgent {
-    background-color: #eb4d4b;
+    background: #ff0000;
+    color: #ffffff;
+    border: 1px outset #ff0000;
 }
 
 #mode {
-    background-color: #64727D;
-    box-shadow: inset 0 -3px #ffffff;
+    background: #c0c0c0;
+    border: 1px inset #c0c0c0;
+    color: #000000;
+    padding: 2px 6px;
 }
 
 #clock,
@@ -71,127 +84,47 @@ button:hover {
 #custom-media,
 #tray,
 #mode,
-#power-profiles-daemon
+#power-profiles-daemon,
+#keyboard-state,
+#custom-power
 {
-    padding: 0 10px;
-    color: #ffffff;
+    background: #c0c0c0;
+    border: 1px inset #c0c0c0;
+    color: #000000;
+    padding: 2px 6px;
+    margin: 1px;
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
 }
 
 #window,
 #workspaces {
-    margin: 0 4px;
+    margin: 0 2px;
 }
 
-/* If workspaces is the leftmost module, omit left margin */
 .modules-left > widget:first-child > #workspaces {
-    margin-left: 0;
+    margin-left: 2px;
 }
 
-/* If workspaces is the rightmost module, omit right margin */
 .modules-right > widget:last-child > #workspaces {
-    margin-right: 0;
+    margin-right: 2px;
 }
 
-#clock {
-    background-color: #64727D;
-}
-
-#battery {
-    background-color: #ffffff;
-    color: #000000;
-}
-
-#battery.charging, #battery.plugged {
-    color: #ffffff;
-    background-color: #26A65B;
-}
-
-@keyframes blink {
-    to {
-        background-color: #ffffff;
-        color: #000000;
-    }
-}
-
-/* Using steps() instead of linear as a timing function to limit cpu usage */
 #battery.critical:not(.charging) {
-    background-color: #f53c3c;
+    background: #ff0000;
     color: #ffffff;
-    animation-name: blink;
-    animation-duration: 0.5s;
-    animation-timing-function: steps(12);
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-}
-
-#power-profiles-daemon {
-    padding-right: 15px;
-}
-
-#power-profiles-daemon.performance {
-    background-color: #f53c3c;
-    color: #ffffff;
-}
-
-#power-profiles-daemon.balanced {
-    background-color: #2980b9;
-    color: #ffffff;
-}
-
-#power-profiles-daemon.power-saver {
-    background-color: #2ecc71;
-    color: #000000;
+    border: 1px inset #ff0000;
+    animation: none;
 }
 
 label:focus {
-    background-color: #000000;
-}
-
-#cpu {
-    background-color: #2ecc71;
-    color: #000000;
-}
-
-#memory {
-    background-color: #9b59b6;
-}
-
-#disk {
-    background-color: #964B00;
-}
-
-#backlight {
-    background-color: #90b1b1;
-}
-
-#network {
-    background-color: #2980b9;
-}
-
-#network.disconnected {
-    background-color: #f53c3c;
-}
-
-#pulseaudio {
-    background-color: #f1c40f;
-    color: #000000;
-}
-
-#pulseaudio.muted {
-    background-color: #90b1b1;
-    color: #2a5c45;
-}
-
-#temperature {
-    background-color: #f0932b;
-}
-
-#temperature.critical {
-    background-color: #eb4d4b;
+    background: #0000ff;
+    color: #ffffff;
 }
 
 #tray {
-    background-color: #2980b9;
+    background: #c0c0c0;
+    border: 1px inset #c0c0c0;
+    padding: 2px 4px;
 }
 
 #tray > .passive {
@@ -200,21 +133,15 @@ label:focus {
 
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
-    background-color: #eb4d4b;
+    background: #ff0000;
+    color: #ffffff;
 }
 
-#keyboard-state {
-    background: #97e1ad;
+#window {
+    background: #c0c0c0;
+    border: 1px inset #c0c0c0;
     color: #000000;
-    padding: 0 0px;
-    margin: 0 5px;
-    min-width: 16px;
-}
-
-#keyboard-state > label {
-    padding: 0 5px;
-}
-
-#keyboard-state > label.locked {
-    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    margin: 1px;
+    font-style: normal;
 }
