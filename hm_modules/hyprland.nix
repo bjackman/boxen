@@ -189,12 +189,11 @@
   };
   # To make default Waybar configuration usable;
   home.packages = [ pkgs.font-awesome ];
-  #
+
   # This makes sure stuff like waybar is configured as part of the correct
   # systemd target, otherwise it gets put under graphical-session.target and
   # then doesn't work properly when restarting hyprland.
   wayland.systemd.target = "hyprland-session.target";
-
 
   # The launcher that hyprland is configured to use below.
   programs.wofi.enable = true;
