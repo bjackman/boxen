@@ -10,6 +10,8 @@
     extraGroups = [
       "networkmanager"
       "wheel"
+      # Required for hyprland stuff to be able to query capslock status.
+      "input"
     ];
     shell = pkgs.fish;
   };
