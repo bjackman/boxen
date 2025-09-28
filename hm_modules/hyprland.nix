@@ -210,26 +210,29 @@
   # Inspired by https://github.com/nix-community/home-manager/blob/3b955f5f0a942f9f60cdc9cacb7844335d0f21c3/modules/programs/waybar.nix#L346
   # Note this will probably also be affected by the flakiness commented on
   # programs.waybar.systemd.enable above.
-  systemd.user.services.nm-applet =
+  systemd.user.services =
   let
     target = config.wayland.systemd.target;
+    mkService = cmd: {
+      Unit = {
+        PartOf = [ target "tray.target" ];
+        After = [ target ];
+        ConditionEnvironment = "WAYLAND_DISPLAY";  # I dunno what this does lol
+      };
+      Service = {
+        ExecReload = "${pkgs.coreutils}/bin/kill -SIGUSR2 $MAINPID";
+        ExecStart = cmd;
+        # Why this and not "mixed"? I dunno, Claude Opus suggested it for reasons
+        # that seem meh to me. Whatever.
+        KillMode = "process";
+        Restart = "on-failure";
+      };
+      Install.WantedBy = [ target "tray.target" ];
+    };
   in
   {
-    Unit = {
-      PartOf = [ target "tray.target" ];
-      After = [ target ];
-      ConditionEnvironment = "WAYLAND_DISPLAY";  # I dunno what this does lol
-    };
-    Service = {
-      ExecReload = "${pkgs.coreutils}/bin/kill -SIGUSR2 $MAINPID";
-      # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
-      ExecStart = "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
-      # Why this and not "mixed"? I dunno, Claude Opus suggested it for reasons
-      # that seem meh to me. Whatever.
-      KillMode = "process";
-      Restart = "on-failure";
-    };
-    Install.WantedBy = [ target "tray.target" ];
+    # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+    nm-applet = mkService "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
   };
 
   # I don't really understand this bit. IIUC this only matters for Flatpak apps,
