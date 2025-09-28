@@ -53,6 +53,8 @@
     - I can get notifications via `notify-send` but Firefox won't send them via
       DBus.
   - [ ] Make screensharing work
+    - [x] In Firefox
+    - [ ] In Chrome
   - [ ] Make Spotify work
   - [x] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
@@ -63,8 +65,10 @@
 - [ ] Figure out impermanence for Chungito
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
-- [ ] Make hyprlock work on non-NixOS:
-    - Basically do the non-NixOS equivalent of `security.pam.services.hyprlock = {};`
+- [ ] Figure out Non-NixOS:
+  - [ ] Hyprlock
+      - Basically do the non-NixOS equivalent of `security.pam.services.hyprlock = {};`
+  - [ ] Screen sharing
 
 ## Inspecting the config
 
