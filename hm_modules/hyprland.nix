@@ -1,7 +1,12 @@
-{ pkgs, config, lib, ... }@args:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}@args:
 let
   isNixOS = args ? osConfig;
-  osConfig = if isNixOS then args.osConfig else {};
+  osConfig = if isNixOS then args.osConfig else { };
 in
 {
   assertions = lib.optionals isNixOS [
@@ -222,31 +227,37 @@ in
   # Note this will probably also be affected by the flakiness commented on
   # programs.waybar.systemd.enable above.
   systemd.user.services =
-  let
-    target = config.wayland.systemd.target;
-    mkService = cmd: {
-      Unit = {
-        PartOf = [ target "tray.target" ];
-        After = [ target ];
-        ConditionEnvironment = "WAYLAND_DISPLAY";  # I dunno what this does lol
+    let
+      target = config.wayland.systemd.target;
+      mkService = cmd: {
+        Unit = {
+          PartOf = [
+            target
+            "tray.target"
+          ];
+          After = [ target ];
+          ConditionEnvironment = "WAYLAND_DISPLAY"; # I dunno what this does lol
+        };
+        Service = {
+          ExecReload = "${pkgs.coreutils}/bin/kill -SIGUSR2 $MAINPID";
+          ExecStart = cmd;
+          # Why this and not "mixed"? I dunno, Claude Opus suggested it for reasons
+          # that seem meh to me. Whatever.
+          KillMode = "process";
+          Restart = "on-failure";
+        };
+        Install.WantedBy = [
+          target
+          "tray.target"
+        ];
       };
-      Service = {
-        ExecReload = "${pkgs.coreutils}/bin/kill -SIGUSR2 $MAINPID";
-        ExecStart = cmd;
-        # Why this and not "mixed"? I dunno, Claude Opus suggested it for reasons
-        # that seem meh to me. Whatever.
-        KillMode = "process";
-        Restart = "on-failure";
-      };
-      Install.WantedBy = [ target "tray.target" ];
+    in
+    {
+      # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+      nm-applet = mkService "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
+      # This is kinda yucky and ugly but whatever, need something that works.
+      blueman-applet = mkService "${pkgs.blueman}/bin/blueman-applet";
     };
-  in
-  {
-    # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
-    nm-applet = mkService "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
-    # This is kinda yucky and ugly but whatever, need something that works.
-    blueman-applet = mkService "${pkgs.blueman}/bin/blueman-applet";
-  };
 
   # I don't really understand this bit. IIUC this only matters for Flatpak apps,
   # I haven't tried any so I don't know if this works, but adding it made a
