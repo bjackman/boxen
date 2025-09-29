@@ -1,5 +1,8 @@
 {
   "theme": "One Dark",
+  "project_panel": {
+    "hide_gitignore": true
+  },
   "base_keymap": "VSCode",
   "vim_mode": true,
   "file_types": {
