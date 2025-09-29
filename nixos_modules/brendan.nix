@@ -2,7 +2,6 @@
 {
   imports = [
     ./common.nix
-    ./hyprland.nix
   ];
   users.users.brendan = {
     isNormalUser = true;

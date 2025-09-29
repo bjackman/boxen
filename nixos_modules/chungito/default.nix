@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ../brendan.nix
+    ../sway.nix
   ];
 
   nix.settings.experimental-features = [
@@ -66,6 +67,7 @@
   hardware.graphics.enable = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia.open = true;
+  programs.sway.extraOptions = [ "--unsupported-gpu" ];
 
   system.stateVersion = "25.05";
 }

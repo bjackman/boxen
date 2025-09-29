@@ -7,7 +7,7 @@
   imports = [
     ./common.nix
     ./brendan.nix
-    ./hyprland.nix
+    ./sway.nix
   ];
   common.config-checkout = "${config.home.homeDirectory}/src/boxen";
   programs.zed-editor = {
