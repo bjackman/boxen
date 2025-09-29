@@ -13,7 +13,7 @@
       tree
       pstree
       btop
-      libnotify  # Useful for testing when faffing around with hyprnotify
+      libnotify # Useful for testing when faffing around with hyprnotify
       spotify
       imagemagick
     ];
