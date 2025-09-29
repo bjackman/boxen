@@ -203,4 +203,11 @@
     networkmanagerapplet
     blueman
   ];
+
+  bjackman.wayland-services = {
+    # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+    nm-applet = "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
+    # This is kinda yucky and ugly but whatever, need something that works.
+    blueman-applet = "${pkgs.blueman}/bin/blueman-applet";
+  };
 }

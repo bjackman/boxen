@@ -67,10 +67,6 @@ in
   # Note this will probably also be affected by the flakiness commented on
   # programs.waybar.systemd.enable above.
   bjackman.wayland-services = {
-    # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
-    nm-applet = "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
-    # This is kinda yucky and ugly but whatever, need something that works.
-    blueman-applet = "${pkgs.blueman}/bin/blueman-applet";
     # This daemon translates DBus notification messages into "hyprctl notify"
     # calls, which just creates a notification natively inside hyprland.
     hyprnotify = "${pkgs.hyprnotify}/bin/hyprnotify";
