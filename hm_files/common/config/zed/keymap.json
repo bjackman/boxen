@@ -37,5 +37,11 @@
     "bindings": {
       "j k": "vim::NormalBefore"
     }
+  },
+  {
+    "context": "(VimControl && !menu)",
+    "bindings": {
+      "ctrl-b": "workspace::ToggleLeftDock"
+    }
   }
 ]
