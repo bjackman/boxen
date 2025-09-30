@@ -193,7 +193,7 @@
         };
       };
     };
-    style = builtins.readFile ./waybar.css;
+    style = pkgs.replaceVars ./waybar.css { start-icon-png = ../hm_files/common/start.png; };
   };
   home.packages = with pkgs; [
     # To make default Waybar configuration usable;

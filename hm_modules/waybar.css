@@ -28,7 +28,7 @@ window#waybar {
 
 /* lol */
 #custom-power {
-    background-image: url("/nix/store/7ss1y4bh4zk2b8accynjiswy8l6awl44-start.png");
+    background-image: url("@start-icon-png@");
     background-size: 32px 32px;
     background-repeat: no-repeat;
 }
