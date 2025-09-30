@@ -102,14 +102,6 @@ window#waybar {
 }
 
 /*
- * CENTER SECTION - Minimal styling (window title)
- * Just padding, no 3D effects
- */
-.modules-center .module {
-    padding: 5px 10px;
-}
-
-/*
  * RIGHT SECTION - Sunken panel style (system info modules)
  * Dark borders on top/left, light on bottom/right = recessed appearance
  * Much more subtle than the raised buttons
