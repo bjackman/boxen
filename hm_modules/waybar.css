@@ -36,11 +36,11 @@ window#waybar {
 #workspaces button:hover {
     box-shadow: 0px 0px 0px;
     text-shadow: none;
-    background: #E0E0E0;
+    background: #e0e0e0;
 }
 
 #workspaces button.focused {
-    background: #E0E0E0;
+    background: #e0e0e0;
     color: #000000;
 }
 
