@@ -60,10 +60,10 @@ in
         "${modifier}+Up" = "focus up";
         "${modifier}+Right" = "focus right";
 
-        "${modifier}+Shift+h" = "move left";
-        "${modifier}+Shift+j" = "move down";
-        "${modifier}+Shift+k" = "move up";
-        "${modifier}+Shift+l" = "move right";
+        "${modifier}+Shift+h" = "move workspace to output left";
+        "${modifier}+Shift+j" = "move workspace to output down";
+        "${modifier}+Shift+k" = "move workspace to output up";
+        "${modifier}+Shift+l" = "move workspace to output right";
 
         "${modifier}+Shift+Left" = "move left";
         "${modifier}+Shift+Down" = "move down";
