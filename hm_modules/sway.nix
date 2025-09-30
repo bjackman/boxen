@@ -36,6 +36,9 @@ in
 
   wayland.windowManager.sway = {
     enable = true;
+    # Don't install the package, use the system once since that will have the
+    # --unsupported-gpu flag if needed.
+    package = null;
     config = rec {
       bars = [];
       modifier = "Mod4";
