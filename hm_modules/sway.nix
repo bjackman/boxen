@@ -109,7 +109,7 @@ in
           key: workspace: lib.nameValuePair "${modifier}+${key}" "workspace ${workspace}"
         ) workspaces)
         // (lib.mapAttrs' (
-          key: workspace: lib.nameValuePair "${modifier}+shift+${key}" "move window to workspace ${workspace}"
+          key: workspace: lib.nameValuePair "${modifier}+shift+${key}" "move window to workspace ${workspace}; workspace ${workspace}"
         ) workspaces)
       );
     };
