@@ -41,6 +41,16 @@ in
       modifier = "Mod4";
       keybindings = {
         "${modifier}+q" = "kill";
+        "${modifier}+c" = "exec swaylock --indicator-caps-lock --color 000000";
+
+        # Dedicated workspaces for my absolute boys. mod+letter switches to the
+        # workspace. mod+shift+letter moves the window to it then focuses it.
+        "${modifier}+b" = "workspace browser";
+        "${modifier}+shift+b" = "move window to workspace browser; workspace browser";
+        "${modifier}+n" = "workspace terminal";
+        "${modifier}+shift+n" = "move window to workspace terminal; workspace terminal";
+        "${modifier}+m" = "workspace editor";
+        "${modifier}+shift+m" = "move window to workspace editor; workspace editor";
       };
     };
     # Include distro-local stuff. On NixOS this includes something important.
