@@ -26,20 +26,20 @@
 - [x] Move remaining Chungito configuration into Home Manager as appropriate
 - [x] Split up NixOS config into modules?
 - [x] Make Fish default shell
-- [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT
-  - [x] Move hyprland config to Nix
-  - [x] Figure out if I need an XDG portal and set one up.
-  - [x] Make it derk mode
-  - [ ] Get a status bar working.
-    - [ ] Set up battery icon if on laptop
-    - [x] Make power control work
-    - [x] Make it look nice
-  - [x] Ensure bluetooth / sound / NetworkManager stuff is all usable
-  - [x] Get a launcher working
-  - [x] Figure out workspace workflow for desktop:
+- [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT. OK actually just use
+      Sway because Hyprland isn't really usable on Debian.
+  - [ ] Figure out workspace workflow for desktop:
         - super+b/n/m to switch to browser/terminal/editor workspaces
         - super+shift+b/n/m to move a window to the corresponding workspace
         - super+shift+h/l to move workspaces left and right between monitors
+  - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
+  - [ ] Figure out if I need an XDG portal and set one up.
+  - [ ] Make it derk mode
+  - [ ] Get a status bar working.
+    - [ ] Set up battery icon if on laptop
+    - [ ] Make power control work
+    - [ ] Make it look nice
+  - [ ] Get a launcher working
   - [ ] Document it for myself
   - [ ] Figure out how to dynamically create workspaces
   - [ ] Figure out how to dynamically enable/disable third monitor
@@ -48,15 +48,15 @@
         which is an official plugin that's supposed to this but I just got an
         error saying "hyrexpo:expo" wasn't valid, I guess I didn't install it
         properly.
-  - [x] Set up a lock screen
+  - [ ] Set up a lock screen
   - [ ] Make notifications work
     - I can get notifications via `notify-send` but Firefox won't send them via
       DBus.
   - [ ] Make screensharing work
-    - [x] In Firefox
+    - [ ] In Firefox
     - [ ] In Chrome
-  - [x] Make Spotify work
-  - [x] Figure out if I really wanna start services from hyprland, see about
+  - [ ] Make Spotify work
+  - [ ] Figure out if I really wanna start services from hyprland, see about
         using systemd properly.
   - [ ] Fix the cursor
   - [ ] Make hyperlinks work in terminal
