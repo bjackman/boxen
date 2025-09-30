@@ -1,3 +1,9 @@
+/*
+ * Windows 95 Style Waybar Theme
+ * Recreates the classic 3D beveled interface using borders and inset shadows
+ */
+
+/* Reset all default styling */
 * {
     border: none;
     border-radius: 0;
@@ -6,48 +12,57 @@
     min-height: 0;
 }
 
+/* Main waybar window - classic taskbar appearance */
 window#waybar {
     background: #c0c0c0;
     color: #000000;
-    box-shadow: 0px 0px 6px 0px #000000;
-    border-top: 2px solid #ffffff;
-    border-bottom: 2px solid #404040;
+    box-shadow: 0px 0px 6px 0px #000000;  /* Drop shadow for depth */
+    border-top: 2px solid #ffffff;        /* Light border on top */
+    border-bottom: 2px solid #404040;     /* Dark border on bottom */
 }
 
-/* Default module styling */
+/* Default module styling - base properties for all modules */
 .module {
     padding: 5px 5px;
     margin: 5px 3px;
     color: #000000;
 }
 
-/* Left section - raised button style */
+/*
+ * LEFT SECTION - Raised 3D button style (Start button, workspaces)
+ * Light borders on top/left, dark on bottom/right = raised appearance
+ */
 .modules-left .module {
     padding: 3px 8px;
     background: #c0c0c0;
-    border-left: 2px solid #ffffff;
-    border-top: 2px solid #ffffff;
-    border-bottom: 2px solid #404040;
-    border-right: 2px solid #404040;
-    box-shadow: inset -2px -2px 2px rgba(0,0,0,0.3);
+    border-left: 2px solid #ffffff;        /* Light left border */
+    border-top: 2px solid #ffffff;         /* Light top border */
+    border-bottom: 2px solid #404040;      /* Dark bottom border */
+    border-right: 2px solid #404040;       /* Dark right border */
+    box-shadow: inset -2px -2px 2px rgba(0,0,0,0.3);  /* Internal shadow from bottom-right */
 }
 
+/* Hover state - flatten the button by removing inset shadow */
 .modules-left .module:hover {
     box-shadow: 0px 0px 0px;
     text-shadow: none;
     background: #e0e0e0;
 }
 
+/* Active/pressed state - flip to sunken appearance */
 .modules-left .module:active {
     background: #a0a0a0;
-    border-left: 2px solid #808080;
-    border-top: 2px solid #808080;
-    border-bottom: 2px solid #ffffff;
-    border-right: 2px solid #ffffff;
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);
+    border-left: 2px solid #808080;        /* Dark left border */
+    border-top: 2px solid #808080;         /* Dark top border */
+    border-bottom: 2px solid #ffffff;      /* Light bottom border */
+    border-right: 2px solid #ffffff;       /* Light right border */
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);  /* Subtle internal shadow from top-left */
 }
 
-/* Workspaces has individual buttons that need their own styling */
+/*
+ * WORKSPACES - Individual workspace buttons
+ * Container gets no styling, individual buttons get full 3D treatment
+ */
 #workspaces.module {
     padding: 0;
     margin: 0;
@@ -56,49 +71,64 @@ window#waybar {
     box-shadow: none;
 }
 
+/* Individual workspace buttons - same raised style as other left modules */
 #workspaces button {
     padding: 3px 8px;
     margin: 5px 3px;
     background: #c0c0c0;
     color: #000000;
-    border-left: 2px solid #ffffff;
-    border-top: 2px solid #ffffff;
-    border-bottom: 2px solid #404040;
-    border-right: 2px solid #404040;
-    box-shadow: inset -2px -2px 2px rgba(0,0,0,0.3);
+    border-left: 2px solid #ffffff;        /* Light left border */
+    border-top: 2px solid #ffffff;         /* Light top border */
+    border-bottom: 2px solid #404040;      /* Dark bottom border */
+    border-right: 2px solid #404040;       /* Dark right border */
+    box-shadow: inset -2px -2px 2px rgba(0,0,0,0.3);  /* Internal shadow from bottom-right */
 }
 
+/* Workspace button hover state */
 #workspaces button:hover {
     box-shadow: 0px 0px 0px;
     text-shadow: none;
     background: #e0e0e0;
 }
 
+/* Workspace button pressed state */
 #workspaces button:active {
     background: #a0a0a0;
-    border-left: 2px solid #808080;
-    border-top: 2px solid #808080;
-    border-bottom: 2px solid #ffffff;
-    border-right: 2px solid #ffffff;
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);
+    border-left: 2px solid #808080;        /* Dark left border */
+    border-top: 2px solid #808080;         /* Dark top border */
+    border-bottom: 2px solid #ffffff;      /* Light bottom border */
+    border-right: 2px solid #ffffff;       /* Light right border */
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);  /* Subtle internal shadow from top-left */
 }
 
-/* Center section - minimal styling */
+/*
+ * CENTER SECTION - Minimal styling (window title)
+ * Just padding, no 3D effects
+ */
 .modules-center .module {
     padding: 5px 10px;
 }
 
-/* Right section - sunken style */
+/*
+ * RIGHT SECTION - Sunken panel style (system info modules)
+ * Dark borders on top/left, light on bottom/right = recessed appearance
+ * Much more subtle than the raised buttons
+ */
 .modules-right .module {
     padding: 3px 3px;
     background-color: #b0b0b0;
-    border-left: 2px solid #808080;
-    border-top: 2px solid #808080;
-    border-bottom: 2px solid #ffffff;
-    border-right: 2px solid #ffffff;
+    border-left: 2px solid #808080;        /* Dark left border (not full black) */
+    border-top: 2px solid #808080;         /* Dark top border (not full black) */
+    border-bottom: 2px solid #ffffff;      /* Light bottom border */
+    border-right: 2px solid #ffffff;       /* Light right border */
+    /* No inset shadow - borders do all the work for subtle effect */
 }
 
-/* Specific module overrides */
+/*
+ * SPECIFIC MODULE OVERRIDES
+ */
+
+/* Start button - needs larger padding for background icon */
 #custom-power {
     padding: 5px 10px;
     background-image: url("@start-icon-png@");
@@ -106,24 +136,13 @@ window#waybar {
     background-repeat: no-repeat;
 }
 
-#custom-power:active {
-    background: #a0a0a0;
-    background-image: url("@start-icon-png@");
-    background-size: 32px 32px;
-    background-repeat: no-repeat;
-    border-left: 2px solid #808080;
-    border-top: 2px solid #808080;
-    border-bottom: 2px solid #ffffff;
-    border-right: 2px solid #ffffff;
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);
-}
-
+/* Focused/active workspace button - stays sunken to show selection */
 #workspaces button.focused {
-    background: #d0d0d0;
+    background: #d0d0d0;                   /* Slightly lighter than pressed state */
     color: #000000;
-    border-left: 2px solid #808080;
-    border-top: 2px solid #808080;
-    border-bottom: 2px solid #ffffff;
-    border-right: 2px solid #ffffff;
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);
+    border-left: 2px solid #808080;        /* Dark left border */
+    border-top: 2px solid #808080;         /* Dark top border */
+    border-bottom: 2px solid #ffffff;      /* Light bottom border */
+    border-right: 2px solid #ffffff;       /* Light right border */
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);  /* Subtle internal shadow from top-left */
 }
