@@ -43,6 +43,12 @@ in
       bars = [ ];
       modifier = "Mod4";
       terminal = "${pkgs.kitty}/bin/kitty";
+      # Put my absolute boys on their home workspace by default
+      assigns = {
+        "browser" = [{ app_id = "firefox"; }];
+        "terminal" = [{ app_id = "kitty"; }];
+        "editor" = [{ app_id = "dev.zed.Zed"; }];
+      };
       # Copy default keybindings from
       # https://github.com/NixOS/nixpkgs/blob/d916df777523d75f7c5acca79946652f032f633e/nixos/modules/programs/wayland/sway.nix
       keybindings = {
