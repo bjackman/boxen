@@ -19,9 +19,11 @@
       modules-left = [
         "custom/power"
         "hyprland/workspaces"
+        "sway/workspaces"
       ];
       modules-center = [
         "hyprland/window"
+        "sway/window"
       ];
       modules-right = [
         "pulseaudio"

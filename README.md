@@ -28,6 +28,7 @@
 - [x] Make Fish default shell
 - [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT. OK actually just use
       Sway because Hyprland isn't really usable on Debian.
+  - [x] Make waybar show workspaces
   - [ ] Figure out workspace workflow for desktop:
         - super+b/n/m to switch to browser/terminal/editor workspaces
         - super+shift+b/n/m to move a window to the corresponding workspace
