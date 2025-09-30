@@ -42,6 +42,7 @@ in
     config = rec {
       bars = [];
       modifier = "Mod4";
+      terminal = "${pkgs.kitty}/bin/kitty";
       # Copy default keybindings from
       # https://github.com/NixOS/nixpkgs/blob/d916df777523d75f7c5acca79946652f032f633e/nixos/modules/programs/wayland/sway.nix
       keybindings = {
