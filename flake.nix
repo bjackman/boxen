@@ -114,8 +114,7 @@
         "jackmanb@jackmanb01" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [
-            ./hm_modules/jackmanb.nix
-            ./hm_modules/sway.nix
+            ./hm_modules/jackmanb01.nix
           ];
           extraSpecialArgs = hmSpecialArgs;
         };
