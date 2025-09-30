@@ -42,9 +42,6 @@ in
     config = rec {
       bars = [];
       modifier = "Mod4";
-      keybindings = {
-        "${modifier}+q" = "kill";
-      };
     };
     # Include distro-local stuff. On NixOS this includes something important.
     extraConfig = "include /etc/sway/config.d/*";
