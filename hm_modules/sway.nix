@@ -94,7 +94,9 @@ in
       // (
         let
           workspaces = {
-            "1" = "number 1";
+            "b" = "browser";
+            "n" = "terminal";
+            "m" = "editor";
             "2" = "number 2";
             "3" = "number 3";
             "4" = "number 4";
