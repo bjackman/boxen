@@ -1,39 +1,39 @@
-  # TODO:
-  # - [x] Move hyprland config to Nix
-  # - [x] Figure out if I need an XDG portal and set one up.
-  # - [x] Make it derk mode
-  # - [ ] Get a status bar working.
-  #   - [ ] Set up battery icon if on laptop
-  #   - [x] Make power control work
-  #   - [x] Make it look nice
-  # - [x] Ensure bluetooth / sound / NetworkManager stuff is all usable
-  # - [x] Get a launcher working
-  # - [x] Figure out workspace workflow for desktop:
-  #       - super+b/n/m to switch to browser/terminal/editor workspaces
-  #       - super+shift+b/n/m to move a window to the corresponding workspace
-  #       - super+shift+h/l to move workspaces left and right between monitors
-  # - [ ] Document it for myself
-  # - [ ] Figure out how to dynamically create workspaces
-  # - [ ] Figure out how to dynamically enable/disable third monitor
-  # - [ ] Figure out an "overview" mechanism like Gnome has. I tried this:
-  #       https://code.hyprland.org/hyprwm/hyprland-plugins/src/branch/main/hyprexpo
-  #       which is an official plugin that's supposed to this but I just got an
-  #       error saying "hyrexpo:expo" wasn't valid, I guess I didn't install it
-  #       properly.
-  # - [x] Set up a lock screen
-  # - [ ] Make notifications work
-  #   - I can get notifications via `notify-send` but Firefox won't send them via
-  #     DBus.
-  # - [ ] Make screensharing work
-  #   - [x] In Firefox
-  #   - [ ] In Chrome
-  # - [x] Make Spotify work
-  # - [x] Figure out if I really wanna start services from hyprland, see about
-  #       using systemd properly.
-  # - [ ] Fix the cursor
-  # - [ ] Make hyperlinks work in terminal
-  # - [ ] Make it look like windows 98
-  # - [ ] Make volume/backlight control buttons work.
+# TODO:
+# - [x] Move hyprland config to Nix
+# - [x] Figure out if I need an XDG portal and set one up.
+# - [x] Make it derk mode
+# - [ ] Get a status bar working.
+#   - [ ] Set up battery icon if on laptop
+#   - [x] Make power control work
+#   - [x] Make it look nice
+# - [x] Ensure bluetooth / sound / NetworkManager stuff is all usable
+# - [x] Get a launcher working
+# - [x] Figure out workspace workflow for desktop:
+#       - super+b/n/m to switch to browser/terminal/editor workspaces
+#       - super+shift+b/n/m to move a window to the corresponding workspace
+#       - super+shift+h/l to move workspaces left and right between monitors
+# - [ ] Document it for myself
+# - [ ] Figure out how to dynamically create workspaces
+# - [ ] Figure out how to dynamically enable/disable third monitor
+# - [ ] Figure out an "overview" mechanism like Gnome has. I tried this:
+#       https://code.hyprland.org/hyprwm/hyprland-plugins/src/branch/main/hyprexpo
+#       which is an official plugin that's supposed to this but I just got an
+#       error saying "hyrexpo:expo" wasn't valid, I guess I didn't install it
+#       properly.
+# - [x] Set up a lock screen
+# - [ ] Make notifications work
+#   - I can get notifications via `notify-send` but Firefox won't send them via
+#     DBus.
+# - [ ] Make screensharing work
+#   - [x] In Firefox
+#   - [ ] In Chrome
+# - [x] Make Spotify work
+# - [x] Figure out if I really wanna start services from hyprland, see about
+#       using systemd properly.
+# - [ ] Fix the cursor
+# - [ ] Make hyperlinks work in terminal
+# - [ ] Make it look like windows 98
+# - [ ] Make volume/backlight control buttons work.
 {
   pkgs,
   config,

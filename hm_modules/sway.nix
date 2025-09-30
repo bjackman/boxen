@@ -40,7 +40,7 @@ in
     # --unsupported-gpu flag if needed.
     package = null;
     config = rec {
-      bars = [];
+      bars = [ ];
       modifier = "Mod4";
       terminal = "${pkgs.kitty}/bin/kitty";
       # Copy default keybindings from
