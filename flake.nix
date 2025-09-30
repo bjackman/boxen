@@ -110,6 +110,15 @@
           modules = [ ./hm_modules/jackmanb.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
+        # corp laptop
+        "jackmanb@jackmanb01" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            ./hm_modules/jackmanb.nix
+            ./hm_modules/sway.nix
+          ];
+          extraSpecialArgs = hmSpecialArgs;
+        };
       };
 
       nixosConfigurations.chungito = nixpkgs.lib.nixosSystem {
