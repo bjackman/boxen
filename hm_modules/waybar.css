@@ -14,7 +14,38 @@ window#waybar {
     border-bottom: 1px solid #404040;
 }
 
-#custom-power,
+/* Default module styling */
+.module {
+    padding: 5px 5px;
+    margin: 5px 3px;
+    color: #000000;
+}
+
+/* Left section - raised button style */
+.modules-left .module {
+    padding: 5px 10px;
+    background: #c0c0c0;
+    border-left: 1px solid #ffffff;
+    border-top: 1px solid #ffffff;
+    border-bottom: 1px solid #404040;
+    box-shadow: 1px 1px 1px 0px #000000;
+}
+
+.modules-left .module:hover {
+    box-shadow: 0px 0px 0px;
+    text-shadow: none;
+    background: #e0e0e0;
+}
+
+/* Workspaces has individual buttons that need their own styling */
+#workspaces.module {
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
 #workspaces button {
     padding: 5px 10px;
     margin: 5px 3px;
@@ -26,39 +57,20 @@ window#waybar {
     box-shadow: 1px 1px 1px 0px #000000;
 }
 
-/* lol */
-#custom-power {
-    background-image: url("@start-icon-png@");
-    background-size: 32px 32px;
-    background-repeat: no-repeat;
-}
-
 #workspaces button:hover {
     box-shadow: 0px 0px 0px;
     text-shadow: none;
     background: #e0e0e0;
 }
 
-#workspaces button.focused {
-    background: #e0e0e0;
-    color: #000000;
+/* Center section - minimal styling */
+.modules-center .module {
+    padding: 5px 10px;
 }
 
-#battery,
-#backlight,
-#pulseaudio,
-#memory,
-#cpu,
-#temperature,
-#keyboard-state,
-#network,
-#power-profiles-daemon,
-#tray,
-#clock {
-    padding: 5px 5px;
-    margin: 5px 3px;
+/* Right section - sunken style */
+.modules-right .module {
     background-color: #b0b0b0;
-    color: #000000;
     border-left: 0.5px solid #000000;
     border-top: 1px solid #000000;
     border-bottom: 1px solid #ffffff;
@@ -66,6 +78,14 @@ window#waybar {
     box-shadow: -1px -0.5px 0px 0px #000000;
 }
 
-#window {
-    padding: 5px 10px;
+/* Specific module overrides */
+#custom-power {
+    background-image: url("@start-icon-png@");
+    background-size: 32px 32px;
+    background-repeat: no-repeat;
+}
+
+#workspaces button.focused {
+    background: #e0e0e0;
+    color: #000000;
 }
