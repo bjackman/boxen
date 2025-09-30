@@ -50,20 +50,20 @@ in
         "${modifier}+Shift+q" = "kill";
         "${modifier}+d" = "exec ${config.wayland.windowManager.sway.config.menu}";
 
-        "${modifier}+${config.wayland.windowManager.sway.config.left}" = "focus left";
-        "${modifier}+${config.wayland.windowManager.sway.config.down}" = "focus down";
-        "${modifier}+${config.wayland.windowManager.sway.config.up}" = "focus up";
-        "${modifier}+${config.wayland.windowManager.sway.config.right}" = "focus right";
+        "${modifier}+h" = "focus left";
+        "${modifier}+j" = "focus down";
+        "${modifier}+k" = "focus up";
+        "${modifier}+l" = "focus right";
 
         "${modifier}+Left" = "focus left";
         "${modifier}+Down" = "focus down";
         "${modifier}+Up" = "focus up";
         "${modifier}+Right" = "focus right";
 
-        "${modifier}+Shift+${config.wayland.windowManager.sway.config.left}" = "move left";
-        "${modifier}+Shift+${config.wayland.windowManager.sway.config.down}" = "move down";
-        "${modifier}+Shift+${config.wayland.windowManager.sway.config.up}" = "move up";
-        "${modifier}+Shift+${config.wayland.windowManager.sway.config.right}" = "move right";
+        "${modifier}+Shift+h" = "move left";
+        "${modifier}+Shift+j" = "move down";
+        "${modifier}+Shift+k" = "move up";
+        "${modifier}+Shift+l" = "move right";
 
         "${modifier}+Shift+Left" = "move left";
         "${modifier}+Shift+Down" = "move down";
