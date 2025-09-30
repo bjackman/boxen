@@ -34,6 +34,7 @@
         - super+shift+h/l to move workspaces left and right between monitors
   - [ ] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [ ] Figure out if I need an XDG portal and set one up.
+  - [ ] Make Chrome login work
   - [ ] Make it derk mode
   - [ ] Get a status bar working.
     - [ ] Set up battery icon if on laptop
