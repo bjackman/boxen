@@ -82,6 +82,7 @@
     package = null; # Don't install (this is the default, but make sure)
     controlMaster = "auto";
     controlPersist = "8h";
+    forwardAgent = true; # For gnubby
     matchBlocks."bj".hostname = "bj.c.googlers.com";
   };
 }
