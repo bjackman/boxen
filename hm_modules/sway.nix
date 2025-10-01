@@ -34,6 +34,8 @@ in
     swaybg = "${pkgs.swaybg}/bin/swaybg -i ${../hm_files/common/ibm_wallpaper.png}";
   };
 
+  programs.wofi.enable = true;
+
   wayland.windowManager.sway = {
     enable = true;
     # Don't install the package, use the system once since that will have the
@@ -43,6 +45,7 @@ in
       bars = [ ];
       modifier = "Mod4";
       terminal = "${pkgs.kitty}/bin/kitty";
+      menu = "wofi --show drun";
       # Put my absolute boys on their home workspace by default
       assigns = {
         "browser" = [{ app_id = "firefox"; }];
