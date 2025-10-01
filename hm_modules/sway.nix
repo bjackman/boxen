@@ -116,6 +116,8 @@ in
         "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -5%";
         "XF86AudioMute" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-mute @DEFAULT_SINK@ toggle";
         "XF86AudioMicMute" = "exec ${pkgs.pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+        "XF86MonBrightnessUp" = "exec brightnessctl set 10%+";
+        "XF86MonBrightnessDown" = "exec brightnessctl set 10%-";
       }
       // (
         let
