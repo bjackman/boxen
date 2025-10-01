@@ -56,7 +56,7 @@ in
     config = rec {
       bars = [ ];
       modifier = "Mod4";
-      terminal = "kitty";
+      terminal = "kitty --session ${pkgs.writeText "fish.kitty-session" "launch fish"}";
       menu = "wofi --show drun";
       # Put my absolute boys on their home workspace by default
       assigns = {
