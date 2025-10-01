@@ -45,6 +45,9 @@ in
 
   programs.wofi.enable = true;
 
+  # Notification server. Works on both gLinux and NixOS.
+  services.mako.enable = true;
+
   wayland.windowManager.sway = {
     enable = true;
     # Don't install the package, use the system once since that will have the
