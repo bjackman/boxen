@@ -64,25 +64,15 @@
       temperature = {
         critical-threshold = 80;
         format = "{temperatureC}°C {icon}";
-        format-icons = [
-          ""
-          ""
-          ""
-        ];
+        # Debian's font-awesome doesn't have all the individual thermometer
+        # icons so just use a single icon to represent "temp".
+        format-icons = [ "" ];
       };
       backlight = {
         format = "{percent}% {icon}";
-        format-icons = [
-          ""
-          ""
-          ""
-          ""
-          ""
-          ""
-          ""
-          ""
-          ""
-        ];
+        # Like with temp, use a single "brightness" icon that exists in Debian's
+        # font-awesome.
+        format-icons = [ "" ];
       };
       battery = {
         states = {
