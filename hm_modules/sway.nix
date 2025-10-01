@@ -19,6 +19,15 @@ in
       assertion = osConfig.programs.sway.enable;
       message = "Must enable programs.sway.enable in NixOS config";
     }
+    # We don't want to install it here because running the NixOS version of
+    # Wayland apps on non-NixOS doesn't work.
+    # Anyway we are over-asserting here, we don't actually need
+    # programs.kitty.enable, so if you are installing it some other way feel
+    # free to change this assertion.
+    {
+      assertion = config.programs.kitty.enable;
+      message = "Must enable programs.kitty.enable in Home Manager config";
+    }
   ];
 
   # This makes sure stuff like waybar is configured as part of the correct
@@ -44,7 +53,7 @@ in
     config = rec {
       bars = [ ];
       modifier = "Mod4";
-      terminal = "${pkgs.kitty}/bin/kitty";
+      terminal = "kitty";
       menu = "wofi --show drun";
       # Put my absolute boys on their home workspace by default
       assigns = {
