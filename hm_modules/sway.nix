@@ -61,7 +61,7 @@ in
       enable = true;
       timeouts =
         let
-          lockAfterSecs = 10;
+          lockAfterSecs = 5 * 60;
           notifyWindow = 5;
         in
         [
