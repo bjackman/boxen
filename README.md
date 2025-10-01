@@ -156,4 +156,38 @@ It works like this:
 
     - There's a key binding for applying the tag that controls the muting
 
-    - The view of "mailboxes" i.e. the "query map" takes into account the tag that is output by the muting script.
+    - The view of "mailboxes" i.e. the "query map" takes into account the tag
+      that is output by the muting script.
+
+### Using it
+
+The page you open on is called the "message list". The navbar to the left shows
+you "folders" in Aerc terminology. Under this config, "folders" are actually
+defined as notmuch queries in the `query-map`.
+
+All the operations below are defined in the `binds.conf` as commands, check in
+there to see the name of the command corresponding to the keys. You can also use
+`?` to see the current bindings.
+
+- `j`/`k` scrolls in the message list itself
+- `J`/`K` scrolls between folders
+- `v` "marks" the highlighted message. `ctrl-v` marks the whole thread. `V`
+  unmarks the whole thread.
+- `a` archives the selected (marked, or currently highlighted) messages. This
+  just hides those specific messages using a notmuch tag.
+- `m` mutes the selected messages, this applies the `notmuch-propagate-mute`
+  magic.
+
+Press enter on a message to open it in the "message viewer". You'll note this
+opens a new "tab" within Aerc.
+
+- `ctrl-p`/`ctrl-n` changes between tabs.
+
+In the message viewer:
+
+- The main view is a pager, running in Aerc's internal terminal emulator. The
+  headers are at the top, I'm not sure how to navigate into those.
+- `J`/`K` flips between messages
+- `rq` is reply-all.
+- `H` toggles view of the headers in the pager. This is useful because I don't
+  know how to navigate the header view at the top.
