@@ -89,6 +89,13 @@ For NixOS hosts, Home Manager options are under
 nix eval .#nixosConfigurations.chungito.config.home-manager.users.brendan.programs.waybar.enable
 ```
 
+For hosts using Home Manager standalone, they are under
+`.#homeConfigurations.<config>`. So for example:
+
+```sh
+nix eval '.#homeConfigurations.jackmanb@jackmanb01.config.wayland.windowManager.sway.xwayland'
+```
+
 ## Secrets
 
 Secrets are stored using [agenix](https://github.com/ryantm/agenix). At runtime
