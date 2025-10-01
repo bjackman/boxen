@@ -76,4 +76,10 @@
   programs.bash.bashrcExtra = ''
     export TMUX_TMPDIR="$XDG_RUNTIME_DIR"
   '';
+
+  programs.ssh = {
+    enable = true;
+    package = null; # Don't install (this is the default, but make sure)
+    controlMaster = "auto";
+  };
 }
