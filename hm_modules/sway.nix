@@ -68,7 +68,7 @@ in
       # https://github.com/NixOS/nixpkgs/blob/d916df777523d75f7c5acca79946652f032f633e/nixos/modules/programs/wayland/sway.nix
       keybindings = {
         "${modifier}+Return" = "exec ${config.wayland.windowManager.sway.config.terminal}";
-        "${modifier}+Shift+q" = "kill";
+        "${modifier}+t" = "kill";
         "${modifier}+d" = "exec ${config.wayland.windowManager.sway.config.menu}";
 
         "${modifier}+h" = "focus left";
