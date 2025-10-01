@@ -30,6 +30,8 @@ function fish_prompt
         set --function prompt_color "brblue"
     else if set -q SSH_CLIENT
         set --function prompt_color "magenta"
+    else if set -q SHPOOL_SESSION_NAME
+        set --function prompt_color "brgreen"
     end
     if set -q SSH_CLIENT
         set --function hostname_bit "$(set_color "magenta")$(hostname --short)$(set_color normal) "
