@@ -28,6 +28,11 @@ function fish_prompt
     if set -q IN_NIX_SHELL
         set --function nix_bit "$(set_color brblue)nix$(set_color normal)"
         set --function prompt_color "brblue"
+    else if set -q SSH_CLIENT
+        set --function prompt_color "magenta"
+    end
+    if set -q SSH_CLIENT
+        set --local hostname_bit "$(set_color "magenta")$(hostname --short)$(set_color normal) "
     end
     # $CMD_DURATION is in ms.
     if [ $CMD_DURATION -gt 1000 ]
@@ -42,7 +47,7 @@ function fish_prompt
         set --function --append duration_bit (set_color normal)
     end
     # I have no idea why spaces are not needed here.
-    echo -e "\n$(set_color -b brblack)$cwd_bit$brendan_vcs_prompt $shlvl_bit $duration_bit$status_bit$nix_bit\n$(set_color  $prompt_color)❯❯$(set_color normal)  "
+    echo -e "\n$(set_color -b brblack)$hostname_bit$cwd_bit$brendan_vcs_prompt $shlvl_bit $duration_bit$status_bit$nix_bit\n$(set_color  $prompt_color)❯❯$(set_color normal)  "
 end
 
 # Useful for testing.
