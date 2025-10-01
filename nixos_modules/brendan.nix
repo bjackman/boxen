@@ -15,4 +15,5 @@
     shell = pkgs.fish;
   };
   programs.fish.enable = true;
+  programs.steam.enable = true;
 }
