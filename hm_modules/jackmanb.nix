@@ -81,6 +81,7 @@
     enable = true;
     package = null; # Don't install (this is the default, but make sure)
     controlMaster = "auto";
+    controlPersist = "8h";
     matchBlocks."bj".hostname = "bj.c.googlers.com";
   };
 }
