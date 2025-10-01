@@ -14,6 +14,14 @@ in
     ./waybar.nix
   ];
 
+  options = {
+    bjackman.sway.lockScreenCommand = lib.mkOption {
+      type = lib.types.str;
+      default = "${pkgs.swaylock}/bin/swaylock --color 888888";
+      description = "Command to use to lock screen. Executed via 'a shell'.";
+    };
+  };
+
   config = {
     assertions = lib.optionals isNixOS [
       {
@@ -48,6 +56,25 @@ in
 
     # Notification server. Works on both gLinux and NixOS.
     services.mako.enable = true;
+
+    services.swayidle = {
+      enable = true;
+      timeouts =
+        let
+          lockAfterSecs = 10;
+          notifyWindow = 5;
+        in
+        [
+          {
+            timeout = lockAfterSecs - notifyWindow;
+            command = ''${pkgs.libnotify}/bin/notify-send "Locking screen in ${toString notifyWindow}s"'';
+          }
+          {
+            timeout = lockAfterSecs;
+            command = config.bjackman.sway.lockScreenCommand;
+          }
+        ];
+    };
 
     wayland.windowManager.sway = {
       enable = true;
@@ -113,7 +140,7 @@ in
 
           "${modifier}+r" = "mode resize";
 
-          "${modifier}+c" = "exec swaylock --color 888888";
+          "${modifier}+c" = "exec ${config.bjackman.sway.lockScreenCommand}";
 
           "XF86AudioRaiseVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ +5%";
           "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -5%";
