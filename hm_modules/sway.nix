@@ -18,7 +18,7 @@ in
     bjackman.sway = {
       lockScreenCommand = lib.mkOption {
           type = lib.types.str;
-          default = "swaylock --color 888888";
+          default = "swaylock --image ${../hm_files/common/clouds_95.png} --scaling fill";
           description = "Command to use to lock screen. Executed via 'a shell'.";
       };
     };
@@ -97,7 +97,7 @@ in
         # We can set global display settings here. Individual outputs will be
         # configured in per-machine modules.
         output."*" = {
-          background = "${../hm_files/common/ibm_wallpaper.png} fill";
+          background = "${../hm_files/common/clouds.png} fill";
         };
         # Copy default keybindings from
         # https://github.com/NixOS/nixpkgs/blob/d916df777523d75f7c5acca79946652f032f633e/nixos/modules/programs/wayland/sway.nix
