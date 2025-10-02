@@ -16,9 +16,9 @@
 window#waybar {
     background: #c0c0c0;
     color: #000000;
-    box-shadow: 0px 0px 6px 0px #000000;  /* Drop shadow for depth */
-    border-top: 2px solid #ffffff;        /* Light border on top */
-    border-bottom: 2px solid #404040;     /* Dark border on bottom */
+    box-shadow: 0px 0px 6px 0px #000000; /* Drop shadow for depth */
+    border-top: 2px solid #ffffff; /* Light border on top */
+    border-bottom: 2px solid #404040; /* Dark border on bottom */
 }
 
 /* Default module styling - base properties for all modules */
@@ -35,11 +35,11 @@ window#waybar {
 .modules-left .module {
     padding: 3px 8px;
     background: #c0c0c0;
-    border-left: 2px solid #ffffff;        /* Light left border */
-    border-top: 2px solid #ffffff;         /* Light top border */
-    border-bottom: 2px solid #404040;      /* Dark bottom border */
-    border-right: 2px solid #404040;       /* Dark right border */
-    box-shadow: inset -2px -2px 2px rgba(0,0,0,0.3);  /* Internal shadow from bottom-right */
+    border-left: 2px solid #ffffff; /* Light left border */
+    border-top: 2px solid #ffffff; /* Light top border */
+    border-bottom: 2px solid #404040; /* Dark bottom border */
+    border-right: 2px solid #404040; /* Dark right border */
+    box-shadow: inset -2px -2px 2px rgba(0, 0, 0, 0.3); /* Internal shadow from bottom-right */
 }
 
 /* Hover state - flatten the button by removing inset shadow */
@@ -52,11 +52,11 @@ window#waybar {
 /* Active/pressed state - flip to sunken appearance */
 .modules-left .module:active {
     background: #a0a0a0;
-    border-left: 2px solid #808080;        /* Dark left border */
-    border-top: 2px solid #808080;         /* Dark top border */
-    border-bottom: 2px solid #ffffff;      /* Light bottom border */
-    border-right: 2px solid #ffffff;       /* Light right border */
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);  /* Subtle internal shadow from top-left */
+    border-left: 2px solid #808080; /* Dark left border */
+    border-top: 2px solid #808080; /* Dark top border */
+    border-bottom: 2px solid #ffffff; /* Light bottom border */
+    border-right: 2px solid #ffffff; /* Light right border */
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.08); /* Subtle internal shadow from top-left */
 }
 
 /*
@@ -77,11 +77,11 @@ window#waybar {
     margin: 5px 3px;
     background: #c0c0c0;
     color: #000000;
-    border-left: 2px solid #ffffff;        /* Light left border */
-    border-top: 2px solid #ffffff;         /* Light top border */
-    border-bottom: 2px solid #404040;      /* Dark bottom border */
-    border-right: 2px solid #404040;       /* Dark right border */
-    box-shadow: inset -2px -2px 2px rgba(0,0,0,0.3);  /* Internal shadow from bottom-right */
+    border-left: 2px solid #ffffff; /* Light left border */
+    border-top: 2px solid #ffffff; /* Light top border */
+    border-bottom: 2px solid #404040; /* Dark bottom border */
+    border-right: 2px solid #404040; /* Dark right border */
+    box-shadow: inset -2px -2px 2px rgba(0, 0, 0, 0.3); /* Internal shadow from bottom-right */
 }
 
 /* Workspace button hover state */
@@ -94,11 +94,11 @@ window#waybar {
 /* Workspace button pressed state */
 #workspaces button:active {
     background: #a0a0a0;
-    border-left: 2px solid #808080;        /* Dark left border */
-    border-top: 2px solid #808080;         /* Dark top border */
-    border-bottom: 2px solid #ffffff;      /* Light bottom border */
-    border-right: 2px solid #ffffff;       /* Light right border */
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);  /* Subtle internal shadow from top-left */
+    border-left: 2px solid #808080; /* Dark left border */
+    border-top: 2px solid #808080; /* Dark top border */
+    border-bottom: 2px solid #ffffff; /* Light bottom border */
+    border-right: 2px solid #ffffff; /* Light right border */
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.08); /* Subtle internal shadow from top-left */
 }
 
 /*
@@ -109,10 +109,10 @@ window#waybar {
 .modules-right .module {
     padding: 3px 3px;
     background-color: #b0b0b0;
-    border-left: 2px solid #808080;        /* Dark left border (not full black) */
-    border-top: 2px solid #808080;         /* Dark top border (not full black) */
-    border-bottom: 2px solid #ffffff;      /* Light bottom border */
-    border-right: 2px solid #ffffff;       /* Light right border */
+    border-left: 2px solid #808080; /* Dark left border (not full black) */
+    border-top: 2px solid #808080; /* Dark top border (not full black) */
+    border-bottom: 2px solid #ffffff; /* Light bottom border */
+    border-right: 2px solid #ffffff; /* Light right border */
     /* No inset shadow - borders do all the work for subtle effect */
 }
 
@@ -130,11 +130,11 @@ window#waybar {
 
 /* Focused/active workspace button - stays sunken to show selection */
 #workspaces button.focused {
-    background: #d0d0d0;                   /* Slightly lighter than pressed state */
+    background: #d0d0d0; /* Slightly lighter than pressed state */
     color: #000000;
-    border-left: 2px solid #808080;        /* Dark left border */
-    border-top: 2px solid #808080;         /* Dark top border */
-    border-bottom: 2px solid #ffffff;      /* Light bottom border */
-    border-right: 2px solid #ffffff;       /* Light right border */
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.08);  /* Subtle internal shadow from top-left */
+    border-left: 2px solid #808080; /* Dark left border */
+    border-top: 2px solid #808080; /* Dark top border */
+    border-bottom: 2px solid #ffffff; /* Light bottom border */
+    border-right: 2px solid #ffffff; /* Light right border */
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.08); /* Subtle internal shadow from top-left */
 }
