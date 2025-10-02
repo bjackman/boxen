@@ -15,10 +15,12 @@ in
   ];
 
   options = {
-    bjackman.sway.lockScreenCommand = lib.mkOption {
-      type = lib.types.str;
-      default = "swaylock --color 888888";
-      description = "Command to use to lock screen. Executed via 'a shell'.";
+    bjackman.sway = {
+      lockScreenCommand = lib.mkOption {
+          type = lib.types.str;
+          default = "swaylock --color 888888";
+          description = "Command to use to lock screen. Executed via 'a shell'.";
+      };
     };
   };
 
@@ -47,14 +49,6 @@ in
     # systemd target, otherwise it gets put under graphical-session.target and
     # then doesn't work properly when restarting hyprland.
     wayland.systemd.target = "sway-session.target";
-
-    # Note this will probably also be affected by the flakiness commented on
-    # programs.waybar.systemd.enable above.
-    bjackman.wayland-services = {
-      # Don't know why we need to run a program for this lol. It sets the
-      # wallpaper then sits there forever.
-      swaybg = "${pkgs.swaybg}/bin/swaybg --mode fill --image ${../hm_files/common/clouds_95.png}";
-    };
 
     programs.wofi.enable = true;
 
@@ -85,6 +79,10 @@ in
       # Don't install the package, use the system once since that will have the
       # --unsupported-gpu flag if needed.
       package = null;
+      # Include distro-local stuff. On NixOS this includes something
+      # important. On Debian it includes the default background so we put it
+      # in extraConfigEarly so that we can override it with our dank pix.
+      extraConfigEarly = "include /etc/sway/config.d/*";
       config = rec {
         bars = [ ];
         modifier = "Mod4";
@@ -95,6 +93,11 @@ in
           "browser" = [ { app_id = "firefox"; } ];
           "terminal" = [ { app_id = "kitty"; } ];
           "editor" = [ { app_id = "dev.zed.Zed"; } ];
+        };
+        # We can set global display settings here. Individual outputs will be
+        # configured in per-machine modules.
+        output."*" = {
+          background = "${../hm_files/common/ibm_wallpaper.png} fill";
         };
         # Copy default keybindings from
         # https://github.com/NixOS/nixpkgs/blob/d916df777523d75f7c5acca79946652f032f633e/nixos/modules/programs/wayland/sway.nix
@@ -178,8 +181,6 @@ in
           ) workspaces)
         );
       };
-      # Include distro-local stuff. On NixOS this includes something important.
-      extraConfig = "include /etc/sway/config.d/*";
     };
   };
 }

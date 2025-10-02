@@ -106,9 +106,6 @@ in
     # This daemon translates DBus notification messages into "hyprctl notify"
     # calls, which just creates a notification natively inside hyprland.
     hyprnotify = "${pkgs.hyprnotify}/bin/hyprnotify";
-    # Don't know why we need to run a program for this lol. It sets the
-    # wallpaper then sits there forever.
-    swaybg = "${pkgs.swaybg}/bin/swaybg -i ${../hm_files/common/ibm_wallpaper.png}";
   };
 
   # I don't really understand this bit. IIUC this only matters for Flatpak apps,
