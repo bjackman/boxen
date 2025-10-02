@@ -138,3 +138,11 @@ window#waybar {
     border-right: 2px solid #ffffff; /* Light right border */
     box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.08); /* Subtle internal shadow from top-left */
 }
+
+/*
+ * Go red when capslock is on. This looks a bit crap. The class doesn't get set
+ * on the overall container though, only the label inside it. Whatever.
+ */
+#keyboard-state label.locked {
+    background: #bb4454;
+}

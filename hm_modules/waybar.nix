@@ -41,10 +41,13 @@
       ];
       keyboard-state = {
         capslock = true;
-        format = "{name} {icon}";
+        format = "{icon}";
         format-icons = {
-          locked = "";
-          unlocked = "";
+          # Changing the text like this reflows the bar and it looks a bit crap.
+          # I tried to fix this with CSS but it's not really properly supported.
+          # Whatever.
+          locked = "CAPS";
+          unlocked = "caps";
         };
       };
       tray = {
