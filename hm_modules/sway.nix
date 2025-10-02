@@ -49,7 +49,7 @@ in
     bjackman.wayland-services = {
       # Don't know why we need to run a program for this lol. It sets the
       # wallpaper then sits there forever.
-      swaybg = "${pkgs.swaybg}/bin/swaybg -i ${../hm_files/common/ibm_wallpaper.png}";
+      swaybg = "${pkgs.swaybg}/bin/swaybg --mode fill --image ${../hm_files/common/clouds_95.png}";
     };
 
     programs.wofi.enable = true;
