@@ -17,7 +17,7 @@ in
   options = {
     bjackman.sway.lockScreenCommand = lib.mkOption {
       type = lib.types.str;
-      default = "${pkgs.swaylock}/bin/swaylock --color 888888";
+      default = "swaylock --color 888888";
       description = "Command to use to lock screen. Executed via 'a shell'.";
     };
   };
@@ -28,14 +28,18 @@ in
         assertion = osConfig.programs.sway.enable;
         message = "Must enable programs.sway.enable in NixOS config";
       }
-      # We don't want to install it here because running the NixOS version of
-      # Wayland apps on non-NixOS doesn't work.
+      # We don't want to install these here because running the NixOS version of
+      # (some?) Wayland apps on non-NixOS doesn't work.
       # Anyway we are over-asserting here, we don't actually need
-      # programs.kitty.enable, so if you are installing it some other way feel
+      # programs.$thing.enable, so if you are installing it some other way feel
       # free to change this assertion.
       {
         assertion = config.programs.kitty.enable;
         message = "Must enable programs.kitty.enable in Home Manager config";
+      }
+      {
+        assertion = config.programs.swaylock.enable;
+        message = "Must enable programs.swaylock.enable in Home Manager config";
       }
     ];
 
