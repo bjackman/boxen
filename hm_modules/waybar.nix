@@ -33,11 +33,11 @@
         "temperature"
         "backlight"
         "keyboard-state"
-        "clock"
         # We're gonna run nm-applet which should show up in the tray, but also
         # put the network module next to it since it has some nice info there.
         "network"
         "tray"
+        "clock"
       ];
       keyboard-state = {
         capslock = true;
