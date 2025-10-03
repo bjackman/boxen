@@ -78,6 +78,10 @@ in
       # important. On Debian it includes the default background so we put it
       # in extraConfigEarly so that we can override it with our dank pix.
       extraConfigEarly = "include /etc/sway/config.d/*";
+      # Lock when laptop lid closed
+      extraConfig = ''
+        bindswitch lid:on exec ${lib.getExe config.programs.swaylock.package}
+      '';
       config = rec {
         bars = [ ];
         modifier = "Mod4";
