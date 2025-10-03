@@ -29,10 +29,6 @@ in
         assertion = config.programs.kitty.enable;
         message = "Must enable programs.kitty.enable in Home Manager config";
       }
-      {
-        assertion = config.programs.swaylock.enable;
-        message = "Must enable programs.swaylock.enable in Home Manager config";
-      }
     ];
 
     # This makes sure stuff like waybar is configured as part of the correct
