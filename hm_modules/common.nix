@@ -130,5 +130,9 @@
         set -as terminal-features ",*:hyperlinks"
       '';
     };
+
+    programs.kitty.settings = {
+      enable_audio_bell = false;
+    };
   };
 }
