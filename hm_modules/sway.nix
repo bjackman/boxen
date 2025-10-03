@@ -14,16 +14,6 @@ in
     ./waybar.nix
   ];
 
-  options = {
-    bjackman.sway = {
-      lockScreenCommand = lib.mkOption {
-          type = lib.types.str;
-          default = "swaylock --image ${../hm_files/common/clouds_95.png} --scaling fill";
-          description = "Command to use to lock screen. Executed via 'a shell'.";
-      };
-    };
-  };
-
   config = {
     assertions = lib.optionals isNixOS [
       {
@@ -69,9 +59,17 @@ in
           }
           {
             timeout = lockAfterSecs;
-            command = config.bjackman.sway.lockScreenCommand;
+            command = "${lib.getExe config.programs.swaylock.package}";
           }
         ];
+    };
+
+    programs.swaylock = {
+      enable = true;
+      settings = {
+        image = ../hm_files/common/clouds_95.png;
+        scaling = "fill";
+      };
     };
 
     wayland.windowManager.sway = {
@@ -148,7 +146,7 @@ in
 
           "${modifier}+r" = "mode resize";
 
-          "${modifier}+c" = "exec ${config.bjackman.sway.lockScreenCommand}";
+          "${modifier}+c" = "exec ${lib.getExe config.programs.swaylock.package}";
 
           "XF86AudioRaiseVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ +5%";
           "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -5%";
