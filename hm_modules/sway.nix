@@ -47,6 +47,14 @@ in
 
     services.swayidle = {
       enable = true;
+      # Lock screen when going to sleep.
+      events = [
+        {
+          event = "before-sleep";
+          command = "${lib.getExe config.programs.swaylock.package}";
+        }
+      ];
+      # Lock screen after being idle for a while.
       timeouts =
         let
           lockAfterSecs = 5 * 60;
