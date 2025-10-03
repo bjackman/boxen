@@ -20,15 +20,6 @@ in
         assertion = osConfig.programs.sway.enable;
         message = "Must enable programs.sway.enable in NixOS config";
       }
-      # We don't want to install these here because running the NixOS version of
-      # (some?) Wayland apps on non-NixOS doesn't work.
-      # Anyway we are over-asserting here, we don't actually need
-      # programs.$thing.enable, so if you are installing it some other way feel
-      # free to change this assertion.
-      {
-        assertion = config.programs.kitty.enable;
-        message = "Must enable programs.kitty.enable in Home Manager config";
-      }
     ];
 
     # This makes sure stuff like waybar is configured as part of the correct
@@ -75,6 +66,8 @@ in
         scaling = "fill";
       };
     };
+
+    programs.kitty.enable = true;
 
     wayland.windowManager.sway = {
       enable = true;
