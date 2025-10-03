@@ -133,6 +133,7 @@
 
     programs.kitty.settings = {
       enable_audio_bell = false;
+      allow_remote_control = true;
     };
   };
 }
