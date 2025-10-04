@@ -12,6 +12,7 @@
     ./git.nix
     ./zed.nix
     ./scripts.nix
+    ./dark-mode.nix
     agenix.homeManagerModules.default
   ];
 
