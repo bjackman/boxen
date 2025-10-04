@@ -41,19 +41,22 @@ in
           command = "${lib.getExe config.programs.swaylock.package}";
         }
       ];
+      # Debug mode - this is just basic logging, should be default.
+      extraArgs = [ "-d" ];
       # Lock screen after being idle for a while.
       timeouts =
         let
-          lockAfterSecs = 5 * 60;
-          notifyWindow = 5;
+          warnAfterSecs = 3 * 60;
+          lockAfterSecs = 5;
+          powerOffAfterSecs = 2 * 60;
         in
         [
           {
-            timeout = lockAfterSecs - notifyWindow;
-            command = ''${pkgs.libnotify}/bin/notify-send --expire-time ${toString (notifyWindow * 1000)} "Locking screen in ${toString notifyWindow}s"'';
+            timeout = warnAfterSecs;
+            command = ''${pkgs.libnotify}/bin/notify-send --expire-time ${toString (lockAfterSecs * 1000)} "Locking screen in ${toString (lockAfterSecs)}s"'';
           }
           {
-            timeout = lockAfterSecs;
+            timeout = warnAfterSecs + lockAfterSecs;
             command = "${lib.getExe config.programs.swaylock.package}";
           }
         ];
