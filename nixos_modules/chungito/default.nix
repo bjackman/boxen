@@ -69,5 +69,11 @@
   hardware.nvidia.open = true;
   programs.sway.extraOptions = [ "--unsupported-gpu" ];
 
+  services.openssh = {
+    enable = true;
+    settings.PasswordAuthentication = false;
+  };
+  services.tailscale.enable = true;
+
   system.stateVersion = "25.05";
 }
