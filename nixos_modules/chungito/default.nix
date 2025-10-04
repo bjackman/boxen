@@ -101,6 +101,7 @@
       "/var/lib/bluetooth" # Apparently bluetooth pairing is system-global.
       "/var/lib/nixos" # Needed for consistent UIDs
       "/var/lib/systemd/coredump"
+      "/var/lib/tailscale"
       "/etc/NetworkManager/system-connections"
       "/var/lib/AccountsService" # Used by GDM to remember last choice of desktop.
     ];
