@@ -26,6 +26,8 @@
     extraModulePackages = [ ];
   };
 
+  system.nixos.label = "no-impermanence";
+
   fileSystems = {
     "/" = {
       device = "/dev/disk/by-uuid/62a99aff-132c-43c9-9c19-6c46e60312cf";
