@@ -90,6 +90,18 @@
   # https://discourse.nixos.org/t/suspend-problem/54033/28
   # https://discourse.nixos.org/t/black-screen-after-suspend-hibernate-with-nvidia/54341/6:
 
+  # sleep-then-hibernate doesn't work due to some Nvidia bullshit or other:
+  #
+  # NVRM: GPU 0000:0a:00.0: PreserveVideoMemoryAllocations module parameter is set.
+  # System Power Management attempted without driver procfs suspend interface.
+  # nvidia 0000:0a:00.0: PM: failed to suspend async: error -5
+  # PM: Some devices failed to suspend, or early wake event detected
+  #
+  # So, just skip the suspend step and go right to hibernando.
+  services.logind.extraConfig = ''
+    SleepOperation=hibernate
+  '';
+
   users.mutableUsers = false;
 
   # Note this is coupled with the fileSystems definition which is currently in
