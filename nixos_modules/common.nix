@@ -16,4 +16,7 @@
   # You'd think this would be really slow but it's fine in practice because
   # you're mostly getting cache hits.
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
+  # Run a regular service to optimize the Nix store.
+  nix.optimise.automatic = true;
 }
