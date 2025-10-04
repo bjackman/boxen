@@ -79,6 +79,8 @@ in
       settings = {
         image = ../hm_files/common/clouds_95.png;
         scaling = "fill";
+        # Stop it from blocking suspend and stuff when called e.g. from swayidle before-sleep.
+        daemonize = true;
       };
     };
 
