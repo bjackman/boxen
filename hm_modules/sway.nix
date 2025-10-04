@@ -59,6 +59,11 @@ in
             timeout = warnAfterSecs + lockAfterSecs;
             command = "${lib.getExe config.programs.swaylock.package}";
           }
+          {
+            timeout = warnAfterSecs + lockAfterSecs + powerOffAfterSecs;
+            command = ''${pkgs.sway}/bin/swaymsg output "*" power off'';
+            resumeCommand = ''${pkgs.sway}/bin/swaymsg output "*" power on'';
+          }
         ];
     };
 
