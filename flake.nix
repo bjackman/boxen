@@ -16,6 +16,7 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    impermanence.url = "github:nix-community/impermanence";
   };
   outputs =
     {
@@ -25,6 +26,7 @@
       home-manager,
       limmat,
       agenix,
+      impermanence,
       ...
     }:
     let
@@ -124,6 +126,7 @@
         system = "x86_64-linux";
         modules = [
           ./nixos_modules/chungito
+          impermanence.nixosModules.impermanence
           home-manager.nixosModules.home-manager
           {
             home-manager = {

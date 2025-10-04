@@ -92,5 +92,21 @@
 
   users.mutableUsers = false;
 
+  # Note this is coupled with the fileSystems definition which is currently in
+  # ./hardware-configuration.nix
+  environment.persistence."/persistent" = {
+    hideMounts = true;  # Don't spam all these mounts in file managers.
+    directories = [
+      "/var/log"
+      "/var/lib/bluetooth"  # Apparently bluetooth pairing is system-global.
+      "/var/lib/nixos"      # Needed for consistent UIDs
+      "/var/lib/systemd/coredump"
+      "/etc/NetworkManager/system-connections"
+    ];
+    files = [
+      "/etc/machine-id"
+    ];
+  };
+
   system.stateVersion = "25.05";
 }

@@ -23,4 +23,23 @@
   };
   programs.fish.enable = true;
   programs.steam.enable = true;
+
+  # TODO: This is coupled with the chungito configuration (assuming /persistent exists).
+  environment.persistence."/persistent".users.brendan = {
+    directories = [
+      "Downloads"
+      "Music"
+      "Pictures"
+      "Documents"
+      "Videos"
+      "src"
+      ".cache"
+      ".local/share/z"
+      ".local/share/fish"
+      ".local/share/zed"
+      { directory = ".mozilla/firefox"; mode = "0700"; }
+      { directory = ".ssh"; mode = "0700"; }
+      { directory = ".local/share/keyrings"; mode = "0700"; }
+    ];
+  };
 }

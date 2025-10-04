@@ -26,12 +26,24 @@
     extraModulePackages = [ ];
   };
 
-  system.nixos.label = "no-impermanence";
-
   fileSystems = {
     "/" = {
+      device = "none";
+      fsType = "tmpfs";
+      options = [ "defaults" "size=25%" "mode=755" ];
+    };
+
+    "/persistent" = {
       device = "/dev/disk/by-uuid/62a99aff-132c-43c9-9c19-6c46e60312cf";
       fsType = "ext4";
+      neededForBoot = true;
+    };
+
+    "/nix" = {
+      device = "/persistent/nix";
+      fsType = "none";
+      options = [ "bind" ];
+      neededForBoot = true;  # Well, I assume so anyway.
     };
 
     "/boot" = {
