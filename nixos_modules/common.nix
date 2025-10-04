@@ -19,4 +19,9 @@
 
   # Run a regular service to optimize the Nix store.
   nix.optimise.automatic = true;
+
+  nix.gc = {
+    automatic = true;
+    options = "--delete-older-than 30d";
+  };
 }
