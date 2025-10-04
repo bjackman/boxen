@@ -11,4 +11,9 @@
   # https://discourse.nixos.org/t/unable-to-fix-too-many-open-files-error/27094/10?u=bjackman
   # But that didn't do anything for me for whatever reason.
   systemd.extraConfig = "DefaultLimitNOFILE=65536";
+  #
+  # This lets you build NixOS for Arm hosts, using binfmt_misc magic and QEMU.
+  # You'd think this would be really slow but it's fine in practice because
+  # you're mostly getting cache hits.
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 }
