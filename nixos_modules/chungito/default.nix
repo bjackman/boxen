@@ -90,5 +90,7 @@
   # https://discourse.nixos.org/t/suspend-problem/54033/28
   # https://discourse.nixos.org/t/black-screen-after-suspend-hibernate-with-nvidia/54341/6:
 
+  users.mutableUsers = false;
+
   system.stateVersion = "25.05";
 }
