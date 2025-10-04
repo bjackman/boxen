@@ -24,14 +24,4 @@
     automatic = true;
     options = "--delete-older-than 30d";
   };
-
-  # Go to sleep when idle for a while. IIUC the "sleep" action is a kinda
-  # composite action that picks whatever action is available from
-  # SleepOperation=. So probably it's sleep-then-hibernate. Note I also have
-  # totally separate configuration in sway that deals with locking the screen.
-  # That's because that also works on gLinux.
-  services.logind.extraConfig = ''
-    IdleAction=sleep
-    IdleActionSec=${5 * 60}
-  '';
 }
