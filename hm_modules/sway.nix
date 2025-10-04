@@ -48,7 +48,8 @@ in
         let
           warnAfterSecs = 3 * 60;
           lockAfterSecs = 5;
-          powerOffAfterSecs = 2 * 60;
+          screenOffAfterSecs = 2 * 60;
+          sleepAfterSecs = 3 * 60;
         in
         [
           {
@@ -60,9 +61,15 @@ in
             command = "${lib.getExe config.programs.swaylock.package}";
           }
           {
-            timeout = warnAfterSecs + lockAfterSecs + powerOffAfterSecs;
+            timeout = warnAfterSecs + lockAfterSecs + screenOffAfterSecs;
             command = ''${pkgs.sway}/bin/swaymsg output "*" power off'';
             resumeCommand = ''${pkgs.sway}/bin/swaymsg output "*" power on'';
+          }
+          {
+            timeout = warnAfterSecs + lockAfterSecs + screenOffAfterSecs;
+            # `systemctl --user show-environment` shows that systemctl is in the
+            # PATH for systemd services at least on NixOS.
+            command = ''systemctl sleep'';
           }
         ];
     };
