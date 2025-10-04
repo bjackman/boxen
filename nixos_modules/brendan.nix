@@ -37,9 +37,18 @@
       ".local/share/z"
       ".local/share/fish"
       ".local/share/zed"
-      { directory = ".mozilla/firefox"; mode = "0700"; }
-      { directory = ".ssh"; mode = "0700"; }
-      { directory = ".local/share/keyrings"; mode = "0700"; }
+      {
+        directory = ".mozilla/firefox";
+        mode = "0700";
+      }
+      {
+        directory = ".ssh";
+        mode = "0700";
+      }
+      {
+        directory = ".local/share/keyrings";
+        mode = "0700";
+      }
     ];
   };
 }

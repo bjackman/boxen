@@ -30,7 +30,11 @@
     "/" = {
       device = "none";
       fsType = "tmpfs";
-      options = [ "defaults" "size=25%" "mode=755" ];
+      options = [
+        "defaults"
+        "size=25%"
+        "mode=755"
+      ];
     };
 
     "/persistent" = {
@@ -43,7 +47,7 @@
       device = "/persistent/nix";
       fsType = "none";
       options = [ "bind" ];
-      neededForBoot = true;  # Well, I assume so anyway.
+      neededForBoot = true; # Well, I assume so anyway.
     };
 
     "/boot" = {
