@@ -75,5 +75,20 @@
   };
   services.tailscale.enable = true;
 
+  # Didn't help:
+  # https://discourse.nixos.org/t/psa-for-those-with-hibernation-issues-on-nvidia/61834
+
+  # This gets rid of the issue where the screen is blank after
+  # resume-from-suspend. No idea why.
+  # https://discourse.nixos.org/t/suspend-problem/54033/3:
+  hardware.nvidia.powerManagement.enable = true;
+  # Something that didn't work to fix the above:
+  # boot.extraModprobeConfig = ''
+  #   options nvidia_modeset vblank_sem_control=0
+  # '';
+  # There are a few other things in these threads that I didn't try:
+  # https://discourse.nixos.org/t/suspend-problem/54033/28
+  # https://discourse.nixos.org/t/black-screen-after-suspend-hibernate-with-nvidia/54341/6:
+
   system.stateVersion = "25.05";
 }
