@@ -16,6 +16,7 @@
       libnotify # Useful for testing when faffing around with hyprnotify
       spotify
       imagemagick
+      signal-desktop
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
