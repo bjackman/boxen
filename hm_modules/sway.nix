@@ -81,13 +81,24 @@ in
       # Lock when laptop lid closed
       extraConfig = ''
         bindswitch lid:on exec ${lib.getExe config.programs.swaylock.package}
+
+        # These apps open on specific workspaces. This can be confusing if it
+        # doesn't also focus that workspace, since the app opens but you can't
+        # see it. So also explicitly set them to focus when opened. I think this
+        # is already the default when it opens on the current workspace. I can't
+        # figure out how to make this "focus workspace on open" the global
+        # default, but I guess it's only an issue for these specific apps.
+        for_window [app_id=kitty|firefox|dev.zed.Zed] focus
+        # This lets apps focus themselves unconditionally.
+        focus_on_window_activation focus
       '';
       config = rec {
         bars = [ ];
         modifier = "Mod4";
         terminal = "kitty --session ${pkgs.writeText "fish.kitty-session" "launch fish"}";
         menu = "wofi --show drun";
-        # Put my absolute boys on their home workspace by default
+        # Put my absolute boys on their home workspace by default. Update the
+        # for_window above if you change this.
         assigns = {
           "browser" = [ { app_id = "firefox"; } ];
           "terminal" = [ { app_id = "kitty"; } ];
