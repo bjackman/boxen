@@ -131,11 +131,23 @@
     ];
   };
 
-  services.transmission.enable = true;
-
-  age.secrets = {
-    jellyfin-admin-password-hash.file = ../../secrets/jellyfin-admin-password-hash.age;
+  age.secrets.transmission-rpc-password-json.file = ../../secrets/transmission-rpc-password.json.age;
+  services.transmission = {
+    enable = true;
+    openRPCPort = true;
+    settings = {
+      rpc-bind-address = "0.0.0.0";
+      rpc-whitelist-enabled = false;
+      rpc-authentication-required = true;
+      rpc-username = "brendan";
+    };
+    # This is a weird roundabout way to set rpc-password in the the settings.
+    # The name of the option is bad, it's actually a JSON file that gets merged
+    # with the settings above.
+    credentialsFile = config.age.secrets.transmission-rpc-password-json.path;
   };
+
+  age.secrets.jellyfin-admin-password-hash.file = ../../secrets/jellyfin-admin-password-hash.age;
   # https://github.com/Sveske-Juice/declarative-jellyfin/blob/main/examples/fullexample.nix
   services.declarative-jellyfin = {
     system.serverName = "Chungito Declarativo";

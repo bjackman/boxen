@@ -22,4 +22,9 @@ in
   # Password for Jellyfin admin account, hashed as per
   # https://github.com/Sveske-Juice/declarative-jellyfin/tree/main?tab=readme-ov-file#generate-user-password-hash
   "jellyfin-admin-password-hash.age".publicKeys = all-personal;
+  # Contains a JSON object of the form { "rpc-password": "{asfjdsakl.H" }.
+  # The value is the hash of password for the Transmission daemon. To generate
+  # the hash, I wrote it into the settings.json manually and then restarted the
+  # service. The transmission edits the settings file lol.
+  "transmission-rpc-password.json.age".publicKeys = all-personal;
 }
