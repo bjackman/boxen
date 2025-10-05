@@ -114,6 +114,7 @@
       "/var/lib/nixos" # Needed for consistent UIDs
       "/var/lib/systemd/coredump"
       "/var/lib/tailscale"
+      "/var/lib/transmission"
       "/etc/NetworkManager/system-connections"
       "/var/lib/AccountsService" # Used by GDM to remember last choice of desktop.
       "/var/lib/systemd/timers" # Ensure we don't forget persistent timer state.
@@ -126,6 +127,8 @@
       "/etc/ssh/ssh_host_rsa_key.pub"
     ];
   };
+
+  services.transmission.enable = true;
 
   system.stateVersion = "25.05";
 }
