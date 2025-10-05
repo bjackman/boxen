@@ -114,7 +114,10 @@
       "/var/lib/nixos" # Needed for consistent UIDs
       "/var/lib/systemd/coredump"
       "/var/lib/tailscale"
-      "/var/lib/transmission"
+      {
+        directory = "/var/lib/transmission";
+        mode = "0755";
+      }
       "/etc/NetworkManager/system-connections"
       "/var/lib/AccountsService" # Used by GDM to remember last choice of desktop.
       "/var/lib/systemd/timers" # Ensure we don't forget persistent timer state.
@@ -129,6 +132,38 @@
   };
 
   services.transmission.enable = true;
+
+  age.secrets = {
+    jellyfin-admin-password-hash.file = ../../secrets/jellyfin-admin-password-hash.age;
+  };
+  # https://github.com/Sveske-Juice/declarative-jellyfin/blob/main/examples/fullexample.nix
+  services.declarative-jellyfin = {
+    system.serverName = "Chungito Declarativo";
+    serverId = "db7bd3ba3d7b404eb430715b3b977dc1"; # uuidgen -r | sed 's/-//g'
+    enable = true;
+    users = {
+      brendan = {
+        mutable = false;
+        permissions.isAdministrator = true;
+        hashedPasswordFile = config.age.secrets.jellyfin-admin-password-hash.path;
+      };
+    };
+    libraries.Movies = {
+      enabled = true;
+      contentType = "movies";
+      pathInfos = [ "/var/lib/transmission/Downloads" ];
+      typeOptions.Movies = {
+        metadataFetchers = [
+          "The Open Movie Database"
+          "TheMovieDb"
+        ];
+        imageFetchers = [
+          "The Open Movie Database"
+          "TheMovieDb"
+        ];
+      };
+    };
+  };
 
   system.stateVersion = "25.05";
 }

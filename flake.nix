@@ -17,6 +17,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     impermanence.url = "github:nix-community/impermanence";
+    declarative-jellyfin = {
+      url = "github:Sveske-Juice/declarative-jellyfin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -27,6 +31,7 @@
       limmat,
       agenix,
       impermanence,
+      declarative-jellyfin,
       ...
     }:
     let
@@ -50,7 +55,10 @@
       };
       # Hm. This is how I'm passing in stuff to my home manager modules that
       # needs to be a flake input. This seems kinda yucky, I think I'm doing
-      # something wrong here.
+      # something wrong here. For the NixOS modules below, instead of injecting
+      # the flake inputs via specialArgs, I just listed them explicitly where I
+      # instantiate the config. For the pkgsUnstable thing, an alternative would
+      # just be to inject the pacakges into pkgs, via an overlay.
       hmSpecialArgs = {
         inherit pkgsUnstable;
         inherit agenix;
@@ -127,6 +135,8 @@
         modules = [
           ./nixos_modules/chungito
           impermanence.nixosModules.impermanence
+          agenix.nixosModules.default
+          declarative-jellyfin.nixosModules.default
           home-manager.nixosModules.home-manager
           {
             home-manager = {
@@ -150,6 +160,7 @@
           limmat.packages."${system}".default
           agenix.packages."${system}".default
           pkgs.nix-diff
+          declarative-jellyfin.packages."${system}".genhash
         ];
       };
     };
