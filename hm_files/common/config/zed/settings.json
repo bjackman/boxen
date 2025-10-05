@@ -22,5 +22,6 @@
       "show_whitespaces": "none",
       "tab_size": 2
     }
-  }
+  },
+  "use_autoclose": false
 }
