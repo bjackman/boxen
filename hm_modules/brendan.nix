@@ -12,6 +12,8 @@
       file
       tree
       pstree
+      pciutils
+      lshw
       btop
       libnotify # Useful for testing when faffing around with hyprnotify
       spotify
