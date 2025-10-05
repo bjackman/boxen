@@ -54,7 +54,9 @@ in
         [
           {
             timeout = warnAfterSecs;
-            command = ''${pkgs.libnotify}/bin/notify-send --expire-time ${toString (lockAfterSecs * 1000)} "Locking screen in ${toString (lockAfterSecs)}s"'';
+            command = ''${pkgs.libnotify}/bin/notify-send --expire-time ${
+              toString (lockAfterSecs * 1000)
+            } "Locking screen in ${toString (lockAfterSecs)}s"'';
           }
           {
             timeout = warnAfterSecs + lockAfterSecs;
