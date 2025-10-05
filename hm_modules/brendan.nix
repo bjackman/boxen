@@ -19,6 +19,7 @@
       spotify
       imagemagick
       signal-desktop
+      jq
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
