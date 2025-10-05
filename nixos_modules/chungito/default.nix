@@ -148,6 +148,23 @@
         hashedPasswordFile = config.age.secrets.jellyfin-admin-password-hash.path;
       };
     };
+    # THIS BIT IS HARDWARE-SPECIFIC, it means I have an NVidia GPU.
+    encoding = {
+      hardwareAccelerationType = "nvenc";
+      # These next bits might be wrong, I'm trusting Claude here.
+      hardwareDecodingCodecs = [
+        "h264"
+        "hevc"
+        "mpeg2video"
+        "vc1"
+        "vp8"
+        "vp9"
+        "av1"
+      ];
+      enableDecodingColorDepth10Hevc = true;
+      allowHevcEncoding = true;
+      allowAv1Encoding = true; # Apparently 30 series only supports decoding AV1.
+    };
     libraries.Movies = {
       enabled = true;
       contentType = "movies";
