@@ -37,6 +37,8 @@
       ".local/share/z"
       ".local/share/fish"
       ".local/share/zed"
+      ".local/share/steam"
+      ".steam"
       {
         directory = ".mozilla/firefox";
         mode = "0700";
