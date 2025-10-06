@@ -23,5 +23,8 @@
       "tab_size": 2
     }
   },
-  "use_autoclose": false
+  "use_autoclose": false,
+  "buffer_font_features": {
+    "calt": false // Disable ligatures
+  }
 }
