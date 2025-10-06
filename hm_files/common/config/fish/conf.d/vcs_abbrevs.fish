@@ -1,4 +1,5 @@
 abbr --add gap "git add -p "
+abbr --add gau "git add -u "
 abbr --add gcam "git commit -am "
 abbr --add gcamend "git commit --amend"
 abbr --add gcaamend "git commit -a --amend"
