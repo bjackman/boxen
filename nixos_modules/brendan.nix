@@ -37,7 +37,7 @@
       ".local/share/z"
       ".local/share/fish"
       ".local/share/zed"
-      ".local/share/steam"
+      ".local/share/Steam"
       ".steam"
       {
         directory = ".mozilla/firefox";
