@@ -52,5 +52,8 @@
         mode = "0700";
       }
     ];
+    files = [
+      ".config/monitors.xml"
+    ];
   };
 }
