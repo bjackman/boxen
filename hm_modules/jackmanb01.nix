@@ -8,9 +8,11 @@
   imports = [
     ./jackmanb.nix
     ./sway.nix
+    ./home-monitors.nix
   ];
 
   wayland.windowManager.sway.config.output = {
+    # Monitors at the office:
     # Center monitor
     "Lenovo Group Limited P27h-20 V906YLCP" = {
       position = "0 0";
