@@ -85,7 +85,4 @@
     forwardAgent = true; # For gnubby
     matchBlocks."bj".hostname = "bj.c.googlers.com";
   };
-
-  home.packages = [ pkgs.kitty ];
-  programs.fish.shellAbbrs.klo = "kitty @ launch --type=os-window --cwd=current fish";
 }

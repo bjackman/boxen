@@ -131,9 +131,16 @@
       '';
     };
 
-    programs.kitty.settings = {
-      enable_audio_bell = false;
-      allow_remote_control = true;
+    programs.kitty = {
+      enable = true;
+      settings = {
+        enable_audio_bell = false;
+        allow_remote_control = true;
+      };
     };
+    # Allow creating new terminals on remote hosts (connected via kitten ssh).
+    # Note when using this in corp you lose the reconnection ability from
+    # roadwarrior/gmosh.
+    programs.fish.shellAbbrs.klo = "kitty @ launch --type=os-window --cwd=current fish";
   };
 }
