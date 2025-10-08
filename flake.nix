@@ -62,6 +62,7 @@
       hmSpecialArgs = {
         inherit pkgsUnstable;
         inherit agenix;
+        inherit nixpkgs;
       };
     in
     {
