@@ -1,5 +1,6 @@
 {
   pkgs,
+  pkgsUnstable,
   config,
   lib,
   ...
@@ -27,7 +28,32 @@ in
     # then doesn't work properly when restarting hyprland.
     wayland.systemd.target = "sway-session.target";
 
-    programs.wofi.enable = true;
+    programs.rofi.enable = true;
+    home.packages = [ pkgsUnstable.bzmenu pkgsUnstable.pwmenu ];
+    # Define desktop entries for bzmenu and pwmenu so that we can access it
+    # easily from the rofi dmenu. Not sure if this is really the proper way to
+    # do this or not.
+    # Note until we have this:
+    # https://github.com/davatorium/rofi/pull/2122
+    # We need to install silly font magic.
+    xdg.desktopEntries.bzmenu = {
+      name = "Bluetooth Menu";
+      comment = "Manage Audio devices";
+      exec = "pwmenu --launcher rofi";
+      icon = "audio-card";
+      terminal = false;
+      type = "Application";
+      categories = [ "Settings" "System" ];
+    };
+    xdg.desktopEntries.pwmenu = {
+      name = "Audio Menu (Pipewire)";
+      comment = "Manage Audio devices";
+      exec = "pwmenu --launcher rofi";
+      icon = "bluetooth";
+      terminal = false;
+      type = "Application";
+      categories = [ "Settings" "System" ];
+    };
 
     # Notification server. Works on both gLinux and NixOS.
     services.mako.enable = true;
@@ -115,7 +141,7 @@ in
         bars = [ ];
         modifier = "Mod4";
         terminal = "kitty --session ${pkgs.writeText "fish.kitty-session" "launch fish"}";
-        menu = "wofi --show drun";
+        menu = "rofi -show drun";
         # Put my absolute boys on their home workspace by default. Update the
         # for_window above if you change this.
         assigns = {

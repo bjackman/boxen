@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   ...
 }:
@@ -24,4 +25,6 @@
     enable = true;
     wrapperFeatures.gtk = true;
   };
+  # For bzmenu/pwmenu
+  fonts.packages = with pkgs; [ nerd-fonts.symbols-only ];
 }
