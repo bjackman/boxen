@@ -136,6 +136,11 @@
       settings = {
         enable_audio_bell = false;
         allow_remote_control = true;
+        # This configures the separate scrollback buffer that is only accessible
+        # via the pager magic, not the "live" scrollback that you can interact
+        # with via the mouse. It's recommended to keep the latter small for perf.
+        # Megabytes.
+        scrollback_pager_history_size = 128;
       };
     };
     # Allow creating new terminals on remote hosts (connected via kitten ssh).
