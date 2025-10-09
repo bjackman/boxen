@@ -17,6 +17,10 @@
       # until I can migrate to a proper package manager.
       "${config.home.homeDirectory}/.local/bin"
     ];
+
+    # Lol, workaround old Nix version with no support for inputs.self.submodules
+    # flake attribute.
+    packages = [ pkgs.nix ];
   };
 
   common.appConfigDirs = {
