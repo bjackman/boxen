@@ -103,8 +103,11 @@ That's where you configure which keys can decrypt it. Then run `agenix -e
 in the home-manager/NixOS config.
 
 To add a recipient key for a secret, update `secrets.nix` to include it in that
-secret's `publicKeys`setting, then run `RULES=secrets/secrets.nix nix develop -c
-agenix -r` from the root of the repo.
+secret's `publicKeys`setting, then run `agenix -r` from the `secrets/` dir.
+Note that this requires decrypting the keys, which your current user might not
+have the ability to do if the only recipients are host keys. In that case, use
+the `-i` flag to point agenix at a private key that can decrypt it, e.g. `sudo
+agenix -r -i /etc/ssh/ssh_host_ed25519_key`.
 
 ## Diffing configs
 
