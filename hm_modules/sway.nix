@@ -164,6 +164,7 @@ in
         output."*" = {
           background = "${../hm_files/common/clouds.png} fill";
         };
+        input."*".xkb_options = "compose:ralt";
         input."type:touchpad".natural_scroll = "enable";
         keybindings = {
           "${modifier}+Return" = "exec ${config.wayland.windowManager.sway.config.terminal}";
