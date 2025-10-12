@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ../brendan.nix
+    ../pc.nix
     ../sway.nix
     ../impermanence.nix
   ];

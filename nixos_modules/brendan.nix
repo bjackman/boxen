@@ -8,10 +8,7 @@
     isNormalUser = true;
     description = "Brendan Jackman";
     extraGroups = [
-      "networkmanager"
       "wheel"
-      # Required for hyprland stuff to be able to query capslock status.
-      "input"
     ];
     shell = pkgs.fish;
     openssh.authorizedKeys.keys = [
@@ -19,38 +16,4 @@
     ];
   };
   programs.fish.enable = true;
-  programs.steam.enable = true;
-
-  bjackman.impermanence.extraPersistence.users.brendan = {
-    directories = [
-      "Downloads"
-      "Music"
-      "Pictures"
-      "Documents"
-      "Videos"
-      "src"
-      ".cache"
-      ".local/share/z"
-      ".local/share/fish"
-      ".local/share/zed"
-      ".local/share/Steam"
-      ".steam"
-      {
-        directory = ".mozilla/firefox";
-        mode = "0700";
-      }
-      {
-        directory = ".ssh";
-        mode = "0700";
-      }
-      {
-        directory = ".local/share/keyrings";
-        mode = "0700";
-      }
-    ];
-    files = [
-      ".config/monitors.xml"
-      ".config/gnome-initial-setup-done"
-    ];
-  };
 }
