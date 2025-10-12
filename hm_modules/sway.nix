@@ -29,7 +29,10 @@ in
     wayland.systemd.target = "sway-session.target";
 
     programs.rofi.enable = true;
-    home.packages = [ pkgsUnstable.bzmenu pkgsUnstable.pwmenu ];
+    home.packages = [
+      pkgsUnstable.bzmenu
+      pkgsUnstable.pwmenu
+    ];
     # Define desktop entries for bzmenu and pwmenu so that we can access it
     # easily from the rofi dmenu. Not sure if this is really the proper way to
     # do this or not.
@@ -43,7 +46,10 @@ in
       icon = "audio-card";
       terminal = false;
       type = "Application";
-      categories = [ "Settings" "System" ];
+      categories = [
+        "Settings"
+        "System"
+      ];
     };
     xdg.desktopEntries.pwmenu = {
       name = "Audio Menu (Pipewire)";
@@ -52,7 +58,10 @@ in
       icon = "bluetooth";
       terminal = false;
       type = "Application";
-      categories = [ "Settings" "System" ];
+      categories = [
+        "Settings"
+        "System"
+      ];
     };
 
     # Notification server. Works on both gLinux and NixOS.
