@@ -32,6 +32,7 @@ in
     home.packages = [
       pkgsUnstable.bzmenu
       pkgsUnstable.pwmenu
+      pkgs.rofi-screenshot
     ];
     # Define desktop entries for bzmenu and pwmenu so that we can access it
     # easily from the rofi dmenu. Not sure if this is really the proper way to
