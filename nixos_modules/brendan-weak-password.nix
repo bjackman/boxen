@@ -3,7 +3,7 @@
   assertions = [
     {
       assertion = config.services.openssh.settings.PasswordAuthentication == false;
-      mesage = "Disable SSH password auth";
+      message = "Disable SSH password auth";
     }
   ];
   age.secrets.weak-local-password-hash.file = ../secrets/weak-local-password-hash.age;
