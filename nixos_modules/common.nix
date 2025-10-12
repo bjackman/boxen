@@ -1,4 +1,5 @@
 {
+  pkgs,
   ...
 }:
 {
@@ -19,6 +20,12 @@
 
   # Run a regular service to optimize the Nix store.
   nix.optimise.automatic = true;
+
+  # Stuff that's useful when poking around in a root shell
+  environment.systemPackages = with pkgs; [
+    file
+    vim
+  ];
 
   nix.gc = {
     automatic = true;
