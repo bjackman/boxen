@@ -27,4 +27,8 @@ in
   # the hash, I wrote it into the settings.json manually and then restarted the
   # service. The transmission edits the settings file lol.
   "transmission-rpc-password.json.age".publicKeys = all-personal;
+  # This is a weak password so encrypt it instead of just checking in the salted
+  # hash. This shouldn't be decrypted with user keys only host keys.
+  # Content generated with mkpasswd -m yescrypt -R 9
+  "weak-local-password-hash.age".publicKeys = [ chungito-host ];
 }
