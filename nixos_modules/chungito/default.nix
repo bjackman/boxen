@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../brendan.nix
     ../sway.nix
+    ../impermanence.nix
   ];
 
   nix.settings.experimental-features = [
@@ -74,6 +75,13 @@
     settings.PasswordAuthentication = false;
   };
   services.tailscale.enable = true;
+  bjackman.impermanence.extraPersistence.directories = [
+    "/var/lib/tailscale"
+    {
+      directory = "/var/lib/transmission";
+      mode = "0755";
+    }
+  ];
 
   # Didn't help:
   # https://discourse.nixos.org/t/psa-for-those-with-hibernation-issues-on-nvidia/61834
@@ -103,33 +111,6 @@
   '';
 
   users.mutableUsers = false;
-
-  # Note this is coupled with the fileSystems definition which is currently in
-  # ./hardware-configuration.nix
-  environment.persistence."/persistent" = {
-    hideMounts = true; # Don't spam all these mounts in file managers.
-    directories = [
-      "/var/log"
-      "/var/lib/bluetooth" # Apparently bluetooth pairing is system-global.
-      "/var/lib/nixos" # Needed for consistent UIDs
-      "/var/lib/systemd/coredump"
-      "/var/lib/tailscale"
-      {
-        directory = "/var/lib/transmission";
-        mode = "0755";
-      }
-      "/etc/NetworkManager/system-connections"
-      "/var/lib/AccountsService" # Used by GDM to remember last choice of desktop.
-      "/var/lib/systemd/timers" # Ensure we don't forget persistent timer state.
-    ];
-    files = [
-      "/etc/machine-id"
-      "/etc/ssh/ssh_host_ed25519_key"
-      "/etc/ssh/ssh_host_ed25519_key.pub"
-      "/etc/ssh/ssh_host_rsa_key"
-      "/etc/ssh/ssh_host_rsa_key.pub"
-    ];
-  };
 
   age.secrets.transmission-rpc-password-json.file = ../../secrets/transmission-rpc-password.json.age;
   services.transmission = {

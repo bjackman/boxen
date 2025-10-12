@@ -21,8 +21,7 @@
   programs.fish.enable = true;
   programs.steam.enable = true;
 
-  # TODO: This is coupled with the chungito configuration (assuming /persistent exists).
-  environment.persistence."/persistent".users.brendan = {
+  bjackman.impermanence.extraPersistence.users.brendan = {
     directories = [
       "Downloads"
       "Music"
