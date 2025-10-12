@@ -21,6 +21,10 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -32,6 +36,7 @@
       agenix,
       impermanence,
       declarative-jellyfin,
+      deploy-rs,
       ...
     }:
     let
@@ -52,6 +57,26 @@
           builtins.elem (pkgs.lib.getName pkg) [
             "claude-code"
           ];
+      };
+      # This is a rather bananas dance to create a cross-compiled deploy-rs.
+      # There is a binary in there that needs to be build for the target
+      # architecture, so this sets up a version of nixpkgs that's cross-compiled
+      # to aarch64. Then deploy-rs provides an overlay that will build the
+      # package via this cross compilation. This does still require building
+      # rustc though lmao.
+      # Note this ISN'T used for the actual NixOS system, for that it's just
+      # built "natively" so you'll need the binfmt_misc magic to make it work.
+      # That is fine in practice because you just get everything from the binary
+      # cache.
+      # https://nixos.wiki/wiki/Cross_Compiling has a section about "lazy
+      # cross-compiling" that seems like a more elegant way to achieve something
+      # kinda similar to this.
+      pkgsCross = import nixpkgs {
+        localSystem = "x86_64-linux";
+        crossSystem = {
+          config = "aarch64-unknown-linux-gnu";
+        };
+        overlays = [ deploy-rs.overlays.default ];
       };
       # Hm. This is how I'm passing in stuff to my home manager modules that
       # needs to be a flake input. This seems kinda yucky, I think I'm doing
@@ -155,6 +180,22 @@
         ];
       };
 
+      nixosConfigurations.norte = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        modules = [
+          agenix.nixosModules.default
+          ./nixos_modules/norte.nix
+        ];
+      };
+      deploy.nodes.norte = {
+        hostname = "norte";
+        interactiveSudo = true;
+        profiles.system = {
+          user = "root";
+          path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.norte;
+        };
+      };
+
       devShells."${system}".default = pkgs.mkShell {
         packages = [
           home-manager.packages."${system}".default
@@ -162,6 +203,7 @@
           agenix.packages."${system}".default
           pkgs.nix-diff
           declarative-jellyfin.packages."${system}".genhash
+          deploy-rs.packages.x86_64-linux.default
         ];
       };
     };
