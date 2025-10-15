@@ -26,5 +26,12 @@
   "use_autoclose": false,
   "buffer_font_features": {
     "calt": false // Disable ligatures
+  },
+  "lsp": {
+    "clangd": {
+      "binary": {
+        "arguments": ["--header-insertion=never"]
+      }
+    }
   }
 }
