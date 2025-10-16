@@ -21,6 +21,11 @@
     "Nix": {
       "show_whitespaces": "none",
       "tab_size": 2
+    },
+    // Set a nice default for old kernel repos without a .editorconfig
+    "C": {
+      "hard_tabs": true,
+      "tab_size": 8
     }
   },
   "use_autoclose": false,
