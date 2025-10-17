@@ -110,10 +110,7 @@
       homeConfigurations = {
         "brendan@brendan-thinkpad" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
-          modules = [
-            ./hm_modules/brendan.nix
-            ./hm_modules/non-nixos.nix
-          ];
+          modules = [ ./hm_modules/brendan-thinkpad.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
         jackmanb = home-manager.lib.homeManagerConfiguration {
@@ -124,9 +121,7 @@
         # corp laptop
         "jackmanb@jackmanb01" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
-          modules = [
-            ./hm_modules/jackmanb01.nix
-          ];
+          modules = [ ./hm_modules/jackmanb01.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
       };
