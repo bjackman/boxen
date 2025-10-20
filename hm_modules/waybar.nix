@@ -32,6 +32,7 @@
         "memory"
         "temperature"
         "backlight"
+        "battery"
         "keyboard-state"
         # We're gonna run nm-applet which should show up in the tray, but also
         # put the network module next to it since it has some nice info there.

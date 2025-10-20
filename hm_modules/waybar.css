@@ -146,3 +146,11 @@ window#waybar {
 #keyboard-state label.locked {
     background: #bb4454;
 }
+
+/* Go alarming colors when battery getting low */
+#battery .warning {
+    background: #cc8833;
+}
+#battery .full {
+    background: #cc0000;
+}
