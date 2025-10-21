@@ -155,7 +155,10 @@ in
         # Put my absolute boys on their home workspace by default. Update the
         # for_window above if you change this.
         assigns = {
-          "browser" = [ { app_id = "firefox"; } ];
+          "browser" = [
+            { app_id = "firefox"; }
+            { app_id = "google-chrome"; }
+          ];
           "terminal" = [ { app_id = "kitty"; } ];
           "editor" = [ { app_id = "dev.zed.Zed"; } ];
         };
