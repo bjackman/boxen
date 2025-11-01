@@ -37,7 +37,6 @@
       }
     ];
     files = [
-      ".config/monitors.xml"
       ".config/gnome-initial-setup-done"
     ];
   };

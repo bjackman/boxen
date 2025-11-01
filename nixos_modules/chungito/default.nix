@@ -176,5 +176,8 @@
     };
   };
 
+  # So that GDM and Gnome and stuff have a persistent monitors setup.
+  environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
+
   system.stateVersion = "25.05";
 }

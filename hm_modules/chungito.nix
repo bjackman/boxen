@@ -15,4 +15,5 @@
     enable = true;
     package = pkgsUnstable.zed-editor;
   };
+  xdg.configFile."monitors.xml".source = ../nixos_files/chungito/monitors.xml;
 }
