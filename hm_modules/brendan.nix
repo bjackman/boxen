@@ -20,6 +20,7 @@
       imagemagick
       signal-desktop
       jq
+      iw
     ];
   };
   programs.git.userEmail = "bhenryj0117@gmail.com";
