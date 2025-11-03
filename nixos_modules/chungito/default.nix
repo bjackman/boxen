@@ -159,6 +159,23 @@
       allowHevcEncoding = true;
       allowAv1Encoding = true; # Apparently 30 series only supports decoding AV1.
     };
+    # Experimental: Manually created, then used this to set up the right directory structure:
+    # mnamer <media dir>  --episode-format "{series}/Season {season:02}/{series} - S{season:02}E{episode:02} - {title}{extension}" --batch
+    libraries.TV = {
+      enabled = true;
+      contentType = "tvshows";
+      pathInfos = [ "/var/lib/media/shows" ];
+      typeOptions.Shows = {
+        metadataFetchers = [
+          "The Open Movie Database"
+          "TheMovieDb"
+        ];
+        imageFetchers = [
+          "The Open Movie Database"
+          "TheMovieDb"
+        ];
+      };
+    };
     libraries.Movies = {
       enabled = true;
       contentType = "movies";
