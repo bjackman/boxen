@@ -63,6 +63,7 @@
         inherit pkgsUnstable;
         inherit agenix;
         inherit nixpkgs;
+        inherit nixpkgs-unstable;
       };
     in
     {

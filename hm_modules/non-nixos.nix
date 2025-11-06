@@ -1,6 +1,7 @@
 {
   pkgs,
   nixpkgs, # from specialArgs
+  nixpkgs-unstable, # from specialArgs
   ...
 }:
 # I had issues with various Wayland apps when running on Debian (some just don't
@@ -27,4 +28,5 @@ in
   # figure out how that works to see if there's a way to avoid the nixpkgs
   # special arg here.
   nix.registry.nixpkgs.flake = nixpkgs;
+  nix.registry.nixpkgs-unstable.flake = nixpkgs-unstable;
 }
