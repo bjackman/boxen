@@ -31,4 +31,9 @@ if status is-interactive
     abbr --add grn "git rebase --interactive staging/mm/next"
     # See set_devrez_machines.fish
     abbr --add sm 'ssh root@$MACHINE'
+
+    function cp_upstream --argument-names commit
+        set --local upstream_version (git tag --sort version:refname --contains $commit | egrep -m1 '^v[0-9]+\.[0-9]+$')
+        kdt cherry-pick --upstream $upstream_version $commit
+    end
 end
