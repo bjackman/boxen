@@ -68,7 +68,7 @@
   - [ ] Screen sharing
 - [ ] Switch back to VSCode
   - [x] Set up sway workspace thingy
-  - [ ] Disable annoying AI shit
+  - [x] Disable annoying AI shit
   - [ ] Refactor symlink magic?
 
 ## Inspecting the config
