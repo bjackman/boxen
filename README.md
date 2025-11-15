@@ -67,7 +67,7 @@
       - Basically do the non-NixOS equivalent of `security.pam.services.hyprlock = {};`
   - [ ] Screen sharing
 - [ ] Switch back to VSCode
-  - [ ] Set up sway workspace thingy
+  - [x] Set up sway workspace thingy
   - [ ] Disable annoying AI shit
   - [ ] Refactor symlink magic?
 

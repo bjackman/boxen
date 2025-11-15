@@ -143,7 +143,7 @@ in
         # is already the default when it opens on the current workspace. I can't
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
-        for_window [app_id=kitty|firefox|dev.zed.Zed] focus
+        for_window [app_id=kitty|firefox|dev.zed.Zed|Code] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
       '';
@@ -154,13 +154,17 @@ in
         menu = "rofi -show drun";
         # Put my absolute boys on their home workspace by default. Update the
         # for_window above if you change this.
+        # Use swaymsg -t get_tree to get the app_id you want.
         assigns = {
           "browser" = [
             { app_id = "firefox"; }
             { app_id = "google-chrome"; }
           ];
           "terminal" = [ { app_id = "kitty"; } ];
-          "editor" = [ { app_id = "dev.zed.Zed"; } ];
+          "editor" = [
+            { app_id = "dev.zed.Zed"; }
+            { app_id = "Code"; }
+          ];
         };
         # We can set global display settings here. Individual outputs will be
         # configured in per-machine modules.
