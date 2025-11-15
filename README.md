@@ -26,7 +26,7 @@
 - [x] Move remaining Chungito configuration into Home Manager as appropriate
 - [x] Split up NixOS config into modules?
 - [x] Make Fish default shell
-- [ ] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT. OK actually just use
+- [x] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT. OK actually just use
       Sway because Hyprland isn't really usable on Debian.
   - [x] Make waybar show workspaces
   - [x] Figure out workspace workflow for desktop:
@@ -35,7 +35,7 @@
         - super+shift+h/l to move workspaces left and right between monitors
   - [x] Ensure bluetooth / sound / NetworkManager stuff is all usable
   - [ ] Figure out if I need an XDG portal and set one up.
-  - [ ] Make Chrome login work
+  - [x] Make Chrome login work
   - [x] Make it derk mode
   - [x] Get a status bar working.
     - [ ] Set up battery icon if on laptop
@@ -52,14 +52,14 @@
         properly.
   - [x] Set up a lock screen
   - [x] Make notifications work
-  - [ ] Make screensharing work
+  - [x] Make screensharing work
     - [ ] In Firefox
     - [ ] In Chrome
-  - [ ] Make Spotify work
+  - [x] Make Spotify work
   - [x] Make hyperlinks work in terminal
   - [x] Make it look like windows 98
   - [x] Make volume/backlight control buttons work.
-- [ ] Figure out impermanence for Chungito
+- [x] Figure out impermanence for Chungito
 - [ ] Document how all the parts of this repo fit together
 - [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
 - [ ] Figure out Non-NixOS:
