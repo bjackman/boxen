@@ -163,7 +163,7 @@ in
           "terminal" = [ { app_id = "kitty"; } ];
           "editor" = [
             { app_id = "dev.zed.Zed"; }
-            { app_id = "Code"; }
+            { class = "Code"; }
           ];
         };
         # We can set global display settings here. Individual outputs will be
