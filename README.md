@@ -69,6 +69,10 @@
 - [ ] Switch back to VSCode
   - [x] Set up sway workspace thingy
   - [x] Disable annoying AI shit
+  - [ ] Install extensions with impermanence:
+    - [ ] Markdown All in One
+    - [ ] Vim
+    - [ ] Trailing Spaces
   - [ ] Refactor symlink magic?
 
 ## Inspecting the config
