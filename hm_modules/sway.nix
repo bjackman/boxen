@@ -234,6 +234,7 @@ in
               "b" = "browser";
               "n" = "terminal";
               "m" = "editor";
+              "1" = "number 1";
               "2" = "number 2";
               "3" = "number 3";
               "4" = "number 4";
