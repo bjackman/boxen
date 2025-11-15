@@ -3,6 +3,11 @@
   ...
 }:
 {
+  # Reasons I can't stick with Zed at the moment:
+  # https://github.com/zed-industries/zed/issues/38799
+  # https://github.com/zed-industries/zed/issues/40180
+  # https://github.com/zed-industries/zed/issues/14203
+
   # We don't set programs.zed-editor.enable here, this module is just
   # configuring it, we leave it up to other modules to install it. This is
   # because some of these configurations are used on non-NixOS systems where

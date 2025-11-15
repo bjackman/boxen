@@ -10,6 +10,7 @@
     ./lkml.nix
     ./chungito-ctrl.nix
     ./git.nix
+    ./vscode.nix
     ./zed.nix
     ./scripts.nix
     agenix.homeManagerModules.default
