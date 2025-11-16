@@ -137,6 +137,7 @@
       # VSCode has a bunch of yucky stateful shit that leaks into .config and I
       # can't be bothered to figure it out, just persist the whole mess.
       ".config/Code"
+      ".vscode"
       {
         directory = ".mozilla/firefox";
         mode = "0700";
