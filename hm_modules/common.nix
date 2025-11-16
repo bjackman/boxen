@@ -3,6 +3,7 @@
   pkgs,
   lib,
   agenix,
+  nixpkgs-unstable, # from specialArgs
   ...
 }:
 {
@@ -148,5 +149,7 @@
     # Note when using this in corp you lose the reconnection ability from
     # roadwarrior/gmosh.
     programs.fish.shellAbbrs.klo = "kitty @ launch --type=os-window --cwd=current fish";
+
+    nix.registry.nixpkgs-unstable.flake = nixpkgs-unstable;
   };
 }
