@@ -23,7 +23,7 @@
     packages = [ pkgs.nix ];
   };
 
-  common.appConfigDirs = {
+  bjackman.appConfigDirs = {
     fish = [ ../hm_files/jackmanb/config/fish ];
   };
 

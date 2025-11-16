@@ -15,7 +15,7 @@ let
   mkUsrBinPkg = name: pkgs.writeShellScriptBin name ''/usr/bin/${name} "''${@}"'';
 in
 {
-  common.appConfigDirs.fish = [ ../hm_files/non_nixos/config/fish ];
+  bjackman.appConfigDirs.fish = [ ../hm_files/non_nixos/config/fish ];
 
   programs.swaylock.package = mkUsrBinPkg "swaylock";
   services.swayidle.package = mkUsrBinPkg "swayidle";

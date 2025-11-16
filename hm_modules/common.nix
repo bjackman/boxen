@@ -18,7 +18,7 @@
   ];
 
   options = {
-    common.appConfigDirs = lib.mkOption {
+    bjackman.appConfigDirs = lib.mkOption {
       type = lib.types.attrsOf (lib.types.listOf lib.types.pathInStore);
       default = { };
       description = ''
@@ -32,7 +32,7 @@
     # config checkout, we define an option to tell the system where that is.
     # Code cribbed from:
     # https://github.com/nix-community/home-manager/issues/2085#issuecomment-2022239332
-    common.config-checkout = lib.mkOption {
+    bjackman.configCheckout = lib.mkOption {
       type = lib.types.path;
       apply = toString;
       default = "${config.xdg.configHome}/home-manager";
@@ -61,7 +61,7 @@
             };
             recursive = true;
           }
-        ) config.common.appConfigDirs
+        ) config.bjackman.appConfigDirs
         // {
 
           ".config/gdb/gdbinit" = {
@@ -99,7 +99,7 @@
     };
     # Note awkward relative path here. Alternative would be to communicate a
     # base path for these files via specialArgs based on the flake's `self`.
-    common.appConfigDirs = {
+    bjackman.appConfigDirs = {
       fish = [ ../hm_files/common/config/fish ];
     };
 

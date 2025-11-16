@@ -20,10 +20,10 @@
   # hopefullyt we don't?).
   xdg.configFile = {
     "zed/settings.json" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.common.config-checkout}/hm_files/common/config/zed/settings.json";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.bjackman.configCheckout}/hm_files/common/config/zed/settings.json";
     };
     "zed/keymap.json" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${config.common.config-checkout}/hm_files/common/config/zed/keymap.json";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.bjackman.configCheckout}/hm_files/common/config/zed/keymap.json";
     };
   };
   # Link the global config directory into the flatpak's local config
