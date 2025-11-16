@@ -71,6 +71,7 @@
 
       sessionVariables = {
         EDITOR = "vim";
+        HOME_MANAGER_CONFIG_CHECKOUT = config.bjackman.configCheckout;
       };
     };
 
