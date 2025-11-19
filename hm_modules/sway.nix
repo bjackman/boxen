@@ -122,7 +122,7 @@ in
       };
     };
 
-    programs.kitty.enable = true;
+    programs.wezterm.enable = true;
 
     wayland.windowManager.sway = {
       enable = true;
@@ -143,14 +143,14 @@ in
         # is already the default when it opens on the current workspace. I can't
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
-        for_window [app_id=kitty|firefox|dev.zed.Zed|Code] focus
+        for_window [app_id=org.wezfurlong.wezterm|firefox|dev.zed.Zed|Code] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
       '';
       config = rec {
         bars = [ ];
         modifier = "Mod4";
-        terminal = "kitty --session ${pkgs.writeText "fish.kitty-session" "launch fish"}";
+        terminal = "wezterm start fish";
         menu = "rofi -show drun";
         # Put my absolute boys on their home workspace by default. Update the
         # for_window above if you change this.
@@ -160,7 +160,7 @@ in
             { app_id = "firefox"; }
             { app_id = "google-chrome"; }
           ];
-          "terminal" = [ { app_id = "kitty"; } ];
+          "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
           "editor" = [
             { app_id = "dev.zed.Zed"; }
             { class = "Code"; }

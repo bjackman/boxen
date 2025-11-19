@@ -90,5 +90,24 @@
     matchBlocks."bj".hostname = "bj.c.googlers.com";
   };
 
-  programs.wezterm.enable = true;
+  programs.wezterm = {
+    enable = true;
+    extraConfig = ''
+      local wezterm = require 'wezterm'
+      return {
+        font_size = 11,
+
+        ssh_domains = {
+          {
+            name = 'bj',
+            remote_address = 'bj.c.googlers.com',
+            username = 'jackmanb',
+            -- For some reason the nix profile doesn't appear in the $PATH as seen by
+            -- SSH, maybe that's only for interactive shell.
+            remote_wezterm_path = '${config.home.homeDirectory}/.nix-profile/bin/wezterm';
+          },
+        }
+      }
+    '';
+  };
 }
