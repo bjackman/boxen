@@ -33,7 +33,7 @@
 		"autoClosingBrackets": "never",
 		"autoClosingQuotes": "never",
 		"inlayHints.enabled": "offUnlessPressed",
-		"renderWhitespace": "none",
+		"renderWhitespace": "boundary",
 		"acceptSuggestionOnCommitCharacter": false,
 		"acceptSuggestionOnEnter": "off",
 		"rulers": [
