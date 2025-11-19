@@ -89,4 +89,6 @@
     forwardAgent = true; # For gnubby
     matchBlocks."bj".hostname = "bj.c.googlers.com";
   };
+
+  programs.wezterm.enable = true;
 }
