@@ -9,6 +9,7 @@
     ./jackmanb.nix
     ./sway.nix
     ./home-monitors.nix
+    ./non-nixos-gl.nix
   ];
 
   wayland.windowManager.sway.config.output = {
