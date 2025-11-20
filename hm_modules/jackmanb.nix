@@ -99,6 +99,9 @@
 
         hide_tab_bar_if_only_one_tab = true,
 
+        # https://github.com/wezterm/wezterm/issues/695#issuecomment-820160764
+        adjust_window_size_when_changing_font_size = false
+
         ssh_domains = {
           {
             name = 'bj',
