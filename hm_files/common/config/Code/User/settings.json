@@ -44,7 +44,8 @@
 	"update.mode": "none",
 	"debug.onTaskErrors": "debugAnyway",
 	"files.associations": {
-		"*.makefile": "makefile"
+		"*.makefile": "makefile",
+		"Makefile.*": "makefile",
 	},
 	"trailing-spaces": {
 		"deleteModifiedLinesOnly": true,
