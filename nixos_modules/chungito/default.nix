@@ -175,5 +175,10 @@
     ];
   };
 
+  # NixOS wiki recommends sticking to NetworkManager for laptoppy usecases, this
+  # is not a laptop-specific module but it's still kinda laptoppy so let's stick
+  # to it I guess.
+  networking.networkmanager.enable = true;
+
   system.stateVersion = "25.05";
 }

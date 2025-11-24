@@ -11,11 +11,6 @@
     efi.canTouchEfiVariables = true;
   };
 
-  # NixOS wiki recommends sticking to NetworkManager for laptoppy usecases, this
-  # is not a laptop-specific module but it's still kinda laptoppy so let's stick
-  # to it I guess.
-  networking.networkmanager.enable = true;
-
   i18n = {
     defaultLocale = "en_GB.UTF-8";
     extraLocaleSettings = {
