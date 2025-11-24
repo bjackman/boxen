@@ -181,5 +181,7 @@
   # to it I guess.
   networking.networkmanager.enable = true;
 
+  programs.steam.enable = true;
+
   system.stateVersion = "25.05";
 }

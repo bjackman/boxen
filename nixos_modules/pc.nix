@@ -54,8 +54,6 @@
   };
   services.tailscale.enable = true;
 
-  programs.steam.enable = true;
-
   users.users.brendan.extraGroups = [
     "networkmanager"
     # Required for waybar etc to be able to query capslock status.
