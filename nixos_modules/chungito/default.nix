@@ -136,5 +136,44 @@
   # So that GDM and Gnome and stuff have a persistent monitors setup.
   environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
 
+  # TODO: These don't really belong in chungito module
+  bjackman.impermanence.extraPersistence.directories = [
+    "/var/lib/tailscale"
+  ];
+  bjackman.impermanence.extraPersistence.users.brendan = {
+    directories = [
+      "Downloads"
+      "Music"
+      "Pictures"
+      "Documents"
+      "Videos"
+      "src"
+      ".cache"
+      ".local/share/z"
+      ".local/share/fish"
+      ".local/share/zed"
+      ".local/share/Steam"
+      ".steam"
+      # VSCode has a bunch of yucky stateful shit that leaks into .config and I
+      # can't be bothered to figure it out, just persist the whole mess.
+      ".config/Code"
+      {
+        directory = ".mozilla/firefox";
+        mode = "0700";
+      }
+      {
+        directory = ".ssh";
+        mode = "0700";
+      }
+      {
+        directory = ".local/share/keyrings";
+        mode = "0700";
+      }
+    ];
+    files = [
+      ".config/gnome-initial-setup-done"
+    ];
+  };
+
   system.stateVersion = "25.05";
 }

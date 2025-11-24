@@ -58,9 +58,6 @@
     settings.PasswordAuthentication = false;
   };
   services.tailscale.enable = true;
-  bjackman.impermanence.extraPersistence.directories = [
-    "/var/lib/tailscale"
-  ];
 
   programs.steam.enable = true;
 
@@ -71,39 +68,4 @@
   ];
 
   users.mutableUsers = false;
-
-  bjackman.impermanence.extraPersistence.users.brendan = {
-    directories = [
-      "Downloads"
-      "Music"
-      "Pictures"
-      "Documents"
-      "Videos"
-      "src"
-      ".cache"
-      ".local/share/z"
-      ".local/share/fish"
-      ".local/share/zed"
-      ".local/share/Steam"
-      ".steam"
-      # VSCode has a bunch of yucky stateful shit that leaks into .config and I
-      # can't be bothered to figure it out, just persist the whole mess.
-      ".config/Code"
-      {
-        directory = ".mozilla/firefox";
-        mode = "0700";
-      }
-      {
-        directory = ".ssh";
-        mode = "0700";
-      }
-      {
-        directory = ".local/share/keyrings";
-        mode = "0700";
-      }
-    ];
-    files = [
-      ".config/gnome-initial-setup-done"
-    ];
-  };
 }
