@@ -7,7 +7,6 @@
     username = "brendan";
     homeDirectory = "/home/brendan";
     packages = with pkgs; [
-      pkgsUnstable.claude-code
       mosh
       file
       tree
@@ -15,9 +14,7 @@
       pciutils
       lshw
       btop
-      libnotify # Useful for testing when faffing around with hyprnotify
       spotify
-      imagemagick
       signal-desktop
       jq
       iw
