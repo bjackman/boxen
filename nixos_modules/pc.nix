@@ -61,6 +61,4 @@
     # Required for waybar etc to be able to query capslock status.
     "input"
   ];
-
-  users.mutableUsers = false;
 }

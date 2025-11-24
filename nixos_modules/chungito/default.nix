@@ -3,7 +3,8 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../brendan.nix
+    ../common.nix
+    ../brendan-weak-password.nix
     ../pc.nix
     ../sway.nix
     ../impermanence.nix

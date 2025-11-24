@@ -23,5 +23,9 @@
 
   time.timeZone = "Europe/London";
 
+  # Default compression is extemely aggressive and takes ages, reduce it.
+  # According to AI the default is 3.
+  isoImage.squashfsCompression = "zstd -Xcompression-level 3";
+
   system.stateVersion = "25.05";
 }

@@ -1,5 +1,9 @@
 { config, ... }:
 {
+  imports = [
+    ./brendan.nix
+  ];
+
   assertions = [
     {
       assertion = config.services.openssh.settings.PasswordAuthentication == false;

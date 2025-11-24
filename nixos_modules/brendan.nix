@@ -1,9 +1,5 @@
 { pkgs, ... }:
 {
-  imports = [
-    ./common.nix
-    ./brendan-weak-password.nix
-  ];
   users.users.brendan = {
     isNormalUser = true;
     description = "Brendan Jackman";

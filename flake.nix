@@ -160,8 +160,6 @@
           system = "x86_64-linux";
           modules = [
             ./nixos_modules/fw13
-            impermanence.nixosModules.impermanence
-            agenix.nixosModules.default
             home-manager.nixosModules.home-manager
             {
               home-manager = {
@@ -170,7 +168,7 @@
                 extraSpecialArgs = hmSpecialArgs;
                 users.brendan = {
                   imports = [
-                    ./hm_modules/chungito.nix
+                    ./hm_modules/brendan.nix
                     ./hm_modules/nixos.nix
                   ];
                 };
