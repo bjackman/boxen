@@ -19,7 +19,27 @@
                 ||     ||
 ```
 
-## TODO
+## Installing
+
+Process for installation that seemed to work:
+
+- Check out `780708c` and burn the result of `nix build
+.#nixosConfigurations.fw13.config.system.build.isoImage` to a USB stick and
+install it.
+
+  This was my attempt to build a kinda minimal "installer" image but probably
+  instead I should figure out a minimaller one, also decoupling it from the
+  `fw13` stuff
+
+- Boot into it and use the GDM networkmanager widget to connect to WiFi.
+
+- Now I could SSH into it on the LAN.
+
+- Write a Disko config, referring to the disk as `/dev/sda`.
+
+- Run a version of the generate-hardware-config command from [here](https://michael.stapelberg.ch/posts/2025-06-01-nixos-installation-declarative/).
+
+  TODO: Finish documenting this once I got it to work.
 
 - [x] Update Zed
 - [x] Set up Zed alias for NixOS
