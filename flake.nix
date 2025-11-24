@@ -163,6 +163,7 @@
           home-manager.packages."${system}".default
           agenix.packages."${system}".default
           pkgs.nix-diff
+          pkgs.nixos-rebuild
           declarative-jellyfin.packages."${system}".genhash
         ];
       };
