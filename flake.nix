@@ -109,6 +109,11 @@
       # home-manager, which in my case means machines not running NixOS.
       # Otherwise the HM config is injected via the NixOS module.
       homeConfigurations = {
+        brendan = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./hm_modules/brendan.nix ];
+          extraSpecialArgs = hmSpecialArgs;
+        };
         "brendan@brendan-thinkpad" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./hm_modules/brendan-thinkpad.nix ];
