@@ -21,6 +21,10 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -32,6 +36,7 @@
       agenix,
       impermanence,
       declarative-jellyfin,
+      disko,
       ...
     }:
     let
@@ -160,6 +165,7 @@
           system = "x86_64-linux";
           modules = [
             ./nixos_modules/fw13
+            disko.nixosModules.disko
             home-manager.nixosModules.home-manager
             {
               home-manager = {
