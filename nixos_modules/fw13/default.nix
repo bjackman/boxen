@@ -18,8 +18,6 @@
   ];
 
   networking.hostName = "fw13";
-  # Trying to get installer image to build, doesn't seem to like networkmanager?
-  networking.networkmanager.enable = false;
 
   time.timeZone = "Europe/London";
 

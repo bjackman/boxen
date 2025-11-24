@@ -59,4 +59,14 @@
     # Required for waybar etc to be able to query capslock status.
     "input"
   ];
+
+  # NixOS wiki recommends sticking to NetworkManager for laptoppy usecases, this
+  # is not a laptop-specific module but it's still kinda laptoppy so let's stick
+  # to it I guess.
+  networking.networkmanager.enable = true;
+  # Something somewhere seems to cause networking.wireless to get enabled when
+  # I'm trying to build an installer image, which causes an error due to
+  # networkmanager also being enabled. Disable it explicitly.
+  networking.wireless.enable = false;
+
 }
