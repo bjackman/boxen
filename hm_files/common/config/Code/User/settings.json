@@ -1,30 +1,6 @@
 {
-	"vim": {
-		"insertModeKeyBindings": [
-			{
-				"before": [
-					"k",
-					"j"
-				],
-				"after": [
-					"<Esc>"
-				]
-			}
-		],
-		"handleKeys": {
-			"<C-b>": false,
-			"<C-j>": false
-		},
-		"useSystemClipboard": true,
-	},
 	"search.smartCase": true,
 	"window.menuBarVisibility": "classic",
-	"git": {
-		"confirmSync": false,
-		"autofetch": true,
-		"mergeEditor": true,
-		"openRepositoryInParentFolders": "never",
-	},
 	"editor.cursorBlinking": "solid",
 	"editor.trimAutoWhitespace": false,
 	"editor.codeLens": false,
@@ -47,11 +23,6 @@
 	"files.associations": {
 		"*.makefile": "makefile",
 		"Makefile.*": "makefile",
-	},
-	"trailing-spaces": {
-		"deleteModifiedLinesOnly": true,
-		"trimOnSave": true,
-		"highlightCurrentLine": false,
 	},
 	"workbench.startupEditor": "none",
 	"chat.disableAIFeatures": true,
