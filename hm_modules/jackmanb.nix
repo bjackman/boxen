@@ -99,8 +99,8 @@
 
         hide_tab_bar_if_only_one_tab = true,
 
-        # https://github.com/wezterm/wezterm/issues/695#issuecomment-820160764
-        adjust_window_size_when_changing_font_size = false
+        -- https://github.com/wezterm/wezterm/issues/695#issuecomment-820160764
+        adjust_window_size_when_changing_font_size = false,
 
         ssh_domains = {
           {
@@ -111,7 +111,7 @@
             -- SSH, maybe that's only for interactive shell.
             remote_wezterm_path = '${config.home.homeDirectory}/.nix-profile/bin/wezterm';
           },
-        }
+        },
       }
     '';
   };
