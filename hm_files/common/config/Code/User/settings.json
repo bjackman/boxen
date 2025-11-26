@@ -39,6 +39,9 @@
 		"rulers": [
 			80,
 		],
+		"minimap.enabled": false,
+		"showFoldingControls": "never",
+		"lineNumbers": "off",
 	},
 	"window.openFoldersInNewWindow": "on",
 	"update.mode": "none",
