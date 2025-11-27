@@ -165,7 +165,6 @@
           system = "x86_64-linux";
           modules = [
             ./nixos_modules/fw13
-            disko.nixosModules.disko
             home-manager.nixosModules.home-manager
             {
               home-manager = {
