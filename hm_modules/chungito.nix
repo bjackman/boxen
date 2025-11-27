@@ -10,7 +10,6 @@
     ./sway.nix
     ./home-monitors.nix
   ];
-  bjackman.configCheckout = "${config.home.homeDirectory}/src/boxen";
   programs.zed-editor = {
     enable = true;
     package = pkgsUnstable.zed-editor;
