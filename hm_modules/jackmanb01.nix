@@ -23,9 +23,8 @@
       "Samsung Electric Company LS27A600U HNMR402251" = {
         position = "2560 0";
       };
-      # Below the lenovo one
       "BOE 0x0C00 Unknown" = {
-        position = "0 1440";
+        position = "2560 0";
       };
     };
     keybindings = {
