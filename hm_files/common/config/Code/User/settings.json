@@ -55,4 +55,6 @@
 		"editor.suggest.snippetsPreventQuickSuggestions": false
 	},
 	"go.testOnSave": true,
+	"trailing-spaces.trimOnSave": true,
+	"trailing-spaces.deleteModifiedLinesOnly": true,
 }
