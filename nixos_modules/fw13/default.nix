@@ -7,6 +7,7 @@
 
 {
   imports = [
+    ../common.nix
     ../brendan.nix
     ../pc.nix
     ../sway.nix
