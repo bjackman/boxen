@@ -102,6 +102,8 @@
         -- https://github.com/wezterm/wezterm/issues/695#issuecomment-820160764
         adjust_window_size_when_changing_font_size = false,
 
+        scrollback_lines = 10000,
+
         ssh_domains = {
           {
             name = 'bj',
