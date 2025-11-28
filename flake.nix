@@ -137,51 +137,43 @@
         };
       };
 
-      nixosConfigurations = {
-        chungito = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            ./nixos_modules/chungito
-            impermanence.nixosModules.impermanence
-            agenix.nixosModules.default
-            declarative-jellyfin.nixosModules.default
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                extraSpecialArgs = hmSpecialArgs;
-                users.brendan = {
-                  imports = [
-                    ./hm_modules/chungito.nix
-                    ./hm_modules/nixos.nix
-                  ];
-                };
+      nixosConfigurations =
+        let
+          brendanHome = {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              extraSpecialArgs = hmSpecialArgs;
+              users.brendan = {
+                imports = [
+                  ./hm_modules/chungito.nix
+                  ./hm_modules/nixos.nix
+                ];
               };
-            }
-          ];
+            };
+          };
+        in
+        {
+          chungito = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            modules = [
+              ./nixos_modules/chungito
+              impermanence.nixosModules.impermanence
+              agenix.nixosModules.default
+              declarative-jellyfin.nixosModules.default
+              home-manager.nixosModules.home-manager
+              brendanHome
+            ];
+          };
+          fw13 = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            modules = [
+              ./nixos_modules/fw13
+              home-manager.nixosModules.home-manager
+              brendanHome
+            ];
+          };
         };
-        fw13 = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            ./nixos_modules/fw13
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                extraSpecialArgs = hmSpecialArgs;
-                users.brendan = {
-                  imports = [
-                    ./hm_modules/brendan.nix
-                    ./hm_modules/nixos.nix
-                  ];
-                };
-              };
-            }
-          ];
-        };
-      };
 
       devShells."${system}".default = pkgs.mkShell {
         packages = [
