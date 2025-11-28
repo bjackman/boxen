@@ -1,4 +1,3 @@
-
 { config, ... }:
 {
   age.secrets.transmission-rpc-password-json.file = ../../secrets/transmission-rpc-password.json.age;
