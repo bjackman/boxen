@@ -167,6 +167,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
+              backupFileExtension = "backup";
               extraSpecialArgs = hmSpecialArgs;
               users.brendan = {
                 imports = [
