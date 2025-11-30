@@ -10,5 +10,4 @@
     ./sway.nix
     ./home-monitors.nix
   ];
-  xdg.configFile."monitors.xml".source = ../nixos_files/chungito/monitors.xml;
 }
