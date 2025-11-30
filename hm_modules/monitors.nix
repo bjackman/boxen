@@ -33,11 +33,11 @@
     settings = [
       {
         profile = {
-          name = "laptop-unplugged";
+          name = "fw13-unplugged";
           outputs = [
             {
-              criteria = "eDP-1";
-              position = "0,0";
+              criteria = "BOE NE135A1M-NY1 Unknown";
+              scale = 1.5;
             }
           ];
         };
