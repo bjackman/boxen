@@ -2,7 +2,12 @@
 # command line.
 # Note this assumes we are connected to my Tailnet, but nothing in this
 # repository actually configures that.
-{ pkgs, config, agenix, ... }:
+{
+  pkgs,
+  config,
+  agenix,
+  ...
+}:
 {
   imports = [
     agenix.homeManagerModules.default
