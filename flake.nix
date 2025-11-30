@@ -171,7 +171,10 @@
               extraSpecialArgs = hmSpecialArgs;
               users.brendan = {
                 imports = [
-                  ./hm_modules/chungito.nix
+                  ./hm_modules/common.nix
+                  ./hm_modules/brendan.nix
+                  ./hm_modules/sway.nix
+                  ./hm_modules/home-monitors.nix
                   ./hm_modules/nixos.nix
                 ];
               };
