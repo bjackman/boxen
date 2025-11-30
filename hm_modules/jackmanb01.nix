@@ -13,20 +13,6 @@
   ];
 
   wayland.windowManager.sway.config = {
-    output = {
-      # Monitors at the office:
-      # Center monitor
-      "Lenovo Group Limited P27h-20 V906YLCP" = {
-        position = "0 0";
-      };
-      # To the right of the Lenovo one
-      "Samsung Electric Company LS27A600U HNMR402251" = {
-        position = "2560 0";
-      };
-      "BOE 0x0C00 Unknown" = {
-        position = "2560 0";
-      };
-    };
     keybindings = {
       # Set up initial connection to remote multiplexing server
       "${config.wayland.windowManager.sway.config.modifier}+Ctrl+Return" = "exec wezterm connect bj";
