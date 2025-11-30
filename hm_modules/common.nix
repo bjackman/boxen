@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  agenix,
   nixpkgs-unstable, # from specialArgs
   ...
 }:
@@ -14,7 +13,6 @@
     ./vscode.nix
     ./zed.nix
     ./scripts.nix
-    agenix.homeManagerModules.default
   ];
 
   options = {
@@ -102,16 +100,6 @@
     # base path for these files via specialArgs based on the flake's `self`.
     bjackman.appConfigDirs = {
       fish = [ ../hm_files/common/config/fish ];
-    };
-
-    # This is the configuration for decrypting secrets. This will cause the
-    # secrets to be decrypted and dumped into a tmpfs as plaintext. The path of
-    # that plaintext file will be available as
-    # config.age.secrets."${name}".path.
-    # Note that the key used to decrypt them is left implicit so it will look at
-    # the general SSH configuration and pick a sensitible default.
-    age.secrets = {
-      eadbald-pikvm-password.file = ../secrets/eadbald-pikvm-password.age;
     };
 
     programs.tmux = {
