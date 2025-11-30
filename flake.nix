@@ -174,7 +174,7 @@
                   ./hm_modules/common.nix
                   ./hm_modules/brendan.nix
                   ./hm_modules/sway.nix
-                  ./hm_modules/home-monitors.nix
+                  ./hm_modules/monitors.nix
                   ./hm_modules/nixos.nix
                 ];
               };
