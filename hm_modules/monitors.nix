@@ -83,6 +83,25 @@
           ];
         };
       }
+      {
+        profile = {
+          name = "corp-office-hotdesk";
+          outputs = [
+            {
+              # Massive 3840x2160
+              criteria = "Lenovo Group Limited LEN P32p-20 VNA6XK1W";
+              position = "0,0";
+              scale = 1.25;
+            }
+            {
+              # This should match both my personal and my work laptop.
+              criteria = "eDP-1";
+              # Below the massive one
+              position = "0,2160";
+            }
+          ];
+        };
+      }
     ];
   };
 }
