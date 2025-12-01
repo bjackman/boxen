@@ -45,18 +45,18 @@
             {
               criteria = "Google Inc. P2718EC C9240002";
               # On the left
-              position = "0 0";
+              position = "0,0";
             }
             {
               criteria = "Dell Inc. DELL P2720DC 81WTK01403MS";
               # To the right of the Google one
-              position = "2560 0";
+              position = "2560,0";
             }
             {
               # This should match both my personal and my work laptop.
               criteria = "eDP-1";
               # Below the Dell one.
-              position = "2560 1440";
+              position = "2560,1440";
             }
           ];
         };
@@ -67,18 +67,18 @@
           outputs = [
             {
               criteria = "Lenovo Group Limited P27h-20 V906YLCP";
-              position = "0 0";
+              position = "0,0";
             }
             {
               criteria = "Dell Inc. DELL P2720DC 81WTK01403MS";
               # To the right of the Lenovo one
-              position = "Samsung Electric Company LS27A600U HNMR402251";
+              position = "2560,0";
             }
             {
               # This should match both my personal and my work laptop.
               criteria = "eDP-1";
               # Below the Lenovo one.
-              position = "0 1440";
+              position = "0,1440";
             }
           ];
         };
