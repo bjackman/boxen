@@ -8,7 +8,7 @@
   imports = [
     ./jackmanb.nix
     ./sway.nix
-    ./home-monitors.nix
+    ./monitors.nix
     ./non-nixos-gl.nix
   ];
 

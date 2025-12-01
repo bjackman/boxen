@@ -9,7 +9,7 @@
     ./brendan.nix
     ./non-nixos.nix
     ./sway.nix
-    ./home-monitors.nix
+    ./monitors.nix
   ];
 
   wayland.windowManager.sway.config.input = {
