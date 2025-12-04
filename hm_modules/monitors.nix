@@ -70,7 +70,7 @@
               position = "0,0";
             }
             {
-              criteria = "Dell Inc. DELL P2720DC 81WTK01403MS";
+              criteria = "Samsung Electric Company LS27A600U HNMR402251";
               # To the right of the Lenovo one
               position = "2560,0";
             }
