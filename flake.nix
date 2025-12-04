@@ -112,6 +112,8 @@
         # obvious at the usage site that they come from an overlay.
         bjackman = {
           notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute { };
+          spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
+          spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
         };
       };
 
