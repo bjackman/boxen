@@ -57,4 +57,5 @@
 	"go.testOnSave": true,
 	"trailing-spaces.trimOnSave": true,
 	"trailing-spaces.deleteModifiedLinesOnly": true,
+	"vim.useSystemClipboard": true,
 }
