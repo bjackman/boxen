@@ -8,5 +8,5 @@ pkgs.stdenv.mkDerivation {
     (pkgs.python3.withPackages (pythonPackages: [ pythonPackages.notmuch ]))
   ];
   dontUnpack = true;
-  installPhase = "install -Dm755 ${../src/notmuch_propagate_mute.py} $out/bin/notmuch-propagate-mute";
+  installPhase = "install -Dm755 ${./notmuch_propagate_mute.py} $out/bin/notmuch-propagate-mute";
 }

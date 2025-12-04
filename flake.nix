@@ -111,7 +111,7 @@
         # Put all the packages defined this way under the "bjackman" key so it's
         # obvious at the usage site that they come from an overlay.
         bjackman = {
-          notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute.nix { };
+          notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute { };
         };
       };
 
