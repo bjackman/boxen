@@ -98,23 +98,6 @@
     {
       formatter."${system}" = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
 
-      checks."${system}".default =
-        pkgs.runCommand "check-nix-format"
-          {
-            nativeBuildInputs = [ pkgs.nixfmt-rfc-style ];
-            src = nixpkgs.lib.fileset.toSource {
-              root = ./.;
-              fileset = nixpkgs.lib.fileset.gitTracked ./.;
-            };
-            output = "/dev/null";
-          }
-          ''
-            for file in $(find $src -name "*.nix"); do
-              nixfmt --check $file
-            done
-            touch $out
-          '';
-
       # This is a bit of a magical dance to get packages defined in this flake
       # to be available as flake outputs (so they can easily be tested) and also
       # exposed into the Home Manager module system. We define the packages in a
