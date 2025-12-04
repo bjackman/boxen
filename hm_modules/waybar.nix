@@ -176,6 +176,11 @@
                   <property name="label">Reboot</property>
                 </object>
               </child>
+              <child>
+                <object class="GtkMenuItem" id="logout">
+                  <property name="label">Logout</property>
+                </object>
+              </child>
             </object>
           </interface>
         '';
@@ -184,6 +189,7 @@
           reboot = "reboot";
           suspend = "systemctl suspend";
           hibernate = "systemctl hibernate";
+          logout = "swaymsg exit";
         };
       };
     };
