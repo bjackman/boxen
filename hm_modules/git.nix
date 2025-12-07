@@ -48,6 +48,8 @@
       merge.conflictStyle = "zdiff3";
 
       init.defaultBranch = "master";
+
+      core.commitGraph = true;
     };
 
     aliases = {
