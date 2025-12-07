@@ -71,6 +71,20 @@
         EDITOR = "vim";
         HOME_MANAGER_CONFIG_CHECKOUT = config.bjackman.configCheckout;
       };
+
+      packages = with pkgs; [
+        mosh
+        file
+        tree
+        pstree
+        pciutils
+        lshw
+        btop
+        spotify
+        signal-desktop
+        jq
+        iw
+      ];
     };
 
     programs.home-manager.enable = true;
