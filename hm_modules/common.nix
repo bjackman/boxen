@@ -91,8 +91,6 @@
       pciutils
       lshw
       btop
-      spotify
-      signal-desktop
       jq
       iw
     ];
