@@ -88,6 +88,7 @@
     controlPersist = "8h";
     forwardAgent = true; # For gnubby
     matchBlocks."bj".hostname = "bj.c.googlers.com";
+    matchBlocks."bj-jp".hostname = "bj-jp.c.googlers.com";
   };
 
   programs.wezterm = {
@@ -106,8 +107,8 @@
 
         ssh_domains = {
           {
-            name = 'bj',
-            remote_address = 'bj.c.googlers.com',
+            name = 'bj-jp',
+            remote_address = 'bj-jp.c.googlers.com',
             username = 'jackmanb',
             -- For some reason the nix profile doesn't appear in the $PATH as seen by
             -- SSH, maybe that's only for interactive shell.
