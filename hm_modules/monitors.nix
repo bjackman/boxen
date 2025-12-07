@@ -102,6 +102,22 @@
           ];
         };
       }
+      {
+        profile = {
+          name = "corp-jp-hotdesk";
+          outputs = [
+            {
+              criteria = "eDP-1";
+              position = "0,0";
+            }
+            {
+              # Smaller one, put to the right of laptop
+              criteria = "Dell Inc. DELL U2722DE 3L50FH3";
+              position = "1920,0";
+            }
+          ];
+        };
+      }
     ];
   };
 }
