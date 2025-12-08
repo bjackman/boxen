@@ -50,6 +50,9 @@
       init.defaultBranch = "master";
 
       core.commitGraph = true;
+
+      # When amending or rebasing, bring notes along, for all notes refs.
+      notes.rewriteRef = "refs/notes/*";
     };
 
     aliases = {
