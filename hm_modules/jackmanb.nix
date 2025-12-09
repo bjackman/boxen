@@ -115,6 +115,20 @@
             remote_wezterm_path = '${config.home.homeDirectory}/.nix-profile/bin/wezterm';
           },
         },
+
+        -- Disable wezterm's shortcuts since I use these keys to control Aerc.
+        keys = {
+          {
+              key = 'PageUp',
+              mods = 'CTRL',
+              action = wezterm.action.DisableDefaultAssignment
+          },
+          {
+              key = 'PageDown',
+              mods = 'CTRL',
+              action = wezterm.action.DisableDefaultAssignment
+          },
+        },
       }
     '';
   };
