@@ -28,6 +28,10 @@
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -41,6 +45,7 @@
       declarative-jellyfin,
       disko,
       deploy-rs,
+      nixos-hardware,
       ...
     }:
     let
@@ -185,6 +190,7 @@
               ./nixos_modules/fw13
               home-manager.nixosModules.home-manager
               brendanHome
+              nixos-hardware.nixosModules.framework-amd-ai-300-series
             ];
           };
           # Raspberry Pi 4B at my mum's place.
