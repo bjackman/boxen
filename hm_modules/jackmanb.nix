@@ -65,13 +65,11 @@
         email = emailAccount.address;
         name = emailAccount.realName;
       };
-      extraConfig = {
-        # To be honest I'm not 100% sure exactly what this does.
-        url."sso://user".insteadOf = "https://user.git.corp.google.com";
-        # Use the gLinux SSH since the Nix one doesn't know about Google
-        # weirdness.
-        core.sshCommand = "/usr/bin/ssh";
-      };
+      # To be honest I'm not 100% sure exactly what this does.
+      url."sso://user".insteadOf = "https://user.git.corp.google.com";
+      # Use the gLinux SSH since the Nix one doesn't know about Google
+      # weirdness.
+      core.sshCommand = "/usr/bin/ssh";
     };
 
   # There is some confusing mess with different versions of tmux doing different
@@ -86,10 +84,14 @@
   programs.ssh = {
     enable = true;
     package = null; # Don't install (this is the default, but make sure)
-    controlMaster = "auto";
-    controlPersist = "8h";
-    forwardAgent = true; # For gnubby
     matchBlocks."bj".hostname = "bj.c.googlers.com";
+    matchBlocks."*" = {
+      controlMaster = "auto";
+      controlPersist = "8h";
+      forwardAgent = true; # For gnubby
+    };
+    # To pre-empt deprecation of default values:
+    enableDefaultConfig = false;
   };
 
   programs.wezterm = {
