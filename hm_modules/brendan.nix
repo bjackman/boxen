@@ -7,7 +7,7 @@
     username = "brendan";
     homeDirectory = "/home/brendan";
   };
-  programs.git.userEmail = "bhenryj0117@gmail.com";
+  programs.git.settings.user.email = "bhenryj0117@gmail.com";
   programs.vim = {
     enable = true;
     defaultEditor = true;

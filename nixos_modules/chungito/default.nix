@@ -44,9 +44,7 @@
   # PM: Some devices failed to suspend, or early wake event detected
   #
   # So, just skip the suspend step and go right to hibernando.
-  services.logind.extraConfig = ''
-    SleepOperation=hibernate
-  '';
+  services.logind.settings.Login.SleepOperation = "hibernate";
 
   age.secrets.jellyfin-admin-password-hash.file = ../../secrets/jellyfin-admin-password-hash.age;
   # https://github.com/Sveske-Juice/declarative-jellyfin/blob/main/examples/fullexample.nix

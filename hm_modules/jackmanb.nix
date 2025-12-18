@@ -56,13 +56,15 @@
   };
   lkml.enable = true;
 
-  programs.git =
+  programs.git.settings =
     let
       emailAccount = config.accounts.email.accounts.work;
     in
     {
-      userEmail = emailAccount.address;
-      userName = emailAccount.realName;
+      user = {
+        email = emailAccount.address;
+        name = emailAccount.realName;
+      };
       extraConfig = {
         # To be honest I'm not 100% sure exactly what this does.
         url."sso://user".insteadOf = "https://user.git.corp.google.com";

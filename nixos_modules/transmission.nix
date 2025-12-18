@@ -1,7 +1,8 @@
-{ config, ... }:
+{ pkgs, config, ... }:
 {
   age.secrets.transmission-rpc-password-json.file = ../secrets/transmission-rpc-password.json.age;
   services.transmission = {
+    package = pkgs.transmission_4;
     enable = true;
     openRPCPort = true;
     settings = {
