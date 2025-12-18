@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  age.secrets.transmission-rpc-password-json.file = ../../secrets/transmission-rpc-password.json.age;
+  age.secrets.transmission-rpc-password-json.file = ../secrets/transmission-rpc-password.json.age;
   services.transmission = {
     enable = true;
     openRPCPort = true;
