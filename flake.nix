@@ -205,6 +205,13 @@
         };
       };
 
+      # Check all NixOS systems and Home Manager configurations build.
+      checks."${system}" =
+        (nixpkgs.lib.mapAttrs (_: conf: conf.config.system.build.toplevel) (
+          nixpkgs.lib.filterAttrs (_: c: c.pkgs.system == system) self.nixosConfigurations
+        ))
+        // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations);
+
       devShells."${system}".default = pkgs.mkShell {
         packages = [
           home-manager.packages."${system}".default
