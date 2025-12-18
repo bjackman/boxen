@@ -149,6 +149,7 @@
       nixosConfigurations =
         let
           brendanHome = {
+            nixpkgs.overlays = [ self.outputs.overlays.default ];
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
