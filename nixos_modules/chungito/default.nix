@@ -6,6 +6,7 @@
     ../common.nix
     ../brendan-weak-password.nix
     ../pc.nix
+    ../server.nix
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix

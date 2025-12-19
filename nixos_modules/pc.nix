@@ -48,12 +48,6 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  services.openssh = {
-    enable = true;
-    settings.PasswordAuthentication = false;
-  };
-  services.tailscale.enable = true;
-
   users.users.brendan.extraGroups = [
     "networkmanager"
     # Required for waybar etc to be able to query capslock status.

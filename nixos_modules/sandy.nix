@@ -2,23 +2,13 @@
 {
   imports = [
     ./brendan.nix
+    ./server.nix
     "${modulesPath}/installer/sd-card/sd-image-aarch64.nix"
     "${modulesPath}/profiles/headless.nix"
     "${modulesPath}/profiles/minimal.nix"
   ];
 
   networking.hostName = "sandy";
-
-  virtualisation.vmVariant.virtualisation = {
-    forwardPorts = [
-      {
-        from = "host";
-        host.port = 2222;
-        guest.port = 22;
-      }
-    ];
-    graphics = false;
-  };
 
   # Note this requires running `sudo tailscale up` on the target to
   # set up.
