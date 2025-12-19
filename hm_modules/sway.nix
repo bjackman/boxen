@@ -13,6 +13,7 @@ in
   imports = [
     ./wayland-services.nix
     ./waybar.nix
+    ./wezterm.nix
   ];
 
   config = {
@@ -121,8 +122,6 @@ in
         daemonize = true;
       };
     };
-
-    programs.wezterm.enable = true;
 
     wayland.windowManager.sway = {
       enable = true;
