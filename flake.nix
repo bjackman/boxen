@@ -201,6 +201,13 @@
               ./nixos_modules/sandy.nix
             ];
           };
+          # Thinkpad t480 at my place
+          pizza = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            modules = [
+              ./nixos_modules/pizza
+            ];
+          };
         };
 
       deploy.nodes.sandy = {
