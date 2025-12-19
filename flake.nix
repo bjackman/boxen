@@ -221,6 +221,7 @@
       devShells."${system}".default = pkgs.mkShell {
         packages = [
           home-manager.packages."${system}".default
+          limmat.packages."${system}".default
           agenix.packages."${system}".default
           pkgs.nix-diff
           pkgs.nixos-rebuild
