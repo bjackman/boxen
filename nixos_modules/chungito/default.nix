@@ -14,7 +14,6 @@
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix
-    ../jellyfin.nix
   ];
 
   networking.hostName = "chungito";
@@ -51,29 +50,6 @@
   #
   # So, just skip the suspend step and go right to hibernando.
   services.logind.settings.Login.SleepOperation = "hibernate";
-
-  services.declarative-jellyfin = {
-    system.serverName = "Chungito Declarativo";
-    serverId = "db7bd3ba3d7b404eb430715b3b977dc1"; # uuidgen -r | sed 's/-//g'
-    enable = true;
-    # This bit means I have an NVidia GPU.
-    encoding = {
-      hardwareAccelerationType = "nvenc";
-      # These next bits might be wrong, I'm trusting Claude here.
-      hardwareDecodingCodecs = [
-        "h264"
-        "hevc"
-        "mpeg2video"
-        "vc1"
-        "vp8"
-        "vp9"
-        "av1"
-      ];
-      enableDecodingColorDepth10Hevc = true;
-      allowHevcEncoding = true;
-      allowAv1Encoding = true; # Apparently 30 series only supports decoding AV1.
-    };
-  };
 
   # So that GDM and Gnome and stuff have a persistent monitors setup.
   environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
