@@ -28,7 +28,11 @@ in
   # service. The transmission edits the settings file lol.
   "transmission-rpc-password.json.age".publicKeys = all-personal;
   # This is a weak password so encrypt it instead of just checking in the salted
-  # hash. This shouldn't be decrypted with user keys only host keys.
-  # Content generated with mkpasswd -m yescrypt -R 9
-  "weak-local-password-hash.age".publicKeys = [ chungito-host ];
+  # hash. Ideally I'd prefer to limit this to only being available to
+  # chungito-host. However unfortunately agenix just has a single rekey
+  # procedure that applies to all secrets, which means if there's a secret in
+  # here that your current SSH key can't decrypt, the process fails.
+  # I can't be bothered to figure out how to modularise the secrets just now
+  # so, fuck it, anyone can decrypt this shit. (At least on devices I own).
+  "weak-local-password-hash.age".publicKeys = all-personal;
 }
