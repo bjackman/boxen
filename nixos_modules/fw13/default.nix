@@ -2,6 +2,7 @@
   config,
   pkgs,
   modulesPath,
+  nixos-hardware,
   ...
 }:
 
@@ -12,6 +13,7 @@
     ../pc.nix
     ../sway.nix
     ./hardware-configuration.nix
+    nixos-hardware.nixosModules.framework-amd-ai-300-series
   ];
 
   networking.hostName = "fw13";

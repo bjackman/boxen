@@ -1,4 +1,4 @@
-{ modulesPath, ... }:
+{ modulesPath, agenix, ... }:
 {
   imports = [
     ./brendan.nix
@@ -6,6 +6,7 @@
     "${modulesPath}/installer/sd-card/sd-image-aarch64.nix"
     "${modulesPath}/profiles/headless.nix"
     "${modulesPath}/profiles/minimal.nix"
+    agenix.nixosModules.default
   ];
 
   networking.hostName = "sandy";

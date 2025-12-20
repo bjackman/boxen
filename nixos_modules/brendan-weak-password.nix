@@ -1,7 +1,8 @@
-{ config, ... }:
+{ config, agenix, ... }:
 {
   imports = [
     ./brendan.nix
+    agenix.nixosModules.default
   ];
 
   assertions = [

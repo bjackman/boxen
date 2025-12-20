@@ -1,5 +1,15 @@
-{ pkgs, config, ... }:
 {
+  pkgs,
+  config,
+  agenix,
+  ...
+}:
+{
+  imports = [
+    ./brendan.nix
+    agenix.nixosModules.default
+  ];
+
   age.secrets.transmission-rpc-password-json.file = ../secrets/transmission-rpc-password.json.age;
   services.transmission = {
     package = pkgs.transmission_4;

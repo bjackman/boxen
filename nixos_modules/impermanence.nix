@@ -3,9 +3,16 @@
   options,
   pkgs,
   lib,
+  impermanence,
+  agenix,
   ...
 }:
 {
+  imports = [
+    impermanence.nixosModules.impermanence
+    agenix.nixosModules.default
+  ];
+
   # The raw impermanence module is quite low-level and requires everything that
   # interacts with it to explicitly specify the mountpoint of the persistent
   # data that it's referring to. These options make that higher level, to do

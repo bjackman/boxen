@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  declarative-jellyfin,
+  ...
+}:
 
 {
   imports = [
@@ -10,6 +15,7 @@
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix
+    declarative-jellyfin.nixosModules.default
   ];
 
   networking.hostName = "chungito";

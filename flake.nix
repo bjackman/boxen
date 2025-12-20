@@ -31,7 +31,7 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware";
   };
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
       nixpkgs-unstable,
@@ -154,6 +154,7 @@
       nixosConfigurations =
         let
           brendanHome = {
+            imports = [ home-manager.nixosModules.home-manager ];
             nixpkgs.overlays = [ self.outputs.overlays.default ];
             home-manager = {
               useGlobalPkgs = true;
@@ -177,40 +178,33 @@
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/chungito
-              # TODO: Consider passing these modules as specialArgs and then
-              # have dependee modules load them via `imports`, like is done for
-              # disko below.
-              impermanence.nixosModules.impermanence
-              agenix.nixosModules.default
-              declarative-jellyfin.nixosModules.default
-              home-manager.nixosModules.home-manager
               brendanHome
             ];
+            # This let's you refer to flake inputs in modules, which lets you
+            # declare imports closer to the code that depends on them. For
+            # example this means you can import the impermanence module near the
+            # code that set up impermanence settings.
+            specialArgs = inputs;
           };
           fw13 = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/fw13
-              home-manager.nixosModules.home-manager
               brendanHome
-              nixos-hardware.nixosModules.framework-amd-ai-300-series
             ];
+            specialArgs = inputs;
           };
           # Raspberry Pi 4B at my mum's place.
           sandy = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-            modules = [
-              agenix.nixosModules.default
-              ./nixos_modules/sandy.nix
-            ];
+            modules = [ ./nixos_modules/sandy.nix ];
+            specialArgs = inputs;
           };
           # Thinkpad t480 at my place
           pizza = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            modules = [
-              ./nixos_modules/pizza
-            ];
-            specialArgs = { inherit disko nixos-hardware; };
+            modules = [ ./nixos_modules/pizza ];
+            specialArgs = inputs;
           };
         };
 
