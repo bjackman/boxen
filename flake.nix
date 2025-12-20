@@ -210,7 +210,7 @@
             modules = [
               ./nixos_modules/pizza
             ];
-            specialArgs = { inherit disko; };
+            specialArgs = { inherit disko nixos-hardware; };
           };
         };
 

@@ -2,6 +2,7 @@
   config,
   pkgs,
   modulesPath,
+  nixos-hardware,
   ...
 }:
 
@@ -13,6 +14,7 @@
     ./disko.nix
     "${modulesPath}/profiles/headless.nix"
     "${modulesPath}/profiles/minimal.nix"
+    nixos-hardware.nixosModules.lenovo-thinkpad-t480
   ];
 
   boot.loader = {
