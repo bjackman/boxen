@@ -1,11 +1,6 @@
 # Stuff for my user but on computers with screens and a keyboard and shit.
 { pkgs, ... }:
 {
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
-
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
