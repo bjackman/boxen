@@ -56,7 +56,7 @@
         notes.rewriteRef = "refs/notes/*";
       };
 
-      aliases = {
+      alias = {
         lgg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
         lg = "log --color --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
         uncommit = "reset HEAD@{1}";
