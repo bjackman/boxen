@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  declarative-jellyfin,
   ...
 }:
 
@@ -15,7 +14,7 @@
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix
-    declarative-jellyfin.nixosModules.default
+    ../jellyfin.nix
   ];
 
   networking.hostName = "chungito";
@@ -53,20 +52,11 @@
   # So, just skip the suspend step and go right to hibernando.
   services.logind.settings.Login.SleepOperation = "hibernate";
 
-  age.secrets.jellyfin-admin-password-hash.file = ../../secrets/jellyfin-admin-password-hash.age;
-  # https://github.com/Sveske-Juice/declarative-jellyfin/blob/main/examples/fullexample.nix
   services.declarative-jellyfin = {
     system.serverName = "Chungito Declarativo";
     serverId = "db7bd3ba3d7b404eb430715b3b977dc1"; # uuidgen -r | sed 's/-//g'
     enable = true;
-    users = {
-      brendan = {
-        mutable = false;
-        permissions.isAdministrator = true;
-        hashedPasswordFile = config.age.secrets.jellyfin-admin-password-hash.path;
-      };
-    };
-    # THIS BIT IS HARDWARE-SPECIFIC, it means I have an NVidia GPU.
+    # This bit means I have an NVidia GPU.
     encoding = {
       hardwareAccelerationType = "nvenc";
       # These next bits might be wrong, I'm trusting Claude here.
@@ -83,40 +73,7 @@
       allowHevcEncoding = true;
       allowAv1Encoding = true; # Apparently 30 series only supports decoding AV1.
     };
-    # Experimental: Manually created, then used this to set up the right directory structure:
-    # mnamer <media dir>  --episode-format "{series}/Season {season:02}/{series} - S{season:02}E{episode:02} - {title}{extension}" --batch
-    libraries.TV = {
-      enabled = true;
-      contentType = "tvshows";
-      pathInfos = [ "/var/lib/media/shows" ];
-      typeOptions.Shows = {
-        metadataFetchers = [
-          "The Open Movie Database"
-          "TheMovieDb"
-        ];
-        imageFetchers = [
-          "The Open Movie Database"
-          "TheMovieDb"
-        ];
-      };
-    };
-    libraries.Movies = {
-      enabled = true;
-      contentType = "movies";
-      pathInfos = [ "/var/lib/transmission/Downloads" ];
-      typeOptions.Movies = {
-        metadataFetchers = [
-          "The Open Movie Database"
-          "TheMovieDb"
-        ];
-        imageFetchers = [
-          "The Open Movie Database"
-          "TheMovieDb"
-        ];
-      };
-    };
   };
-  services.jellyfin.openFirewall = true;
 
   # So that GDM and Gnome and stuff have a persistent monitors setup.
   environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
