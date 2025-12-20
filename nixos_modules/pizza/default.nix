@@ -49,11 +49,6 @@
     # Gemini suggests this, but... I dunno about that one buddy.
     # "pcie_aspm=force"
 
-    # Gemini suggested this in response to seeing reports in powertop of "Audio
-    # codec hwC0D2: Intel" using CPU.
-    "snd_hda_intel.power_save=1"
-    "snd_hda_intel.power_save_controller=Y"
-
     # GPU Power Management, also suggested by Gemini.
     "i915.enable_dc=2" # Enable deeper Display Core power states
     "i915.enable_fbc=1" # Framebuffer compression
@@ -65,6 +60,9 @@
     "iwlwifi"
     "btusb"
     "uvcvideo" # Apparently USB webcames are a common culprit for blocking deep package idle.
+    # I was seeing a bunch of 'Audio codec hwC0D2: Intel' in powertop's Overview
+    # tab, disabling this driver completely makes that go away.
+    "snd_hda_intel"
   ];
 
   # Notes:
