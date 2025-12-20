@@ -1,6 +1,7 @@
 # https://github.com/bjackman/limmat
 [[tests]]
 name = "flake-check"
+cache = "by_tree"
 command = """
 git reset --hard  # nix flake check will modify the tree :(
 nix flake check
@@ -8,6 +9,7 @@ nix flake check
 
 [[tests]]
 name = "fmt"
+cache = "by_tree"
 command = """
 git reset --hard
 nix fmt -- --fail-on-change
