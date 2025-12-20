@@ -1,10 +1,10 @@
-{ ... }:
+{ lib, ... }:
 {
   services.openssh = {
     enable = true;
     settings.PasswordAuthentication = false;
   };
-  services.tailscale.enable = true;
+  services.tailscale.enable = lib.mkDefault true;
 
   # There won't be a login password on this machine, all SSH all day.
   security.sudo.wheelNeedsPassword = false;
