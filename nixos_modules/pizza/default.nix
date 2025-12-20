@@ -13,6 +13,7 @@
     ../server.nix
     ./disko.nix
     ./power.nix
+    ./jellyfin.nix
     "${modulesPath}/profiles/headless.nix"
     "${modulesPath}/profiles/minimal.nix"
     nixos-hardware.nixosModules.lenovo-thinkpad-t480
