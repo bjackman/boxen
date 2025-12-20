@@ -17,10 +17,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     impermanence.url = "github:nix-community/impermanence";
-    declarative-jellyfin = {
-      url = "github:Sveske-Juice/declarative-jellyfin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     disko = {
       url = "github:nix-community/disko";
     };
@@ -39,7 +35,6 @@
       limmat,
       agenix,
       impermanence,
-      declarative-jellyfin,
       disko,
       deploy-rs,
       nixos-hardware,
@@ -239,7 +234,6 @@
           agenix.packages."${system}".default
           pkgs.nix-diff
           pkgs.nixos-rebuild
-          declarative-jellyfin.packages."${system}".genhash
           deploy-rs.packages.x86_64-linux.default
         ];
       };
