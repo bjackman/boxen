@@ -1,4 +1,14 @@
 # https://github.com/bjackman/limmat
 [[tests]]
 name = "flake-check"
-command = "nix flake check"
+command = """
+git reset --hard  # nix flake check will modify the tree :(
+nix flake check
+"""
+
+[[tests]]
+name = "fmt"
+command = """
+git reset --hard
+nix fmt -- --fail-on-change
+"""
