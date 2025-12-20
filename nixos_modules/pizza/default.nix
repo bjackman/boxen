@@ -37,5 +37,23 @@
     settings.PasswordAuthentication = false;
   };
 
+  # Temporary while I work out some other networking stuff. I can still access
+  # it on the LAN (e.g. deploy .#pizza --hostname pizza.fritz.box).
+  services.tailscale.enable = false;
+
+  networking.useDHCP = false;
+  networking.networkmanager.enable = false;
+  systemd.network = {
+    enable = true;
+    networks."10-eth-default" = {
+      matchConfig.Type = "ether";
+      networkConfig = {
+        DHCP = "yes";
+        IPv6AcceptRA = true;
+      };
+    };
+  };
+  services.resolved.enable = true;
+
   system.stateVersion = "25.11";
 }
