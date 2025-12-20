@@ -24,6 +24,11 @@
 
   time.timeZone = "Europe/Zurich";
 
+  services.logind.settings.Login = {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+  };
+
   services.openssh = {
     enable = true;
     settings.PasswordAuthentication = false;
