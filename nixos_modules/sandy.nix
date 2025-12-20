@@ -34,8 +34,5 @@
   # Waste of CPU time since we're always just gonna have to decompress it anyway.
   sdImage.compressImage = false;
 
-  # There won't be a login password on this machine, all SSH all day.
-  security.sudo.wheelNeedsPassword = false;
-
   system.stateVersion = "25.05";
 }

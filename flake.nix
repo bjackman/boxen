@@ -174,6 +174,9 @@
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/chungito
+              # TODO: Consider passing these modules as specialArgs and then
+              # have dependee modules load them via `imports`, like is done for
+              # disko below.
               impermanence.nixosModules.impermanence
               agenix.nixosModules.default
               declarative-jellyfin.nixosModules.default
@@ -204,6 +207,7 @@
             modules = [
               ./nixos_modules/pizza
             ];
+            specialArgs = { inherit disko; };
           };
         };
 

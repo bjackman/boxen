@@ -10,8 +10,13 @@
     ../common.nix
     ../brendan.nix
     ../server.nix
-    (modulesPath + "/installer/cd-dvd/installation-cd-minimal.nix")
+    ./disko.nix
   ];
+
+  boot.loader = {
+    systemd-boot.enable = true;
+    efi.canTouchEfiVariables = true;
+  };
 
   networking.hostName = "pizza";
 
