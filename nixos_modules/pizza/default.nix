@@ -76,6 +76,11 @@
   # the monitor regardless of the logical state.
   #
   #   setterm --blank force --term linux < /dev/tty1 > /dev/tty1
+  #
+  # Powertop still shows that a bunch of USB devices are keeping the package
+  # from entering deep sleep. Gemini guided me to try a bunch of stuff to try
+  # and fix this but none of it works. When I rmmod xhci_pci, the power usage
+  # increases a bunch! Oh well, it's pretty low already.
 
   system.stateVersion = "25.11";
 }
