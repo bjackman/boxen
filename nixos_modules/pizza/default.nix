@@ -11,6 +11,8 @@
     ../brendan.nix
     ../server.nix
     ./disko.nix
+    "${modulesPath}/profiles/headless.nix"
+    "${modulesPath}/profiles/minimal.nix"
   ];
 
   boot.loader = {
