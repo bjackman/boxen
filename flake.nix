@@ -49,7 +49,10 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ self.overlays.default ];
+        overlays = [
+          self.overlays.default
+          deploy-rs.overlays.default
+        ];
         config.allowUnfreePredicate =
           pkg:
           builtins.elem (pkgs.lib.getName pkg) [
@@ -211,11 +214,20 @@
           };
         };
 
-      deploy.nodes.sandy = {
-        hostname = "sandy";
-        profiles.system = {
-          user = "root";
-          path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.sandy;
+      deploy.nodes = {
+        sandy = {
+          hostname = "sandy";
+          profiles.system = {
+            user = "root";
+            path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.sandy;
+          };
+        };
+        pizza = {
+          hostname = "pizza";
+          profiles.system = {
+            user = "root";
+            path = pkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.pizza;
+          };
         };
       };
 
