@@ -19,6 +19,16 @@ in
   # This is the password for the 'admin' user, configured via the PiKVM UI or
   # something I can't remember.
   "eadbald-pikvm-password.age".publicKeys = all;
+  # Password for Jellyfin admin account
+  "jellyfin-admin-password.age".publicKeys = all-personal;
+  # Contains an API key for Jellyfin. From the Jellarr docs I am not really sure
+  # how you are supposed to generate this. In the end, I did it by running
+  # Jellyfin, generating one in the UI, and copying it from there.
+  "jellarr-api-key.age".publicKeys = all-personal;
+  # The same key again, but now in the form JELLARR_API_KEY=<key> because that's
+  # how you have to provide it to Jellarr via its environmentFile option
+  # (because it's been designed with sops-nix in mind).
+  "jellarr-env.age".publicKeys = all-personal;
   # Contains a JSON object of the form { "rpc-password": "{asfjdsakl.H" }.
   # The value is the hash of password for the Transmission daemon. To generate
   # the hash, I wrote it into the settings.json manually and then restarted the
