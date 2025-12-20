@@ -37,10 +37,6 @@
     settings.PasswordAuthentication = false;
   };
 
-  # Temporary while I work out some other networking stuff. I can still access
-  # it on the LAN (e.g. deploy .#pizza --hostname pizza.fritz.box).
-  services.tailscale.enable = false;
-
   networking.useDHCP = false;
   networking.networkmanager.enable = false;
   systemd.network = {
