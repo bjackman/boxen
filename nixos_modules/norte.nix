@@ -35,6 +35,12 @@
   # some weird nixos-raspberrypi shit or what. Anyway let's just set a stable
   # fixed one to keep things sane.
   networking.hostId = "39bb2a74";
+  boot.supportedFilesystems.zfs = true;
+  # The ZFS pool attached to this system was created before I installed NixOS,
+  # using Ubuntu.
+  # Following the suggestion of AI, I set mountpoint=legacy for each of the
+  # datasets to stop zfs tools from auto-mounting them.
+  boot.zfs.extraPools = [ "nas" ];
 
   system.stateVersion = "25.11";
 }
