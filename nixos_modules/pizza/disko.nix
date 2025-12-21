@@ -26,6 +26,16 @@
                 mountOptions = [ "umask=0077" ];
               };
             };
+            swap = {
+              size = "8G";
+              content = {
+                type = "swap";
+                # Dunno what this does, but disko example sets it, Gemini says
+                # "recommended for NVMe/SSDs".
+                discardPolicy = "both";
+                resumeDevice = false;
+              };
+            };
             root = {
               size = "100%";
               content = {
