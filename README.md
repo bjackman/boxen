@@ -40,6 +40,11 @@ How I installed `pizza`:
           --target-host pizza.fritz.box
   ```
 
+Note this process won't work if secrets are needed for the machine to work (e.g.
+if there is a login password that is managed by this repo). You need to
+bootstrap the configuration so that the system can generate host keys and you
+can rekey secrets to allow it to access them.
+
 # TODOs
 
 - [x] Update Zed
