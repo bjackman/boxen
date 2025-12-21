@@ -4,7 +4,7 @@
 let
   chungito = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMaakNfELyvjLLCRwH2U/yQ35HkEW+hEShAD7sn0mCmH brendan@chungito";
   chungito-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBTTgMTKXqjE6Vdd5mYMqtU3CxHdTFLVW4TNg3K5dfpo root@chungito";
-  pizza-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINLKxbIzWQL1j/BybSg/MOOl/XP/+LE78GwdFL6ul+Xo root@pizza";
+  pizza-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAmiVXunDkdw9EBJtfPshYvR3od5p00vbL9MqlaJZgGf root@pizza";
   all-personal = [
     chungito
     chungito-host
