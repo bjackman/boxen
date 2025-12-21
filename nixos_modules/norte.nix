@@ -41,6 +41,10 @@
   # Following the suggestion of AI, I set mountpoint=legacy for each of the
   # datasets to stop zfs tools from auto-mounting them.
   boot.zfs.extraPools = [ "nas" ];
+  fileSystems."/mnt/nas" = {
+    device = "nas";
+    fsType = "zfs";
+  };
 
   system.stateVersion = "25.11";
 }
