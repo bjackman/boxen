@@ -29,6 +29,23 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware";
+    # Alternatives: raspberry-pi-nix: Archived for unclear reasons
+    # https://discourse.nixos.org/t/what-happened-to-raspberry-pi-nix/62417.
+    # nixos-hardware has support for raspberry-pi but unclear how to actually
+    # use it.
+    nixos-raspberrypi = {
+      url = "github:nvmd/nixos-raspberrypi/main";
+      # Don't set input.nixpkgs.follows because this nixos-raspberrypi thing is
+      # pretty fucked up and overrides its nixpkgs in weird ways.
+    };
+  };
+  nixConfig = {
+    extra-substituters = [
+      "https://nixos-raspberrypi.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
+    ];
   };
   outputs =
     inputs@{
@@ -42,6 +59,7 @@
       disko,
       deploy-rs,
       nixos-hardware,
+      nixos-raspberrypi,
       ...
     }:
     let
@@ -198,6 +216,15 @@
           pizza = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             modules = [ ./nixos_modules/pizza ];
+            specialArgs = inputs;
+          };
+          # Raspberry Pi 5 with a Radxa SATA hat at my place.
+          # Note this is using a special nixosSystem helper. Raspberry Pi 5s
+          # are fucked up and someone made it work, so, well, we're gonna go
+          # with it.
+          norte = nixos-raspberrypi.lib.nixosSystem {
+            system = "aarch64-linux";
+            modules = [ ./nixos_modules/norte.nix ];
             specialArgs = inputs;
           };
         };
