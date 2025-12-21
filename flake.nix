@@ -237,6 +237,13 @@
             path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.sandy;
           };
         };
+        norte = {
+          hostname = "norte";
+          profiles.system = {
+            user = "root";
+            path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.norte;
+          };
+        };
         pizza = {
           hostname = "pizza";
           profiles.system = {
