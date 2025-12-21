@@ -27,11 +27,6 @@
     "net.ipv6.conf.all.forwarding" = 1;
   };
 
-  services.openssh = {
-    enable = true;
-    settings.PasswordAuthentication = false;
-  };
-
   # Waste of CPU time since we're always just gonna have to decompress it anyway.
   sdImage.compressImage = false;
 
