@@ -23,6 +23,33 @@
     enable = lib.mkEnableOption "impermanence";
     extraPersistence = lib.mkOption {
       default = { };
+      # Without this type I got confusing merging behaviour. I had two modules
+      # setting the option and instead of merging them, Nix had one version
+      # override the other. Gemini claims this is because if one module imports
+      # another, it overrides its options instead of merging with them. I don't
+      # know if that's true. Anyway, it gave me this fancy business which is
+      # probably for the best anyway.
+      type = lib.types.submodule {
+        options = {
+          directories = lib.mkOption {
+            type = lib.types.listOf lib.types.anything;
+          };
+          users = lib.mkOption {
+            type = lib.types.attrsOf (
+              lib.types.submodule {
+                options = {
+                  files = lib.mkOption {
+                    type = lib.types.listOf lib.types.str;
+                  };
+                  directories = lib.mkOption {
+                    type = lib.types.listOf lib.types.anything;
+                  };
+                };
+              }
+            );
+          };
+        };
+      };
       description = ''
         Overlay to apply to
         environment.persistence."${config.bjackman.impermanence.persistentMountPoint}"
