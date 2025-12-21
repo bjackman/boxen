@@ -30,5 +30,11 @@
     };
   };
 
+  # AI says ZFS needs a machine ID. Somehow even before I set this, there was a
+  # hostId already set when I evaliated the configuration. I dunno if this is
+  # some weird nixos-raspberrypi shit or what. Anyway let's just set a stable
+  # fixed one to keep things sane.
+  networking.hostId = "39bb2a74";
+
   system.stateVersion = "25.11";
 }
