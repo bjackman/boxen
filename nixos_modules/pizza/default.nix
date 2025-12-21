@@ -54,23 +54,6 @@
   services.resolved.enable = true;
 
   fileSystems = {
-    "/" = {
-      device = "none";
-      fsType = "tmpfs";
-      options = [
-        "defaults"
-        "size=25%"
-        "mode=755"
-      ];
-    };
-
-    "/nix" = {
-      device = "/persistent/nix";
-      fsType = "none";
-      options = [ "bind" ];
-      neededForBoot = true; # Well, I assume so anyway.
-    };
-
     # Defined in disko.nix, but set neededForBoot here.
     "/persistent".neededForBoot = true;
   };

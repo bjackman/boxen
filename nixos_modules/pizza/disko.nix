@@ -5,7 +5,7 @@
     disko.nixosModules.disko
   ];
 
-  # Copied from
+  # Originally copied from
   # https://michael.stapelberg.ch/posts/2025-06-01-nixos-installation-declarative/#nixos-anywhere
   # but with nvme0n1 instead of sda.
   disko.devices = {
@@ -39,9 +39,29 @@
             root = {
               size = "100%";
               content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/persistent";
+                type = "btrfs";
+                extraArgs = [ "-f" ]; # Override existing partition
+                subvolumes =
+                  let
+                    mountOptions = [
+                      "compress=zstd"
+                      "noatime"
+                    ];
+                  in
+                  {
+                    "/root" = {
+                      mountpoint = "/";
+                      inherit mountOptions;
+                    };
+                    "/persistent" = {
+                      mountpoint = "/persistent";
+                      inherit mountOptions;
+                    };
+                    "/nix" = {
+                      mountpoint = "/nix";
+                      inherit mountOptions;
+                    };
+                  };
               };
             };
           };
