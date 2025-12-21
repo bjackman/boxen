@@ -32,4 +32,5 @@
       mode = "0755";
     }
   ];
+  systemd.services.transmission.serviceConfig.StateDirectoryMode = "0755";
 }

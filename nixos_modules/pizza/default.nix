@@ -13,6 +13,7 @@
     ../brendan.nix
     ../server.nix
     ../impermanence.nix
+    ../transmission.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
