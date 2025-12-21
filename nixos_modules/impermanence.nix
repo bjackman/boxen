@@ -33,6 +33,7 @@
         options = {
           directories = lib.mkOption {
             type = lib.types.listOf lib.types.anything;
+            default = [ ];
           };
           users = lib.mkOption {
             type = lib.types.attrsOf (
@@ -40,13 +41,16 @@
                 options = {
                   files = lib.mkOption {
                     type = lib.types.listOf lib.types.str;
+                    default = [ ];
                   };
                   directories = lib.mkOption {
                     type = lib.types.listOf lib.types.anything;
+                    default = [ ];
                   };
                 };
               }
             );
+            default = { };
           };
         };
       };
