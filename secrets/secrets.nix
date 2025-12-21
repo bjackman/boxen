@@ -19,9 +19,6 @@ in
   # This is the password for the 'admin' user, configured via the PiKVM UI or
   # something I can't remember.
   "eadbald-pikvm-password.age".publicKeys = all;
-  # Password for Jellyfin admin account, hashed as per
-  # https://github.com/Sveske-Juice/declarative-jellyfin/tree/main?tab=readme-ov-file#generate-user-password-hash
-  "jellyfin-admin-password-hash.age".publicKeys = all-personal;
   # Contains a JSON object of the form { "rpc-password": "{asfjdsakl.H" }.
   # The value is the hash of password for the Transmission daemon. To generate
   # the hash, I wrote it into the settings.json manually and then restarted the

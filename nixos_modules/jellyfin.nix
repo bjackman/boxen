@@ -12,7 +12,6 @@
     agenix.nixosModules.default
   ];
 
-  age.secrets.jellyfin-admin-password-hash.file = ../secrets/jellyfin-admin-password-hash.age;
   services.jellyfin = {
     enable = true;
     openFirewall = true;
