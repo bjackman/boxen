@@ -6,7 +6,7 @@
 }:
 {
   # Note this is just the generic parts of the config, individual machines will
-  # need more specific configs. It also doesn't actually enable jellyfin.
+  # need more specific configs.
 
   imports = [
     agenix.nixosModules.default
