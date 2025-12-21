@@ -51,46 +51,15 @@
   # So, just skip the suspend step and go right to hibernando.
   services.logind.settings.Login.SleepOperation = "hibernate";
 
+  bjackman.impermanence.enable = true;
+
   # So that GDM and Gnome and stuff have a persistent monitors setup.
   environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
-
-  bjackman.impermanence.enable = true;
-  # TODO: These don't really belong in chungito module
-  bjackman.impermanence.extraPersistence.users.brendan = {
-    directories = [
-      "Downloads"
-      "Music"
-      "Pictures"
-      "Documents"
-      "Videos"
-      "src"
-      ".cache"
-      ".local/share/z"
-      ".local/share/fish"
-      ".local/share/zed"
-      ".local/share/Steam"
-      ".steam"
-      # VSCode has a bunch of yucky stateful shit that leaks into .config and I
-      # can't be bothered to figure it out, just persist the whole mess.
-      ".config/Code"
-      ".vscode"
-      {
-        directory = ".mozilla/firefox";
-        mode = "0700";
-      }
-      {
-        directory = ".ssh";
-        mode = "0700";
-      }
-      {
-        directory = ".local/share/keyrings";
-        mode = "0700";
-      }
-    ];
-    files = [
-      ".config/gnome-initial-setup-done"
-    ];
-  };
+  # TODO: This doesn't work, I think coz gnome does fancy stuff with atomic file
+  # updates that are incompatible with the symlink model or something?
+  bjackman.impermanence.extraPersistence.users.brendan.files = [
+    ".config/gnome-initial-setup-done"
+  ];
 
   programs.steam.enable = true;
 
