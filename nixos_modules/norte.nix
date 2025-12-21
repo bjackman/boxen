@@ -45,6 +45,7 @@
     device = "nas";
     fsType = "zfs";
   };
+  services.zfs.autoSnapshot.enable = true;
 
   system.stateVersion = "25.11";
 }
