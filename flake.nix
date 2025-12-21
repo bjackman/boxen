@@ -128,11 +128,6 @@
           modules = [ ./hm_modules/brendan.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
-        "brendan@brendan-thinkpad" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./hm_modules/brendan-thinkpad.nix ];
-          extraSpecialArgs = hmSpecialArgs;
-        };
         jackmanb = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./hm_modules/jackmanb.nix ];
