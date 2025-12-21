@@ -56,6 +56,7 @@
             "/etc/NetworkManager/system-connections"
             "/var/lib/AccountsService" # Used by GDM to remember last choice of desktop.
             "/var/lib/systemd/timers" # Ensure we don't forget persistent timer state.
+            "/var/lib/tailscale"
           ];
           files = [
             "/etc/machine-id"

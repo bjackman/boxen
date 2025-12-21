@@ -56,9 +56,6 @@
 
   bjackman.impermanence.enable = true;
   # TODO: These don't really belong in chungito module
-  bjackman.impermanence.extraPersistence.directories = [
-    "/var/lib/tailscale"
-  ];
   bjackman.impermanence.extraPersistence.users.brendan = {
     directories = [
       "Downloads"
