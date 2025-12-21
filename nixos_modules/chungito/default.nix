@@ -54,6 +54,7 @@
   # So that GDM and Gnome and stuff have a persistent monitors setup.
   environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
 
+  bjackman.impermanence.enable = true;
   # TODO: These don't really belong in chungito module
   bjackman.impermanence.extraPersistence.directories = [
     "/var/lib/tailscale"
