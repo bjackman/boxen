@@ -58,13 +58,12 @@
   # Create /mnt/nas/media, let anyone read it. Members of media-writers can
   # write it. This is defined explicitly here while other subtrees aren't,
   # that's just coz they were created before I set up NixOS on this node.
-  users.groups.media-writers = { };
   systemd.tmpfiles.settings = {
     "10-mnt-nas-media" = {
       "/mnt/nas/media" = {
         d = {
           group = "media-writers";
-          mode = "0755";
+          mode = "0775";
           user = "root";
         };
       };
@@ -100,6 +99,11 @@
   };
   networking.firewall.allowedTCPPorts = [ 2049 ];
 
+  users.groups.media-writers = { };
+  systemd.services.transmission.serviceConfig = {
+    SupplementaryGroups = [ "media-writers" ];
+    ReadWritePaths = [ "/mnt/nas/media" ];
+  };
   services.transmission.settings.download-dir = "/mnt/nas/media";
 
   powerManagement.powertop.enable = true;
