@@ -4,6 +4,7 @@
     ./common.nix
     ./non-nixos.nix
     ./wezterm.nix
+    ./nix-warmup.nix
   ];
 
   home = {
@@ -107,4 +108,8 @@
       },
     };
   '';
+
+  bjackman.nix-warmups = [
+    "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
+  ];
 }
