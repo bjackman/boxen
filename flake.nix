@@ -39,14 +39,16 @@
       # pretty fucked up and overrides its nixpkgs in weird ways.
     };
   };
-  nixConfig = {
-    extra-substituters = [
-      "https://nixos-raspberrypi.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
-    ];
-  };
+  # Not really sure if this works. Not really sure if it's needed. Disable it
+  # so we can at least avoid using it for other nodes than Norte.
+  # nixConfig = {
+  #   extra-substituters = [
+  #     "https://nixos-raspberrypi.cachix.org"
+  #   ];
+  #   extra-trusted-public-keys = [
+  #     "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
+  #   ];
+  # };
   outputs =
     inputs@{
       self,
