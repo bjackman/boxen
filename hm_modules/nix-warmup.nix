@@ -32,7 +32,7 @@
             # --refresh means to pull from the remote.
             # --out-link overrides what would normally be ./result. This is what
             # creates the GC root.
-            ExecStart =  pkgs.writeShellScript "warmup-${escapeRef flakeRef}-script" ''
+            ExecStart = pkgs.writeShellScript "warmup-${escapeRef flakeRef}-script" ''
               set -euo pipefail
               ${pkgs.nix}/bin/nix build "${flakeRef}" --refresh \
                 --out-link "$CACHE_DIRECTORY/${escapeRef flakeRef}"
