@@ -28,7 +28,7 @@
   };
   bjackman.impermanence.extraPersistence.directories = [
     {
-      directory = "/var/lib/transmission";
+      directory = config.services.transmission.settings.download-dir;
       mode = "0755";
     }
   ];
