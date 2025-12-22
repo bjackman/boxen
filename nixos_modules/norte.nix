@@ -97,5 +97,7 @@
   };
   networking.firewall.allowedTCPPorts = [ 2049 ];
 
+  powerManagement.powertop.enable = true;
+
   system.stateVersion = "25.11";
 }
