@@ -13,6 +13,7 @@
     ./vscode.nix
     ./zed.nix
     ./scripts.nix
+    ./nix-warmup.nix
   ];
 
   options = {
@@ -149,5 +150,9 @@
     programs.fish.shellAbbrs.klo = "kitty @ launch --type=os-window --cwd=current fish";
 
     nix.registry.nixpkgs-unstable.flake = nixpkgs-unstable;
+
+    bjackman.nix-warmups = [
+      "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
+    ];
   };
 }
