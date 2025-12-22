@@ -14,8 +14,8 @@
       pull.rebase = true;
 
       diff = {
-        renames = "true";
-        mnemonicPrefix = "true";
+        renames = true;
+        mnemonicPrefix = true;
         wsErrorHighlight = "all";
         tool = "meld";
         algorithm = "histogram";
@@ -24,11 +24,11 @@
 
       help.autocorrect = 3;
 
-      color.ui = "true";
+      color.ui = true;
 
       rebase = {
-        autosquash = "true";
-        updateRefs = "true";
+        autosquash = true;
+        updateRefs = true;
       };
 
       branch.sort = "-committerdate";
@@ -36,14 +36,14 @@
 
       rerere = {
         enabled = 1;
-        autoUpdate = "true";
+        autoUpdate = true;
       };
 
       checkout.workers = 0; # Use num_cpu
 
       column.ui = "auto";
 
-      fetch.prune = "true";
+      fetch.prune = true;
 
       merge.conflictStyle = "zdiff3";
 
