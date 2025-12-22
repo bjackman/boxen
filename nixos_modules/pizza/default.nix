@@ -93,5 +93,30 @@
   };
   bjackman.impermanence.enable = true;
 
+  boot.supportedFilesystems = [ "nfs" ];
+  # Dunno what this does. Wiki says it's needed.
+  services.rpcbind.enable = true;
+  # I originally tried to do this with fileSystems (that's how Gemini did it)
+  # but ran into this issue:
+  # https://discourse.nixos.org/t/x-systemd-automount-makes-activation-fail/54589/2
+  # Anyway the wiki uses systemd.[auto]mounts so this seems fine.
+  systemd.mounts = [
+    {
+      where = "/mnt/nas-media";
+      what = "norte.fritz.box:/mnt/nas/media";
+      type = "nfs";
+      mountConfig = {
+        Options = "ro,noauto,noatime,x-systemd.mount-timeout=5s,nfsvers=4.2,soft";
+      };
+    }
+  ];
+  systemd.automounts = [
+    {
+      wantedBy = [ "multi-user.target" ];
+      where = "/mnt/nas-media";
+      automountConfig.TimeoutIdleSec = "600";
+    }
+  ];
+
   system.stateVersion = "25.11";
 }

@@ -92,6 +92,8 @@
         uid = builtins.toString config.users.users.nfs-media.uid;
         gid = builtins.toString config.users.groups.nfs-media.gid;
       in
+      # WARNING: The path of this export is coupled with the client
+      # configuration. If you change it you'll need to update the users too.
       ''
         /mnt/nas/media 192.168.0.0/16(ro,all_squash,anonuid=${uid},anongid=${gid},no_subtree_check)
       '';
