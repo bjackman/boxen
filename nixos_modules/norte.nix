@@ -11,6 +11,7 @@
     nixos-raspberrypi.nixosModules.raspberry-pi-5.base
     ./brendan.nix
     ./server.nix
+    ./common.nix
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
