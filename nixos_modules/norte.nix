@@ -12,6 +12,7 @@
     ./brendan.nix
     ./server.nix
     ./common.nix
+    ./transmission.nix
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
@@ -96,6 +97,8 @@
       '';
   };
   networking.firewall.allowedTCPPorts = [ 2049 ];
+
+  services.transmission.settings.download-dir = "/mnt/nas/media";
 
   powerManagement.powertop.enable = true;
 
