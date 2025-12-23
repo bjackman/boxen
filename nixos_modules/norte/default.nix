@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   modulesPath,
   nixos-raspberrypi,
@@ -16,8 +17,11 @@ in
     ../server.nix
     ../common.nix
     ../transmission.nix
+    ../hosts.nix
     ./nfs-server.nix
   ];
+  
+  bjackman.onHomeLan = true;
 
   boot.loader.raspberryPi.bootloader = "kernel";
 
@@ -65,6 +69,30 @@ in
     ReadWritePaths = [ nfsCfg.mediaMount ];
   };
   services.transmission.settings.download-dir = nfsCfg.mediaMount;
+
+  # NFS doesn't support file notifications so the Jellyfin watcher doesn't
+  # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
+  # via the API :)
+  age.secrets.jellarr-api-key.file = ../../secrets/jellarr-api-key.age;
+  systemd.services.jellyfin-notifier = {
+    description = "Watchexec Jellyfin API notifier";
+    # I don't think depnding on a .mount unit like this is correct lmao
+    after = [ "network.target" "run-agenix.d.mount" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart =
+        let
+          jellyfinUrl = config.bjackman.servers.jellyfin.url;
+        in
+        pkgs.writeShellScript "watchexec-jellyfin" ''
+          set -euo pipefail
+          key="$(cat ${config.age.secrets.jellarr-api-key.path})"
+          ${pkgs.watchexec}/bin/watchexec --debounce 3s --watch ${nfsCfg.mediaMount} -- \
+            ${pkgs.curl}/bin/curl -X POST ${jellyfinUrl}/Library/Refresh?api_key="$key";
+        '';
+      Restart = "always";
+    };
+  };
 
   powerManagement.powertop.enable = true;
 

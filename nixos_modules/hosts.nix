@@ -4,14 +4,9 @@
 { config, lib, ... }:
 let
   cfg = config.bjackman;
-
-  mkLanFqdn =
-    fqdn:
-    if cfg.onHomeLan then
-      fqdn
-    else
-      throw "Can't get FQDN '${fqdn}' unless options.bjackman.onHomeLan is set";
-
+  lanOnlyValue =
+    val:
+    if cfg.onHomeLan then val else throw "Can't get '${val}' unless options.bjackman.onHomeLan is set";
 in
 {
   options.bjackman = {
@@ -25,16 +20,17 @@ in
       nfs = {
         hostname = lib.mkOption {
           type = lib.types.str;
-          default = mkLanFqdn "norte.fritz.box";
+          default = lanOnlyValue "norte.fritz.box";
         };
         mediaMount = lib.mkOption {
           type = lib.types.path;
           default = "/mnt/nas/media";
         };
       };
-      jellyfin = lib.mkOption {
+      jellyfin.url = lib.mkOption {
         type = lib.types.str;
-        default = mkLanFqdn "jellyfin.fritz.box";
+        # TODO: This is quietly coupled with the port elsewhere :/
+        default = lanOnlyValue "http://jellyfin.fritz.box:8096";
       };
     };
   };
