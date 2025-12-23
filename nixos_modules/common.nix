@@ -40,4 +40,7 @@
     "nix-command"
     "flakes"
   ];
+
+  # This broke stuff for me before on Pizza, enable it everywhere.
+  hardware.enableRedistributableFirmware = true;
 }
