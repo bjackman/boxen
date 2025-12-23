@@ -31,6 +31,13 @@
             pathInfos = [ { path = "/var/lib/transmission"; } ];
           };
         }
+        {
+          name = "NFS Movies";
+          collectionType = "movies";
+          libraryOptions = {
+            pathInfos = [ { path = "/mnt/nas-media"; } ];
+          };
+        }
       ];
     };
   };
