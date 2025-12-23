@@ -17,7 +17,8 @@
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
-    "${modulesPath}/profiles/headless.nix"
+    # Don't load headless.nix, it disables all GPU stuff but we want GPU stuff
+    # for Jellyfin.
     "${modulesPath}/profiles/minimal.nix"
     nixos-hardware.nixosModules.lenovo-thinkpad-t480
   ];
