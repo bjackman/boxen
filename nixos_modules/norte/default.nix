@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   modulesPath,
   nixos-raspberrypi,
@@ -16,8 +17,11 @@ in
     ../server.nix
     ../common.nix
     ../transmission.nix
+    ../hosts.nix
     ./nfs-server.nix
   ];
+
+  bjackman.onHomeLan = true;
 
   boot.loader.raspberryPi.bootloader = "kernel";
 
@@ -65,6 +69,41 @@ in
     ReadWritePaths = [ nfsCfg.mediaMount ];
   };
   services.transmission.settings.download-dir = nfsCfg.mediaMount;
+
+  # NFS doesn't support file notifications so the Jellyfin watcher doesn't
+  # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
+  # via the API :)
+  age.secrets.jellarr-api-key.file = ../../secrets/jellarr-api-key.age;
+  systemd.services.jellyfin-notifier = {
+    description = "Watchexec Jellyfin API notifier";
+    # I don't think depnding on a .mount unit like this is correct lmao
+    after = [
+      "network.target"
+      "run-agenix.d.mount"
+    ];
+    wantedBy = [ "multi-user.target" ];
+    # Putting watchexec in here doesn't work since this PATH isn't used execute
+    # the ExecStart, the ExecStart command is just executed with this PATH.
+    path = [ pkgs.curl ];
+    serviceConfig = {
+      ExecStart =
+        let
+          jellyfinUrl = config.bjackman.servers.jellyfin.url;
+          # watchexec prints the command it's running, which is useful, but it
+          # risks leaking the API key into the journal. So put the actual key
+          # read + update into its own little script.
+          refreshScript = pkgs.writeShellScript "jellyin-refresh-library" ''
+            set -eu -o pipefail
+            key=$(cat ${config.age.secrets.jellarr-api-key.path})
+            curl -f -X POST "${jellyfinUrl}/Library/Refresh?api_key=$key" -d "" 2>&1;
+          '';
+        in
+        # --shell=none stops watchexec from trying to use a shell from $PATH,
+        # since there isn't one in the service environment.
+        "${pkgs.watchexec}/bin/watchexec --debounce 3s --watch ${nfsCfg.mediaMount} --shell=none -- ${refreshScript}";
+      Restart = "always";
+    };
+  };
 
   powerManagement.powertop.enable = true;
 
