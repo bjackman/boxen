@@ -11,14 +11,6 @@
     # this causes Linux to be hesitant to enter the deepest power saving state,
     # but that setting this parameter to a higher default will fix it.
     "nvme_core.default_ps_max_latency_us=10000"
-
-    # Gemini suggests this, but... I dunno about that one buddy.
-    # "pcie_aspm=force"
-
-    # GPU Power Management, also suggested by Gemini.
-    "i915.enable_dc=2" # Enable deeper Display Core power states
-    "i915.enable_fbc=1" # Framebuffer compression
-    "i915.enable_psr=1" # Panel Self Refresh
   ];
 
   # Disable some un-needed kernel modules as an attempt to try and reduce power.
