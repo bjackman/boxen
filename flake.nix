@@ -227,7 +227,7 @@
           # with it.
           norte = nixos-raspberrypi.lib.nixosSystem {
             system = "aarch64-linux";
-            modules = [ ./nixos_modules/norte.nix ];
+            modules = [ ./nixos_modules/norte ];
             specialArgs = inputs;
           };
         };

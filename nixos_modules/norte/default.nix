@@ -9,10 +9,10 @@
   imports = [
     nixos-raspberrypi.nixosModules.sd-image
     nixos-raspberrypi.nixosModules.raspberry-pi-5.base
-    ./brendan.nix
-    ./server.nix
-    ./common.nix
-    ./transmission.nix
+    ../brendan.nix
+    ../server.nix
+    ../common.nix
+    ../transmission.nix
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
