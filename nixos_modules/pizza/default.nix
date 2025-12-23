@@ -23,6 +23,10 @@
     nixos-hardware.nixosModules.lenovo-thinkpad-t480
   ];
 
+  # Required for i915 driver to load cleanly. IIUC this because of the
+  # enable_guc setting from nixos-hardware.
+  hardware.enableRedistributableFirmware = true;
+
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
