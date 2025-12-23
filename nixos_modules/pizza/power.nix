@@ -4,15 +4,6 @@
 {
   powerManagement.powertop.enable = true;
 
-  boot.kernelParams = [
-    # Obsessively poking around with power saving shit.
-    # Gemini got me to run `sudo nvme id-ctrl /dev/nvme0n1 -H | grep -A 15 "ps.*:"`
-    # which said "exlat:8000" for the deepest power state. The AI claims that
-    # this causes Linux to be hesitant to enter the deepest power saving state,
-    # but that setting this parameter to a higher default will fix it.
-    "nvme_core.default_ps_max_latency_us=10000"
-  ];
-
   # Disable some un-needed kernel modules as an attempt to try and reduce power.
   boot.blacklistedKernelModules = [
     "iwlwifi"
