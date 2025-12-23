@@ -4,6 +4,9 @@
   nixos-raspberrypi,
   ...
 }:
+let
+  nfsCfg = config.bjackman.servers.nfs;
+in
 {
   # This was figured out with great pain and anguish, not by reading docs.
   imports = [
@@ -59,9 +62,9 @@
   users.groups.media-writers = { };
   systemd.services.transmission.serviceConfig = {
     SupplementaryGroups = [ "media-writers" ];
-    ReadWritePaths = [ "/mnt/nas/media" ];
+    ReadWritePaths = [ nfsCfg.mediaMount ];
   };
-  services.transmission.settings.download-dir = "/mnt/nas/media";
+  services.transmission.settings.download-dir = nfsCfg.mediaMount;
 
   powerManagement.powertop.enable = true;
 

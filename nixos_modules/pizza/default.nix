@@ -6,7 +6,9 @@
   lib,
   ...
 }:
-
+let
+  nfsCfg = config.bjackman.servers.nfs;
+in
 {
   imports = [
     ../common.nix
@@ -14,6 +16,7 @@
     ../server.nix
     ../impermanence.nix
     ../transmission.nix
+    ../hosts.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
@@ -22,6 +25,8 @@
     "${modulesPath}/profiles/minimal.nix"
     nixos-hardware.nixosModules.lenovo-thinkpad-t480
   ];
+
+  bjackman.onHomeLan = true;
 
   # Required for i915 driver to load cleanly. IIUC this because of the
   # enable_guc setting from nixos-hardware.
@@ -108,7 +113,7 @@
   systemd.mounts = [
     {
       where = "/mnt/nas-media";
-      what = "norte.fritz.box:/mnt/nas/media";
+      what = "${nfsCfg.hostname}:${nfsCfg.mediaMount}";
       type = "nfs";
       mountConfig = {
         Options = "ro,noauto,noatime,x-systemd.mount-timeout=5s,nfsvers=4.2,soft";
@@ -118,7 +123,7 @@
   systemd.automounts = [
     {
       wantedBy = [ "multi-user.target" ];
-      where = "/mnt/nas-media";
+      where = nfsCfg.mediaMount;
       automountConfig.TimeoutIdleSec = "600";
     }
   ];

@@ -1,12 +1,18 @@
 { config, ... }:
+let
+  nfsCfg = config.bjackman.servers.nfs;
+in
 {
-  # Create /mnt/nas/media, let anyone read it. Members of media-writers can
-  # write it. This is defined explicitly here while other subtrees aren't,
-  # that's just coz they were created before I set up NixOS on this node.
+  imports = [ ../hosts.nix ];
+
+  # Create the NFS media mount point, let anyone read it. Members of
+  # media-writers can write it. This is defined explicitly here while other
+  # subtrees aren't, that's just coz they were created before I set up NixOS on
+  # this node.
   users.groups.media-writers = { };
   systemd.tmpfiles.settings = {
     "10-mnt-nas-media" = {
-      "/mnt/nas/media" = {
+      "${nfsCfg.mediaMount}" = {
         d = {
           group = "media-writers";
           mode = "0775";
@@ -40,7 +46,7 @@
       # WARNING: The path of this export is coupled with the client
       # configuration. If you change it you'll need to update the users too.
       ''
-        /mnt/nas/media 192.168.0.0/16(ro,all_squash,anonuid=${uid},anongid=${gid},no_subtree_check)
+        ${nfsCfg.mediaMount} 192.168.0.0/16(ro,all_squash,anonuid=${uid},anongid=${gid},no_subtree_check)
       '';
   };
   networking.firewall.allowedTCPPorts = [ 2049 ];
