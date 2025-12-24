@@ -13,7 +13,7 @@ in
   imports = [
     ../common.nix
     ../brendan.nix
-    ../server.nix
+    ../ssh-server.nix
     ../impermanence.nix
     ../transmission.nix
     ../hosts.nix
