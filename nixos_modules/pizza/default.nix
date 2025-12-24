@@ -46,11 +46,6 @@ in
     HandleLidSwitchExternalPower = "ignore";
   };
 
-  services.openssh = {
-    enable = true;
-    settings.PasswordAuthentication = false;
-  };
-
   networking.useDHCP = false;
   networking.networkmanager.enable = false;
   systemd.network = {
