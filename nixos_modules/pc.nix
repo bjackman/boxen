@@ -58,4 +58,5 @@
   # networkmanager also being enabled. Disable it explicitly.
   networking.wireless.enable = false;
 
+  services.tailscale.enable = true;
 }
