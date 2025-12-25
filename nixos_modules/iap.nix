@@ -4,6 +4,9 @@
   agenix,
   ...
 }:
+let
+  autheliaPort = 9091;
+in
 {
   imports = [
     agenix.nixosModules.default
@@ -16,14 +19,14 @@
     virtualHosts = {
       # This is the authelia UI.
       "auth.app.localhost".extraConfig = ''
-        reverse_proxy 127.0.0.1:9091
+        reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
       '';
 
       # Dummy app that we'll configure to auth via Authelia.
       # TODO: Gemini generated this. Should read the docs to understand what
       # this actually does.
       "app.localhost".extraConfig = ''
-        forward_auth 127.0.0.1:9091 {
+        forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
           uri /api/authz/forward-auth
           copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
         }
@@ -61,6 +64,8 @@
     };
 
     settings = {
+      server.address = "tcp://:${builtins.toString autheliaPort}/";
+
       authentication_backend = {
         password_reset.disable = true;
         # Authelia has nice ways to read files/env vars and then do templating
