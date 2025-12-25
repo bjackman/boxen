@@ -13,17 +13,28 @@
     '';
   };
 
-  age.secrets = {
-    authelia-jwt-secret.file = ../secrets/authelia/jwt-secret.age;
-    authelia-storage-encryption-key.file = ../secrets/authelia/storage-encryption-key.age;
-    authelia-session-secret.file = ../secrets/authelia/session-secret.age;
-  };
+  age.secrets =
+    let
+      mkSecret = name: {
+        file = ../secrets/authelia + "/${name}.age";
+        mode = "440";
+        group = config.services.authelia.instances.main.group;
+      };
+    in
+    {
+      authelia-jwt-secret = mkSecret "jwt-secret";
+      authelia-storage-encryption-key = mkSecret "storage-encryption-key";
+      authelia-session-secret = mkSecret "session-secret";
+    };
 
   services.authelia.instances.main = with config.age.secrets; {
     enable = true;
-    secrets.jwtSecretFile = authelia-jwt-secret.path;
-    secrets.storageEncryptionKeyFile = authelia-storage-encryption-key.path;
-    secrets.sessionSecretFile = authelia-session-secret.path;
+
+    secrets = with config.age.secrets; {
+      jwtSecretFile = authelia-jwt-secret.path;
+      storageEncryptionKeyFile = authelia-storage-encryption-key.path;
+      sessionSecretFile = authelia-session-secret.path;
+    };
 
     settings = {
       # server.address = "tcp://127.0.0.1:9091";
