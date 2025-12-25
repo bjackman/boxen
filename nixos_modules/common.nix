@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  self,
   ...
 }:
 {
@@ -43,4 +44,6 @@
 
   # This broke stuff for me before on Pizza, enable it everywhere.
   hardware.enableRedistributableFirmware = true;
+
+  system.configurationRevision = self.shortRev or self.dirtyRev or "dirty";
 }
