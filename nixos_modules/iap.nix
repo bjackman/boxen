@@ -1,4 +1,9 @@
+{ config, agenix, ... }:
 {
+  imports = [
+    agenix.nixosModules.default
+  ];
+
   # Can connect to this locally over HTTPS if I bypass my browser's complaint
   # that the CA is unknown.
   services.caddy = {
@@ -6,5 +11,44 @@
     virtualHosts."localhost".extraConfig = ''
       respond "Hello, world!"
     '';
+  };
+
+  age.secrets = {
+    authelia-jwt-secret.file = ../secrets/authelia/jwt-secret.age;
+    authelia-storage-encryption-key.file = ../secrets/authelia/storage-encryption-key.age;
+    authelia-session-secret.file = ../secrets/authelia/session-secret.age;
+  };
+
+  services.authelia.instances.main = with config.age.secrets; {
+    enable = true;
+    secrets.jwtSecretFile = authelia-jwt-secret.path;
+    secrets.storageEncryptionKeyFile = authelia-storage-encryption-key.path;
+    secrets.sessionSecretFile = authelia-session-secret.path;
+
+    settings = {
+      # server.address = "tcp://127.0.0.1:9091";
+      # log.level = "debug";
+
+      authentication_backend.file.path = "/var/lib/authelia/users.yml";
+
+      storage.local.path = "/var/lib/authelia/db.sqlite3";
+
+      # access_control.default_policy = "deny";
+      # access_control.rules = [
+      #   {
+      #     domain = ["auth.example.com"];
+      #     policy = "bypass";
+      #   }
+      # ];
+
+      # session = {
+      #   name = "authelia_session";
+      #   domain = "example.com";
+      #   expiration = 3600;
+      #   inactivity = 300;
+      # };
+
+      # notifier.filesystem.filename = "/var/lib/authelia/notification.txt";
+    };
   };
 }
