@@ -52,7 +52,5 @@ in
   "authelia/jwt-secret.age".publicKeys = all-personal;
   "authelia/storage-encryption-key.age".publicKeys = all-personal;
   "authelia/session-secret.age".publicKeys = all-personal;
-  # Generated with nix run nixpkgs#authelia crypto hash generate argon2
-  # Maybe leaking this would be fine, I'm not sure really.
-  "authelia/brendan-password-hash.age".publicKeys = all-personal;
+  "authelia/users.yaml.age".publicKeys = all-personal;
 }

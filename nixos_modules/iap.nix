@@ -45,6 +45,7 @@
       authelia-storage-encryption-key = mkSecret "storage-encryption-key";
       authelia-session-secret = mkSecret "session-secret";
       authelia-brendan-password-hash = mkSecret "brendan-password-hash";
+      authelia-users-yaml = mkSecret "users.yaml";
     };
 
   services.authelia.instances.main = with config.age.secrets; {
@@ -60,23 +61,15 @@
     };
 
     settings = {
-      authentication_backend =
-        let
-          userCfg = (pkgs.formats.yaml { }).generate "users.yaml" {
-            # TODO: Can I use the filter magic in the users config file? Not
-            # really sure.
-            users.brendan = {
-              password = ''{{- fileContent "${authelia-brendan-password-hash.path}" }}'';
-              displayname = "Brendan";
-              groups = [];
-            };
-          };
-        in
-        {
-          password_reset.disable = true;
-          # file.path = pkgs.writeText "users.yaml" userCfg;
-          file.path = userCfg;
-        };
+      authentication_backend = {
+        password_reset.disable = true;
+        # Authelia has nice ways to read files/env vars and then do templating
+        # on them. So you'd think we'd be able to define the users in Nix and
+        # then just inject the password hashes as secrets. But, the user
+        # config file is a kinda static resource that doesn't support that.
+        # So whatever, just encrypt the whole config.
+        file.path = authelia-users-yaml.path;
+      };
 
       storage.local.path = "/var/lib/authelia-main/db.sqlite3";
 
