@@ -1,4 +1,9 @@
-{ config, agenix, ... }:
+{
+  pkgs,
+  config,
+  agenix,
+  ...
+}:
 {
   imports = [
     agenix.nixosModules.default
@@ -39,11 +44,15 @@
       authelia-jwt-secret = mkSecret "jwt-secret";
       authelia-storage-encryption-key = mkSecret "storage-encryption-key";
       authelia-session-secret = mkSecret "session-secret";
+      authelia-brendan-password-hash = mkSecret "brendan-password-hash";
     };
 
   services.authelia.instances.main = with config.age.secrets; {
     enable = true;
 
+    # These options are higher-level functionality provided by the nixpkgs
+    # packaging, this doesn't directly correspond to the Authelia secrets
+    # system it just populates some other settings values in a nice way.
     secrets = with config.age.secrets; {
       jwtSecretFile = authelia-jwt-secret.path;
       storageEncryptionKeyFile = authelia-storage-encryption-key.path;
@@ -51,10 +60,23 @@
     };
 
     settings = {
-      authentication_backend = {
-        password_reset.disable = true;
-        file.path = "/var/lib/authelia-main/users.yml";
-      };
+      authentication_backend =
+        let
+          userCfg = (pkgs.formats.yaml { }).generate "users.yaml" {
+            # TODO: Can I use the filter magic in the users config file? Not
+            # really sure.
+            users.brendan = {
+              password = ''{{- fileContent "${authelia-brendan-password-hash.path}" }}'';
+              displayname = "Brendan";
+              groups = [];
+            };
+          };
+        in
+        {
+          password_reset.disable = true;
+          # file.path = pkgs.writeText "users.yaml" userCfg;
+          file.path = userCfg;
+        };
 
       storage.local.path = "/var/lib/authelia-main/db.sqlite3";
 
