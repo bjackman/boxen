@@ -9,10 +9,14 @@
   services.caddy = {
     enable = true;
     virtualHosts = {
+      # This is the authelia UI.
       "auth.app.localhost".extraConfig = ''
         reverse_proxy 127.0.0.1:9091
       '';
 
+      # Dummy app that we'll configure to auth via Authelia.
+      # TODO: Gemini generated this. Should read the docs to understand what
+      # this actually does.
       "app.localhost".extraConfig = ''
         forward_auth 127.0.0.1:9091 {
           uri /api/authz/forward-auth
@@ -74,6 +78,9 @@
         ];
       };
 
+      # This is a dummy for sending email notifications. It's required for the
+      # configuration to validate. I think for the way I've set this up (e.g. no
+      # password reset flow), this is unused.
       notifier.filesystem.filename = "/var/lib/authelia-main/notification.txt";
     };
   };
