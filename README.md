@@ -60,6 +60,8 @@ can rekey secrets to allow it to access them.
 - [ ] Make creating Authelia users more practical
 - [ ] Make creating FileBrowser users more practical
 - [ ] Make FileBrowser able to access NAS data (read/write)
+- [ ] Set up some monitoring. In particular it would be nice to know about
+      watchdog resets.
 
 ## Inspecting the config
 
