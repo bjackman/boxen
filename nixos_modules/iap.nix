@@ -8,9 +8,19 @@
   # that the CA is unknown.
   services.caddy = {
     enable = true;
-    virtualHosts."localhost".extraConfig = ''
-      respond "Hello, world!"
-    '';
+    virtualHosts = {
+      "auth.localhost".extraConfig = ''
+        reverse_proxy 127.0.0.1:9091
+      '';
+
+      "app.localhost".extraConfig = ''
+        forward_auth 127.0.0.1:9091 {
+          uri /api/authz/forward-auth
+          copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+        }
+        respond "Authenticated!"
+      '';
+    };
   };
 
   age.secrets =
@@ -37,29 +47,31 @@
     };
 
     settings = {
-      # server.address = "tcp://127.0.0.1:9091";
-      # log.level = "debug";
+      authentication_backend.file.path = "/var/lib/authelia-main/users.yml";
 
-      authentication_backend.file.path = "/var/lib/authelia/users.yml";
+      storage.local.path = "/var/lib/authelia-main/db.sqlite3";
 
-      storage.local.path = "/var/lib/authelia/db.sqlite3";
+      access_control = {
+        default_policy = "deny";
+        rules = [
+          {
+            domain = [ "localhost" ];
+            policy = "one_factor";
+          }
+        ];
+      };
 
-      # access_control.default_policy = "deny";
-      # access_control.rules = [
-      #   {
-      #     domain = ["auth.example.com"];
-      #     policy = "bypass";
-      #   }
-      # ];
+      session = {
+        name = "authelia_session";
+        cookies = [
+          {
+            domain = "auth.localhost";
+            authelia_url = "https://auth.localhost";
+          }
+        ];
+      };
 
-      # session = {
-      #   name = "authelia_session";
-      #   domain = "example.com";
-      #   expiration = 3600;
-      #   inactivity = 300;
-      # };
-
-      # notifier.filesystem.filename = "/var/lib/authelia/notification.txt";
+      notifier.filesystem.filename = "/var/lib/authelia-main/notification.txt";
     };
   };
 }
