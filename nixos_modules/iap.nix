@@ -47,7 +47,10 @@
     };
 
     settings = {
-      authentication_backend.file.path = "/var/lib/authelia-main/users.yml";
+      authentication_backend = {
+        password_reset.disable = true;
+        file.path = "/var/lib/authelia-main/users.yml";
+      };
 
       storage.local.path = "/var/lib/authelia-main/db.sqlite3";
 
