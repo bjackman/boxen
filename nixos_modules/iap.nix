@@ -9,7 +9,7 @@
   services.caddy = {
     enable = true;
     virtualHosts = {
-      "auth.localhost".extraConfig = ''
+      "auth.app.localhost".extraConfig = ''
         reverse_proxy 127.0.0.1:9091
       '';
 
@@ -55,7 +55,7 @@
         default_policy = "deny";
         rules = [
           {
-            domain = [ "localhost" ];
+            domain = [ "app.localhost" ];
             policy = "one_factor";
           }
         ];
@@ -65,8 +65,8 @@
         name = "authelia_session";
         cookies = [
           {
-            domain = "auth.localhost";
-            authelia_url = "https://auth.localhost";
+            domain = "app.localhost";
+            authelia_url = "https://auth.app.localhost";
           }
         ];
       };
