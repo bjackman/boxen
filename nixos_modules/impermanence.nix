@@ -99,5 +99,12 @@
         }
         cfg.extraPersistence
       ];
+
+      # Ensure Agenix can decrypt login passwords during early boot
+      # https://discourse.nixos.org/t/impermanence-agenix-host-keys-login-password/70881/2
+      age.identityPaths = [
+        "/persistent/etc/ssh/ssh_host_ed25519_key"
+        "/persistent/etc/ssh/ssh_host_rsa_key"
+      ];
     };
 }

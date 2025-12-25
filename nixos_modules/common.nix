@@ -2,14 +2,9 @@
   lib,
   pkgs,
   self,
-  agenix,
   ...
 }:
 {
-  imports = [
-    agenix.nixosModules.default
-  ];
-
   # Set up the default soft ulimit for open
   # file descriptors. Without this I've run into "too many open files" during
   # Nix builds.
@@ -51,12 +46,4 @@
   hardware.enableRedistributableFirmware = true;
 
   system.configurationRevision = self.shortRev or self.dirtyRev or "dirty";
-
-
-  # Ensure Agenix can decrypt login passwords during early boot
-  # https://discourse.nixos.org/t/impermanence-agenix-host-keys-login-password/70881/2
-  age.identityPaths = [
-    "/persistent/etc/ssh/ssh_host_ed25519_key"
-    "/persistent/etc/ssh/ssh_host_rsa_key"
-  ];
 }
