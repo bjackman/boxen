@@ -47,60 +47,6 @@ can rekey secrets to allow it to access them.
 
 # TODOs
 
-- [x] Update Zed
-- [x] Set up Zed alias for NixOS
-- [x] Move remaining Chungito configuration into Home Manager as appropriate
-- [x] Split up NixOS config into modules?
-- [x] Make Fish default shell
-- [x] Explore some FREAKY TILING WINDOW MANAGER BULLSHIT. OK actually just use
-      Sway because Hyprland isn't really usable on Debian.
-  - [x] Make waybar show workspaces
-  - [x] Figure out workspace workflow for desktop:
-        - super+b/n/m to switch to browser/terminal/editor workspaces
-        - super+shift+b/n/m to move a window to the corresponding workspace
-        - super+shift+h/l to move workspaces left and right between monitors
-  - [x] Ensure bluetooth / sound / NetworkManager stuff is all usable
-  - [ ] Figure out if I need an XDG portal and set one up.
-  - [x] Make Chrome login work
-  - [x] Make it derk mode
-  - [x] Get a status bar working.
-    - [ ] Set up battery icon if on laptop
-    - [x] Make power control work
-    - [x] Make it look nice
-  - [x] Get a launcher working
-  - [ ] Document it for myself
-  - [ ] Figure out how to dynamically create workspaces
-  - [ ] Figure out how to dynamically enable/disable third monitor
-  - [ ] Figure out an "overview" mechanism like Gnome has. I tried this:
-        https://code.hyprland.org/hyprwm/hyprland-plugins/src/branch/main/hyprexpo
-        which is an official plugin that's supposed to this but I just got an
-        error saying "hyrexpo:expo" wasn't valid, I guess I didn't install it
-        properly.
-  - [x] Set up a lock screen
-  - [x] Make notifications work
-  - [x] Make screensharing work
-    - [ ] In Firefox
-    - [ ] In Chrome
-  - [x] Make Spotify work
-  - [x] Make hyperlinks work in terminal
-  - [x] Make it look like windows 98
-  - [x] Make volume/backlight control buttons work.
-- [x] Figure out impermanence for Chungito
-- [ ] Document how all the parts of this repo fit together
-- [ ] Figure out a nice way to CONSUME MEDIA potentially involving CRIME
-- [ ] Figure out Non-NixOS:
-  - [ ] Hyprlock
-      - Basically do the non-NixOS equivalent of `security.pam.services.hyprlock = {};`
-  - [ ] Screen sharing
-- [ ] Switch back to VSCode
-  - [x] Set up sway workspace thingy
-  - [x] Disable annoying AI shit
-  - [ ] Install extensions with impermanence:
-    - [ ] Markdown All in One
-    - [ ] Vim
-    - [ ] Trailing Spaces
-  - [ ] Refactor symlink magic?
-
 ## Inspecting the config
 
 NixOS options are under `.#nixosConfigurations.<config>.config`. So for example:
