@@ -10,6 +10,7 @@ in
 {
   imports = [
     agenix.nixosModules.default
+    ./impermanence.nix
   ];
 
   # Can connect to this locally over HTTPS if I bypass my browser's complaint
@@ -108,4 +109,8 @@ in
       notifier.filesystem.filename = "/var/lib/authelia-main/notification.txt";
     };
   };
+
+  bjackman.impermanence.extraPersistence.files = [
+    config.services.authelia.instances.main.settings.storage.local.path
+  ];
 }
