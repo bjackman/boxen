@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   config,
   agenix,
   ...
@@ -134,5 +135,45 @@ in
       # listen for local connections.
       address = "localhost";
     };
+  };
+  system.activationScripts.filebrowser-users = {
+    deps = [
+      "users"
+      "groups"
+    ];
+    text =
+      let
+        filebrowser = lib.getExe config.services.filebrowser.package;
+        dbPath = config.services.filebrowser.settings.database;
+        filebrowserUser = config.services.filebrowser.user;
+        # TODO: Configure this
+        users = [ "brendan" ];
+        userListFile = pkgs.writeText "filebrowser-user-list.txt" (lib.concatStringsSep "\n" users);
+      in
+      ''
+        set -eu
+        
+        # Manually ensure the directory exists because tmpfiles hasn't run yet.
+        mkdir -p /var/lib/filebrowser
+        chown filebrowser:filebrowser /var/lib/filebrowser
+        chmod 0750 /var/lib/filebrowser
+
+        # Ensure directory exists.
+        if [ ! -f "${dbPath}" ]; then
+          echo "Creating FileBrowser database at ${dbPath}"
+          ${filebrowser} -d ${dbPath} config init
+          chown ${filebrowserUser}:${filebrowserUser} "${dbPath}"
+        fi
+
+        while read -r user; do
+          if ! ${filebrowser} -d ${dbPath} users find "$user"; then
+            echo "Provisioning FileBrowser user: $user"
+            # TODO: Make admin conditional
+            ${filebrowser} -d ${dbPath} users add "$user" "dummy-unused-password" --perm.admin=true
+          else
+            echo "FileBrowser user $user already exists"
+          fi
+        done < "${userListFile}"
+      '';
   };
 }
