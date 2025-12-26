@@ -6,6 +6,7 @@
 }:
 let
   autheliaPort = 9091;
+  fileBrowserPort = config.services.filebrowser.settings.port;
 in
 {
   imports = [
@@ -23,7 +24,7 @@ in
         reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
       '';
 
-      # Dummy app that we'll configure to auth via Authelia.
+      # Proxy FileBrowser, behind Authelia auth.
       # Gemini generated this and seems to have been cribbing from
       # https://www.authelia.com/integration/proxies/caddy/. As per that doc
       # this corresponds to the default configuration of Authelia's ForwardAuth
@@ -35,12 +36,12 @@ in
       # included here, so that if the user sets them in their own request, that
       # doesn't get forwarded directly to the app (allowing users to spoof
       # stuff).
-      "app.localhost".extraConfig = ''
+      "filebrowser.app.localhost".extraConfig = ''
         forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
           uri /api/authz/forward-auth
           copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
         }
-        respond "Authenticated!"
+        reverse_proxy 127.0.0.1:${builtins.toString fileBrowserPort}
       '';
     };
   };
@@ -92,14 +93,14 @@ in
         default_policy = "deny";
         rules = [
           {
-            domain = [ "app.localhost" ];
+            domain = [ "filebrowser.app.localhost" ];
             policy = "one_factor";
           }
         ];
       };
 
       session = {
-        name = "authelia_session";
+        name = "filebrowser_session";
         cookies = [
           {
             domain = "app.localhost";
