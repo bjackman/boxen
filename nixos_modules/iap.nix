@@ -28,8 +28,13 @@ in
       # https://www.authelia.com/integration/proxies/caddy/. As per that doc
       # this corresponds to the default configuration of Authelia's ForwardAuth
       # Authz implementation.
-      # TO be honest there is a lot going on that I don't understand here, the
-      # Authelia docs are not that clear.
+      # This makes a query to Authelia to get the auth state. If not
+      # authenticated it redirects to the Authelia UI. If authenticated, it adds
+      # the Remote-* headers to the request and forward it to the app.
+      # It's important that all the headers that are of security relevance are
+      # included here, so that if the user sets them in their own request, that
+      # doesn't get forwarded directly to the app (allowing users to spoof
+      # stuff).
       "app.localhost".extraConfig = ''
         forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
           uri /api/authz/forward-auth
@@ -113,4 +118,20 @@ in
   bjackman.impermanence.extraPersistence.files = [
     config.services.authelia.instances.main.settings.storage.local.path
   ];
+
+  services.filebrowser = {
+    enable = true;
+    settings = {
+      signup = false;
+      # This tells FileBrowser to trust headers from our proxy.
+      # Here FileBrowser is trusting the network. Anyone who can connect
+      # directly to it, can spoof arbitrary users by manually setting the
+      # Remote-User header.
+      auth.method = "proxy";
+      auth.header = "Remote-User";
+      # Since we're effectively trusting the network it's important to only
+      # listen for local connections.
+      address = "localhost";
+    };
+  };
 }
