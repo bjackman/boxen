@@ -49,7 +49,7 @@ can rekey secrets to allow it to access them.
 
 - [ ] Fix borked machines
  - [x] Unbrick deadlocked Norte
- - [ ] Unbrick remote pizza access
+ - [x] Unbrick remote pizza access
  - [ ] Figure out where ZFS media went on norte
 - [ ] Get watchdogs working (test with  `ls /mnt/nas/.zfs/snapshots/*/media`)
 - [ ] Investigate if `sops-nix` is better than `agenix`. Main goal is we need to
