@@ -23,8 +23,12 @@ in
       '';
 
       # Dummy app that we'll configure to auth via Authelia.
-      # TODO: Gemini generated this. Should read the docs to understand what
-      # this actually does.
+      # Gemini generated this and seems to have been cribbing from
+      # https://www.authelia.com/integration/proxies/caddy/. As per that doc
+      # this corresponds to the default configuration of Authelia's ForwardAuth
+      # Authz implementation.
+      # TO be honest there is a lot going on that I don't understand here, the
+      # Authelia docs are not that clear.
       "app.localhost".extraConfig = ''
         forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
           uri /api/authz/forward-auth
