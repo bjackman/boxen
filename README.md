@@ -47,6 +47,17 @@ can rekey secrets to allow it to access them.
 
 # TODOs
 
+- [ ] Fix borked machines
+- [ ] Get watchdogs working (test with  `ls /mnt/nas/.zfs/snapshots/*/media`)
+- [ ] Investigate if `sops-nix` is better than `agenix`. Main goal is we need to
+      be able to generate stuff like configs containing secrets, on the host.
+- [ ] Get Authelia running
+- [ ] Get FileBrowser running
+- [ ] Get FileBrowser accepting auth from Athelia
+- [ ] Make creating Authelia users more practical
+- [ ] Make creating FileBrowser users more practical
+- [ ] Make FileBrowser able to access NAS data (read/write)
+
 ## Inspecting the config
 
 NixOS options are under `.#nixosConfigurations.<config>.config`. So for example:
