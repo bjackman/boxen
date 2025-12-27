@@ -153,6 +153,7 @@
 
     bjackman.nix-warmups = [
       "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
+      "github:bjackman/boxen/master#devShells.${pkgs.stdenv.hostPlatform.system}.default"
     ];
   };
 }
