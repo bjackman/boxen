@@ -124,17 +124,14 @@
         inherit nixpkgs;
         inherit nixpkgs-unstable;
       };
+      treefmtCfg = treefmt-nix.lib.evalModule pkgs {
+        projectRootFile = "flake.nix";
+        programs.nixfmt.enable = true;
+        programs.mdformat.enable = true;
+      };
     in
     {
-      formatter."${system}" =
-        let
-          cfg = treefmt-nix.lib.evalModule pkgs {
-            projectRootFile = "flake.nix";
-            programs.nixfmt.enable = true;
-            programs.mdformat.enable = true;
-          };
-        in
-        cfg.config.build.wrapper;
+      formatter."${system}" = treefmtCfg.config.build.wrapper;
 
       # This is a bit of a magical dance to get packages defined in this flake
       # to be available as flake outputs (so they can easily be tested) and also
@@ -274,7 +271,10 @@
         (nixpkgs.lib.mapAttrs (_: conf: conf.config.system.build.toplevel) (
           nixpkgs.lib.filterAttrs (_: c: c.pkgs.stdenv.hostPlatform.system == system) self.nixosConfigurations
         ))
-        // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations);
+        // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations)
+        // {
+          format = treefmtCfg.config.build.check self;
+        };
 
       devShells."${system}".default = pkgs.mkShell {
         packages = [

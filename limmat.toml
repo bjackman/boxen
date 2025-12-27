@@ -2,15 +2,11 @@
 [[tests]]
 name = "flake-check"
 cache = "by_tree"
-command = """
-git reset --hard  # nix flake check will modify the tree :(
-nix flake check
-"""
+command = "nix flake check"
 
 [[tests]]
 name = "fmt"
 cache = "by_tree"
-command = """
-git reset --hard
-nix fmt -- --fail-on-change
-"""
+# Note this is redundant with nix flake check. But I want a separate job so it's
+# easy to see when this is the only issue.
+command = "nix build .#checks.x86_64-linux.format"
