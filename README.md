@@ -24,13 +24,19 @@
 How I installed `pizza`:
 
 - Check out `813e8d1ec22e`
+
 - `nix build .#nixosConfigurations.pizza.config.system.build.isoImage`. This
   builds an installer image.
+
 - Boot the installer on the machine, plug it into the network.
+
 - Can now SSH to the machine on the LAN.
+
 - Modify the configuration like in `18ab3a3`, that is at least:
+
   - Remove the installer module and enable a bootloader
   - Add a Disko configuration
+
 - Run `nixos-anywhere` e.g.:
 
   ```sh
@@ -48,12 +54,12 @@ can rekey secrets to allow it to access them.
 # TODOs
 
 - [ ] Fix borked machines
- - [x] Unbrick deadlocked Norte
- - [x] Unbrick remote pizza access
- - [ ] Figure out where ZFS media went on norte
-- [ ] Get watchdogs working (test with  `ls /mnt/nas/.zfs/snapshots/*/media`)
+- [x] Unbrick deadlocked Norte
+- [x] Unbrick remote pizza access
+- [ ] Figure out where ZFS media went on norte
+- [ ] Get watchdogs working (test with `ls /mnt/nas/.zfs/snapshots/*/media`)
 - [ ] Investigate if `sops-nix` is better than `agenix`. Main goal is we need to
-      be able to generate stuff like configs containing secrets, on the host.
+  be able to generate stuff like configs containing secrets, on the host.
 - [ ] Get Authelia running
 - [ ] Get FileBrowser running
 - [ ] Get FileBrowser accepting auth from Athelia
@@ -61,7 +67,7 @@ can rekey secrets to allow it to access them.
 - [ ] Make creating FileBrowser users more practical
 - [ ] Make FileBrowser able to access NAS data (read/write)
 - [ ] Set up some monitoring. In particular it would be nice to know about
-      watchdog resets.
+  watchdog resets.
 
 ## Inspecting the config
 
@@ -94,16 +100,16 @@ they get decrypted and dumped into a tmpfs as plaintext (lol).
 
 To add a secret, run `nix develop` to get the `agenix` CLI, then go into
 `secrets/` and add it to `secrets.nix` following the existing pattern in there.
-That's where you configure which keys can decrypt it. Then run `agenix -e
-<name>.age`. Then to make it get decrypted at runtime, add it to `age.secrets`
+That's where you configure which keys can decrypt it. Then run `agenix -e <name>.age`.
+Then to make it get decrypted at runtime, add it to `age.secrets`
 in the home-manager/NixOS config.
 
 To add a recipient key for a secret, update `secrets.nix` to include it in that
 secret's `publicKeys`setting, then run `agenix -r` from the `secrets/` dir.
 Note that this requires decrypting the keys, which your current user might not
 have the ability to do if the only recipients are host keys. In that case, use
-the `-i` flag to point agenix at a private key that can decrypt it, e.g. `sudo
-agenix -r -i /etc/ssh/ssh_host_ed25519_key`.
+the `-i` flag to point agenix at a private key that can decrypt it, e.g.
+`sudo agenix -r -i /etc/ssh/ssh_host_ed25519_key`.
 
 ## Diffing configs
 
@@ -148,10 +154,10 @@ It works like this:
 - `aerc` is used as the actual mail client. A configuration is provided that is
   coupled with the tagging mechanism used by `notmuch-propagate-mute`:
 
-    - There's a key binding for applying the tag that controls the muting
+  - There's a key binding for applying the tag that controls the muting
 
-    - The view of "mailboxes" i.e. the "query map" takes into account the tag
-      that is output by the muting script.
+  - The view of "mailboxes" i.e. the "query map" takes into account the tag
+    that is output by the muting script.
 
 ### Using it
 

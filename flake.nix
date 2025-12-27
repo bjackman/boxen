@@ -39,6 +39,10 @@
       # Don't set input.nixpkgs.follows because this nixos-raspberrypi thing is
       # pretty fucked up and overrides its nixpkgs in weird ways.
     };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -63,6 +67,7 @@
       deploy-rs,
       nixos-hardware,
       nixos-raspberrypi,
+      treefmt-nix,
       ...
     }:
     let
@@ -121,7 +126,15 @@
       };
     in
     {
-      formatter."${system}" = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
+      formatter."${system}" =
+        let
+          cfg = treefmt-nix.lib.evalModule pkgs {
+            projectRootFile = "flake.nix";
+            programs.nixfmt.enable = true;
+            programs.mdformat.enable = true;
+          };
+        in
+        cfg.config.build.wrapper;
 
       # This is a bit of a magical dance to get packages defined in this flake
       # to be available as flake outputs (so they can easily be tested) and also
