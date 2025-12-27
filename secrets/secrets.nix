@@ -48,4 +48,9 @@ in
   # I can't be bothered to figure out how to modularise the secrets just now
   # so, fuck it, anyone can decrypt this shit. (At least on devices I own).
   "weak-local-password-hash.age".publicKeys = all-personal;
+  # Authelia secrets generated with openssl rand  -base64 64 | agenix -e <file>
+  "authelia/jwt-secret.age".publicKeys = all-personal;
+  "authelia/storage-encryption-key.age".publicKeys = all-personal;
+  "authelia/session-secret.age".publicKeys = all-personal;
+  "authelia/users.yaml.age".publicKeys = all-personal;
 }

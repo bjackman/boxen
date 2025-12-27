@@ -35,6 +35,10 @@
             type = lib.types.listOf lib.types.anything;
             default = [ ];
           };
+          files = lib.mkOption {
+            type = lib.types.listOf lib.types.anything;
+            default = [ ];
+          };
           users = lib.mkOption {
             type = lib.types.attrsOf (
               lib.types.submodule {
