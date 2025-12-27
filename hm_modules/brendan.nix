@@ -6,6 +6,9 @@
   home = {
     username = "brendan";
     homeDirectory = "/home/brendan";
+    packages = [
+      pkgsUnstable.gemini-cli
+    ];
   };
   programs.git.settings.user.email = "bhenryj0117@gmail.com";
   programs.vim = {

@@ -36,6 +36,7 @@
       # can't be bothered to figure it out, just persist the whole mess.
       ".config/Code"
       ".vscode"
+      ".gemini" # yuck
       {
         directory = ".mozilla/firefox";
         mode = "0700";
