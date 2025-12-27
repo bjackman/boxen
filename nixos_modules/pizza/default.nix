@@ -2,6 +2,7 @@
   config,
   pkgs,
   modulesPath,
+  agenix,
   nixos-hardware,
   lib,
   ...
@@ -25,6 +26,7 @@ in
     # for Jellyfin.
     "${modulesPath}/profiles/minimal.nix"
     nixos-hardware.nixosModules.lenovo-thinkpad-t480
+    agenix.nixosModules.default
   ];
 
   bjackman.onHomeLan = true;
@@ -127,6 +129,20 @@ in
         };
       };
     };
+  };
+
+  # Dynamic DNS. None of this shit is documented AFAICS, found from a
+  # combination of Reddit and AI.
+  age.secrets.cloudflare-ddns-api-token.file = ../../secrets/cloudflare-ddns-api-token.age;
+  services.ddclient = {
+    enable = true;
+    zone = "yawn.io";
+    domains = [ "home.yawn.io" ];
+    protocol = "cloudflare";
+    username = "token";
+    passwordFile = config.age.secrets.cloudflare-ddns-api-token.path;
+    usev6 = "webv6, webv6=ipify-ipv6";
+    usev4 = "webv4, webv4=ipify-ipv4";
   };
 
   system.stateVersion = "25.11";

@@ -53,4 +53,5 @@ in
   "authelia/storage-encryption-key.age".publicKeys = all-personal;
   "authelia/session-secret.age".publicKeys = all-personal;
   "authelia/users.yaml.age".publicKeys = all-personal;
+  "cloudflare-ddns-api-token.age".publicKeys = all-personal;
 }
