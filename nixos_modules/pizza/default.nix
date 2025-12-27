@@ -17,6 +17,7 @@ in
     ../impermanence.nix
     ../transmission.nix
     ../hosts.nix
+    ../filebrowser.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
