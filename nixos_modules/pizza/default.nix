@@ -133,14 +133,14 @@ in
 
   # Dynamic DNS. None of this shit is documented AFAICS, found from a
   # combination of Reddit and AI.
-  age.secrets.cloudflare-ddns-api-token.file = ../../secrets/cloudflare-ddns-api-token.age;
+  age.secrets.cloudflare-dns-api-token.file = ../../secrets/cloudflare-dns-api-token.age;
   services.ddclient = {
     enable = true;
     zone = "yawn.io";
     domains = [ "home.yawn.io" ];
     protocol = "cloudflare";
     username = "token";
-    passwordFile = config.age.secrets.cloudflare-ddns-api-token.path;
+    passwordFile = config.age.secrets.cloudflare-dns-api-token.path;
     usev6 = "webv6, webv6=ipify-ipv6";
     usev4 = "webv4, webv4=ipify-ipv4";
   };

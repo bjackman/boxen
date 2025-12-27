@@ -8,6 +8,7 @@
 let
   autheliaPort = 9092;
   fileBrowserPort = config.services.filebrowser.settings.port;
+  domain = "home.yawn.io";
 in
 {
   imports = [
@@ -52,9 +53,32 @@ in
     # that the CA is unknown.
     services.caddy = {
       enable = true;
+      package = pkgs.caddy.withPlugins {
+        plugins = [ "github.com/caddy-dns/cloudflare@v0.2.2" ];
+        hash = "sha256-dnhEjopeA0UiI+XVYHYpsjcEI6Y1Hacbi28hVKYQURg=";
+      };
+      # This configures Caddy to do the special dance with Cloudflare to get a
+      # Lets Encrypt certificate. Because we want a wildcard certificate we need
+      # to do the DNS-01 challenge, this supports that.
+      globalConfig = ''
+        debug
+        acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
+      '';
       virtualHosts = {
+        # This block is supposed to a) tell the ACME logic that we want a
+        # wildcard SSL cert and b) configure caddy to use that cert for all the
+        # other matching blocks. It looks like in practice it just registered
+        # separate certs for each domain as well, if I wanna use the wildcard
+        # domain I think I have to restructure the config. I don't think I
+        # actually care though.
+        "${domain}, *.${domain}".extraConfig = ''
+          tls {
+              dns cloudflare {$CLOUDFLARE_API_TOKEN}
+          }
+        '';
+
         # This is the authelia UI.
-        "auth.app.localhost".extraConfig = ''
+        "auth.${domain}".extraConfig = ''
           reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
         '';
 
@@ -70,7 +94,7 @@ in
         # included here, so that if the user sets them in their own request, that
         # doesn't get forwarded directly to the app (allowing users to spoof
         # stuff).
-        "filebrowser.app.localhost".extraConfig = ''
+        "filebrowser.${domain}".extraConfig = ''
           forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
             uri /api/authz/forward-auth
             copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
@@ -79,6 +103,15 @@ in
         '';
       };
     };
+    system.activationScripts.gen-caddy-env = {
+      deps = [ "agenix" ];
+      text = ''
+        mkdir -p /run/derived-secrets
+        echo CLOUDFLARE_API_TOKEN=$(cat ${config.age.secrets.cloudflare-dns-api-token.path}) \
+          > /run/derived-secrets/caddy.env
+      '';
+    };
+    systemd.services.caddy.serviceConfig.EnvironmentFile = [ "/run/derived-secrets/caddy.env" ];
     networking.firewall.allowedTCPPorts = [
       80
       443
@@ -131,7 +164,7 @@ in
           default_policy = "deny";
           rules = [
             {
-              domain = [ "filebrowser.app.localhost" ];
+              domain = [ "filebrowser.${domain}" ];
               policy = "one_factor";
             }
           ];
@@ -141,8 +174,8 @@ in
           name = "filebrowser_session";
           cookies = [
             {
-              domain = "app.localhost";
-              authelia_url = "https://auth.app.localhost";
+              domain = "${domain}";
+              authelia_url = "https://auth.${domain}";
             }
           ];
         };
