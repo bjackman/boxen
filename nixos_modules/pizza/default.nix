@@ -101,27 +101,32 @@ in
   boot.supportedFilesystems = [ "nfs" ];
   # Dunno what this does. Wiki says it's needed.
   services.rpcbind.enable = true;
-  # I originally tried to do this with fileSystems (that's how Gemini did it)
-  # but ran into this issue:
-  # https://discourse.nixos.org/t/x-systemd-automount-makes-activation-fail/54589/2
-  # Anyway the wiki uses systemd.[auto]mounts so this seems fine.
-  systemd.mounts = [
-    {
-      where = "/mnt/nas-media";
-      what = "${nfsCfg.hostname}:${nfsCfg.mediaMount}";
-      type = "nfs";
-      mountConfig = {
-        Options = "ro,noauto,noatime,x-systemd.mount-timeout=5s,nfsvers=4.2,soft";
+  fileSystems."/mnt/nas-media" = {
+    device = "${nfsCfg.hostname}:${nfsCfg.mediaMount}";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "noauto"
+      "noatime"
+      "x-systemd.automount"
+      "x-systemd.mount-timeout=5s"
+      "x-systemd.idle-timeout=600"
+      "nfsvers=4.2"
+      "soft"
+    ];
+  };
+  # Ensure NFS mountpoint is world-readable.
+  systemd.tmpfiles.settings = {
+    "10-nfs-mountpoint" = {
+      "/mnt/nas-media" = {
+        d = {
+          user = "root";
+          group = "root";
+          mode = "0755";
+        };
       };
-    }
-  ];
-  systemd.automounts = [
-    {
-      wantedBy = [ "multi-user.target" ];
-      where = nfsCfg.mediaMount;
-      automountConfig.TimeoutIdleSec = "600";
-    }
-  ];
+    };
+  };
 
   system.stateVersion = "25.11";
 }
