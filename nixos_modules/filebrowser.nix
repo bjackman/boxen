@@ -86,7 +86,8 @@
     '';
   };
   fileSystems."${config.services.filebrowser.settings.root}" = {
-    device = with otherConfigs.sambaServer; "//${networking.hostName}.fritz.box/nas"; # "nas" matches the share name in the server config
+    # "nas" matches the share name in the server config
+    device = with otherConfigs.sambaServer; "//${networking.hostName}.fritz.box/nas";
     fsType = "cifs";
     options = [
       "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s"
