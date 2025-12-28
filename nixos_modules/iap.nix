@@ -3,6 +3,7 @@
   lib,
   config,
   agenix,
+  agenix-template,
   ...
 }:
 let
@@ -13,6 +14,7 @@ in
 {
   imports = [
     agenix.nixosModules.default
+    agenix-template.nixosModules.default
     ./impermanence.nix
     ./iap-users.nix
   ];
@@ -103,15 +105,13 @@ in
         '';
       };
     };
-    system.activationScripts.gen-caddy-env = {
-      deps = [ "agenix" ];
-      text = ''
-        mkdir -p /run/derived-secrets
-        echo CLOUDFLARE_API_TOKEN=$(cat ${config.age.secrets.cloudflare-dns-api-token.path}) \
-          > /run/derived-secrets/caddy.env
-      '';
+    age-template.files."caddy.env" = {
+      vars.token = config.age.secrets.cloudflare-dns-api-token.path;
+      content = "CLOUDFLARE_API_TOKEN=$token";
     };
-    systemd.services.caddy.serviceConfig.EnvironmentFile = [ "/run/derived-secrets/caddy.env" ];
+    systemd.services.caddy.serviceConfig.EnvironmentFile = [
+      config.age-template.files."caddy.env".path
+    ];
     networking.firewall.allowedTCPPorts = [
       80
       443

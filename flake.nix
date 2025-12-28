@@ -16,6 +16,7 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agenix-template.url = "github:jhillyerd/agenix-template";
     impermanence.url = "github:nix-community/impermanence";
     jellarr = {
       url = "github:venkyr77/jellarr";
@@ -62,6 +63,7 @@
       home-manager,
       limmat,
       agenix,
+      agenix-template,
       impermanence,
       disko,
       deploy-rs,
