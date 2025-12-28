@@ -129,7 +129,6 @@ in
         authelia-jwt-secret = mkSecret "jwt-secret";
         authelia-storage-encryption-key = mkSecret "storage-encryption-key";
         authelia-session-secret = mkSecret "session-secret";
-        authelia-brendan-password-hash = mkSecret "brendan-password-hash";
         authelia-users-yaml = mkSecret "users.yaml";
       };
 
