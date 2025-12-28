@@ -5,11 +5,9 @@
   agenix,
   nixos-hardware,
   lib,
+  otherConfigs,
   ...
 }:
-let
-  nfsCfg = config.bjackman.servers.nfs;
-in
 {
   imports = [
     ../common.nix
@@ -17,7 +15,6 @@ in
     ../server.nix
     ../impermanence.nix
     ../transmission.nix
-    ../hosts.nix
     ../filebrowser.nix
     ./disko.nix
     ./power.nix
@@ -28,8 +25,6 @@ in
     nixos-hardware.nixosModules.lenovo-thinkpad-t480
     agenix.nixosModules.default
   ];
-
-  bjackman.onHomeLan = true;
 
   # Required for i915 driver to load cleanly. IIUC this because of the
   # enable_guc setting from nixos-hardware.
@@ -105,7 +100,9 @@ in
   # Dunno what this does. Wiki says it's needed.
   services.rpcbind.enable = true;
   fileSystems."/mnt/nas-media" = {
-    device = "${nfsCfg.hostname}:${nfsCfg.mediaMount}";
+    device =
+      with otherConfigs.nfsServer;
+      "${networking.hostName}.fritz.box:${bjackman.nfsServer.mediaDir}";
     fsType = "nfs";
     options = [
       "ro"

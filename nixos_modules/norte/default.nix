@@ -3,10 +3,11 @@
   config,
   modulesPath,
   nixos-raspberrypi,
+  otherConfigs,
   ...
 }:
 let
-  nfsCfg = config.bjackman.servers.nfs;
+  nfsCfg = config.bjackman.nfsServer;
 in
 {
   # This was figured out with great pain and anguish, not by reading docs.
@@ -17,11 +18,8 @@ in
     ../server.nix
     ../common.nix
     ../transmission.nix
-    ../hosts.nix
     ./nfs-server.nix
   ];
-
-  bjackman.onHomeLan = true;
 
   boot.loader.raspberryPi.bootloader = "kernel";
 
@@ -66,9 +64,9 @@ in
   users.groups.media-writers = { };
   systemd.services.transmission.serviceConfig = {
     SupplementaryGroups = [ "media-writers" ];
-    ReadWritePaths = [ nfsCfg.mediaMount ];
+    ReadWritePaths = [ nfsCfg.mediaDir ];
   };
-  services.transmission.settings.download-dir = nfsCfg.mediaMount;
+  services.transmission.settings.download-dir = nfsCfg.mediaDir;
 
   # NFS doesn't support file notifications so the Jellyfin watcher doesn't
   # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
@@ -88,7 +86,9 @@ in
     serviceConfig = {
       ExecStart =
         let
-          jellyfinUrl = config.bjackman.servers.jellyfin.url;
+          jellyfinUrl =
+            with otherConfigs.jellyfinServer;
+            "http://${networking.hostName}.fritz.box:${builtins.toString bjackman.jellyfin.httpPort}";
           # watchexec prints the command it's running, which is useful, but it
           # risks leaking the API key into the journal. So put the actual key
           # read + update into its own little script.
@@ -100,7 +100,7 @@ in
         in
         # --shell=none stops watchexec from trying to use a shell from $PATH,
         # since there isn't one in the service environment.
-        "${pkgs.watchexec}/bin/watchexec --debounce 3s --watch ${nfsCfg.mediaMount} --shell=none -- ${refreshScript}";
+        "${pkgs.watchexec}/bin/watchexec --debounce 3s --watch ${nfsCfg.mediaDir} --shell=none -- ${refreshScript}";
       Restart = "always";
     };
   };

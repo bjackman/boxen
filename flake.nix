@@ -202,6 +202,18 @@
               };
             };
           };
+          # Squashing the inputs into specialArgs let's you refer to flake
+          # inputs in modules, which lets you declare imports closer to the code
+          # that depends on them. For example this means you can import the
+          # impermanence module near the code that set up impermanence settings.
+          specialArgs = inputs // {
+            # Also allow different nodes' configs to refer to each other in
+            # cases where they are coupled.
+            otherConfigs = {
+              nfsServer = self.nixosConfigurations.norte.config;
+              jellyfinServer = self.nixosConfigurations.pizza.config;
+            };
+          };
         in
         {
           chungito = nixpkgs.lib.nixosSystem {
@@ -210,11 +222,7 @@
               ./nixos_modules/chungito
               brendanHome
             ];
-            # This let's you refer to flake inputs in modules, which lets you
-            # declare imports closer to the code that depends on them. For
-            # example this means you can import the impermanence module near the
-            # code that set up impermanence settings.
-            specialArgs = inputs;
+            inherit specialArgs;
           };
           fw13 = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
@@ -222,19 +230,19 @@
               ./nixos_modules/fw13
               brendanHome
             ];
-            specialArgs = inputs;
+            inherit specialArgs;
           };
           # Raspberry Pi 4B at my mum's place.
           sandy = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
             modules = [ ./nixos_modules/sandy.nix ];
-            specialArgs = inputs;
+            inherit specialArgs;
           };
           # Thinkpad t480 at my place
           pizza = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             modules = [ ./nixos_modules/pizza ];
-            specialArgs = inputs;
+            inherit specialArgs;
           };
           # Raspberry Pi 5 with a Radxa SATA hat at my place.
           # Note this is using a special nixosSystem helper. Raspberry Pi 5s
@@ -243,7 +251,7 @@
           norte = nixos-raspberrypi.lib.nixosSystem {
             system = "aarch64-linux";
             modules = [ ./nixos_modules/norte ];
-            specialArgs = inputs;
+            inherit specialArgs;
           };
         };
 
