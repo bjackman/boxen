@@ -31,14 +31,25 @@
       filebrowser = "${lib.getExe config.services.filebrowser.package} -d ${dbPath}";
       serviceUser = config.services.filebrowser.user;
       users = config.bjackman.iap.users;
-      provisionUsersScript = lib.concatMapStrings (u: ''
-        if ! ${filebrowser} users find "${u.name}" >/dev/null; then
-          echo "Provisioning FileBrowser user: ${u.name}"
-          ${filebrowser} users add "${u.name}" "dummy-unused-password" --perm.admin=${lib.boolToString u.admin}
-        else
-          echo "FileBrowser user ${u.name} already exists"
-        fi
-      '') users;
+      mkUserCmds =
+        u:
+        let
+          userArgs = lib.concatStringsSep " " [
+            "--perm.admin=${lib.boolToString u.admin}"
+            "--scope=${if u.admin then "." else "users/${u.name}"}"
+            # FileBrowser password shouldn't matter anyway but to avoid confusion
+            "--lockPassword"
+          ];
+        in
+        ''
+          if ! ${filebrowser} users find "${u.name}" >/dev/null; then
+            echo "Provisioning FileBrowser user: ${u.name}"
+            ${filebrowser} users add "${u.name}" "dummy-unused-password" ${userArgs}
+          else
+            echo "Updating FileBrowser user: ${u.name}"
+            ${filebrowser} users update "${u.name}" ${userArgs}
+          fi
+        '';
       script = pkgs.writeShellScript "provision-filebrowser-users" ''
         if [ ! -f "${dbPath}" ]; then
           echo "Creating FileBrowser database at ${dbPath}"
@@ -58,7 +69,7 @@
         ${filebrowser} config set --address="localhost";
 
         # Inject the generated user provisioning logic
-        ${provisionUsersScript}
+        ${lib.concatMapStringsSep "\n" mkUserCmds users}
       '';
     in
     "${script}";
