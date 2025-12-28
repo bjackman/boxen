@@ -54,4 +54,6 @@ in
   "authelia/session-secret.age".publicKeys = all-personal;
   "authelia/users.yaml.age".publicKeys = all-personal;
   "cloudflare-ddns-api-token.age".publicKeys = all-personal;
+  # nix run nixpkgs#openssl -- rand -base64 12 | agenix -e filebrowser-samba-password.age
+  "filebrowser-samba-password.age".publicKeys = all-personal;
 }

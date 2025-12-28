@@ -19,6 +19,7 @@ in
     ../common.nix
     ../transmission.nix
     ./nfs-server.nix
+    ./samba-server.nix
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
@@ -68,7 +69,7 @@ in
   };
   services.transmission.settings.download-dir = nfsCfg.mediaDir;
 
-  # NFS doesn't support file notifications so the Jellyfin watcher doesn't
+  # NFS/CIFS doesn't support file notifications so the Jellyfin watcher doesn't
   # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
   # via the API :)
   age.secrets.jellarr-api-key.file = ../../secrets/jellarr-api-key.age;
