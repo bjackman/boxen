@@ -9,4 +9,4 @@ name = "fmt"
 cache = "by_tree"
 # Note this is redundant with nix flake check. But I want a separate job so it's
 # easy to see when this is the only issue.
-command = "nix build .#checks.x86_64-linux.format"
+command = "nix build .#packages.x86_64-linux.format"

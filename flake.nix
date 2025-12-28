@@ -152,7 +152,12 @@
         };
       };
 
-      packages."${system}" = pkgs.bjackman;
+      packages."${system}" = pkgs.bjackman // {
+        # This is really a "check" but having it in there is super fucking
+        # annoying because it causes deploy-rs to fail. So, just put it as a
+        # package and we can have Limmat build it.
+        format = treefmtCfg.config.build.check self;
+      };
 
       # This defines the configurations for machines using standalone
       # home-manager, which in my case means machines not running NixOS.
@@ -271,10 +276,7 @@
         (nixpkgs.lib.mapAttrs (_: conf: conf.config.system.build.toplevel) (
           nixpkgs.lib.filterAttrs (_: c: c.pkgs.stdenv.hostPlatform.system == system) self.nixosConfigurations
         ))
-        // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations)
-        // {
-          format = treefmtCfg.config.build.check self;
-        };
+        // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations);
 
       devShells."${system}".default = pkgs.mkShell {
         packages = [
