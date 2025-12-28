@@ -2,6 +2,7 @@
   lib,
   pkgs,
   config,
+  otherConfigs,
   ...
 }:
 {
@@ -61,4 +62,28 @@
       '';
     in
     "${script}";
+
+  # Wiki says this is required
+  environment.systemPackages = [ pkgs.cifs-utils ];
+  age.secrets.filebrowser-samba-password.file = ../secrets/filebrowser-samba-password.age;
+  age-template.files.samba-creds = {
+    vars.password = config.age.secrets.filebrowser-samba-password.path;
+    content = ''
+      username=${otherConfigs.sambaServer.bjackman.samba.users.filebrowser}
+      password=$password
+      domain=${otherConfigs.sambaServer.services.samba.settings.global.workgroup}
+    '';
+  };
+  fileSystems."${config.services.filebrowser.settings.root}" = {
+    device = with otherConfigs.sambaServer; "//${networking.hostName}.fritz.box/nas"; # "nas" matches the share name in the server config
+    fsType = "cifs";
+    options = [
+      "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s"
+      "credentials=${config.age-template.files.samba-creds.path}"
+      "nofail"
+      # Local user that owns the files mounted here
+      "uid=${config.services.filebrowser.user}"
+      "gid=${config.services.filebrowser.group}"
+    ];
+  };
 }

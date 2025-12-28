@@ -213,6 +213,7 @@
             # cases where they are coupled.
             otherConfigs = {
               nfsServer = self.nixosConfigurations.norte.config;
+              sambaServer = self.nixosConfigurations.norte.config;
               jellyfinServer = self.nixosConfigurations.pizza.config;
             };
           };
