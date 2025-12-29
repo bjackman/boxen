@@ -224,6 +224,7 @@
             modules = [
               ./nixos_modules/chungito
               brendanHome
+              { home-manager.users.brendan.imports = [ ./hm_modules/chungito.nix ]; }
             ];
             inherit specialArgs;
           };
