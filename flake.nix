@@ -216,6 +216,7 @@
               sambaServer = self.nixosConfigurations.norte.config;
               jellyfinServer = self.nixosConfigurations.pizza.config;
             };
+            inherit pkgsUnstable;
           };
         in
         {

@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  pkgsUnstable,
   config,
   otherConfigs,
   ...
@@ -11,7 +12,10 @@
   # Note that AFAICS certain settings can't be set in the --config file (i.e.
   # via services.filebrowser.settings):
   # https://github.com/filebrowser/filebrowser/pull/5643/files
-  services.filebrowser.enable = true;
+  services.filebrowser = {
+    enable = true;
+    package = pkgsUnstable.filebrowser;
+  };
   # Since we're doing a custom preStart, ensure the relevant directories exists.
   systemd.tmpfiles.settings."10-filebrowser" = {
     "${builtins.dirOf config.services.filebrowser.settings.database}" = {
