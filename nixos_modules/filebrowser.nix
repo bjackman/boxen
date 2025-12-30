@@ -50,7 +50,15 @@
             ${filebrowser} users update "${u.name}" ${userArgs}
           fi
         '';
+      # FileBrowser commit 0a0cb8046fce52f1ff926171b34bcdb7cd39aab3
+      createUserDirFlag =
+        if lib.versionAtLeast pkgs.filebrowser.version "2.48" then
+          "--createUserDir"
+        else
+          "--create-user-dir";
       script = pkgs.writeShellScript "provision-filebrowser-users" ''
+        set -e
+
         if [ ! -f "${dbPath}" ]; then
           echo "Creating FileBrowser database at ${dbPath}"
           ${filebrowser} config init
@@ -67,6 +75,9 @@
         # Since we're effectively trusting the network it's important to only
         # listen for local connections.
         ${filebrowser} config set --address="localhost";
+        # Creating the user dir doesn't work for some reason, possibly because
+        # of systemd sandboxing?
+        ${filebrowser} config set --create-user-dir=false
 
         # Inject the generated user provisioning logic
         ${lib.concatMapStringsSep "\n" mkUserCmds users}
