@@ -4,6 +4,7 @@
       name = "brendan";
       admin = true;
     }
+    "ben"
   ];
   # You also need to add new users to the Authelia user file by running this
   # from the secrets/ dir:
