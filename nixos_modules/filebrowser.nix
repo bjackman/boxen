@@ -8,10 +8,30 @@
 {
   imports = [ ./iap.nix ];
 
+  # Just delete the overrideAttrs block below.
+  warnings = lib.optional (lib.versionAtLeast pkgs.filebrowser.version config.services.filebrowser.package.version) "Nixpkgs has caught up to pinned FileBrowser version";
+
   # Note that AFAICS certain settings can't be set in the --config file (i.e.
   # via services.filebrowser.settings):
   # https://github.com/filebrowser/filebrowser/pull/5643/files
-  services.filebrowser.enable = true;
+  services.filebrowser = {
+    enable = true;
+    # This service is really annoying and fiddly and produces bad error
+    # messages, and also seems buggy. I dunno if this version actually fixes any
+    # bugs that I am affected by but just to try and eliminate potential causes
+    # for confusion, use the latest version.
+    package = pkgs.filebrowser.overrideAttrs (
+      final: prev: rec {
+        version = "2.53.0";
+        src = pkgs.fetchFromGitHub {
+          owner = "filebrowser";
+          repo = "filebrowser";
+          rev = "v${version}";
+          hash = "sha256-ln7Dst+sN99c3snPU7DrIGpwKBz/e4Lz+uOknmm6sxg=";
+        };
+      }
+    );
+  };
   # Since we're doing a custom preStart, ensure the relevant directories exists.
   systemd.tmpfiles.settings."10-filebrowser" = {
     "${builtins.dirOf config.services.filebrowser.settings.database}" = {
