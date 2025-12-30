@@ -1,5 +1,6 @@
 {
   pkgs,
+  config,
   nixpkgs, # from specialArgs
   ...
 }:
@@ -13,4 +14,11 @@
   # figure out how that works to see if there's a way to avoid the nixpkgs
   # special arg here.
   nix.registry.nixpkgs.flake = nixpkgs;
+
+  bjackman.nix-warmups = [
+    # Note this might not actually be the configuration we're currently
+    # building (e.g. we might be building a config named $USER@$HOST). But
+    # this is probably similar enough that it's helpful to have it warm.
+    "github:bjackman/boxen/master#homeConfigurations.${config.home.username}.activationPackage"
+  ];
 }
