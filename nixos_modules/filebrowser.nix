@@ -57,6 +57,11 @@
           chown ${serviceUser}:${serviceUser} "${dbPath}"
         fi
 
+        # So that the user setup operations below work against the correct root
+        # dir, ensure that the root option is set in the DB as well as in the
+        # --config that gets passed to the service at runtime.
+        ${filebrowser} config set --root="${config.services.filebrowser.settings.root}"
+
         # These settings can only be set in the database.
         ${filebrowser} config set --signup=false
         # This tells FileBrowser to trust headers from our proxy.
