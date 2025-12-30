@@ -50,7 +50,7 @@
             ${filebrowser} users update "${u.name}" ${userArgs}
           fi
         '';
-      script = pkgs.writeShellScript "provision-filebrowser-users" ''
+      script = pkgs.writeShellScript "configure-filebrowser-db" ''
         if [ ! -f "${dbPath}" ]; then
           echo "Creating FileBrowser database at ${dbPath}"
           ${filebrowser} config init
