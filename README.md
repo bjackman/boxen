@@ -19,6 +19,15 @@
                 ||     ||
 ```
 
+## HOWTOs
+
+### Adding a new user for dä homelab
+
+- Add them to `nixos_modules/iap-users.nix`
+- Generate password: `nix run nixpkgs#openssl -- rand -base64 12`
+- Generate hash: `nix run nixpkgs#authelia -- crypto hash generate argon2 --password $PASSWORD`
+- `cd secrets; agenix -e authelia/users.yaml.age`, add user based on existing pattern.
+
 ## Installing
 
 How I installed `pizza`:
@@ -51,7 +60,7 @@ if there is a login password that is managed by this repo). You need to
 bootstrap the configuration so that the system can generate host keys and you
 can rekey secrets to allow it to access them.
 
-# TODOs
+## TODOs
 
 - [ ] Fix borked machines
 - [x] Unbrick deadlocked Norte
