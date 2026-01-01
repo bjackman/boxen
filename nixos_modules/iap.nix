@@ -186,6 +186,13 @@ in
       };
     };
 
+    # Reload the service when the secret changes - since its path is fixed
+    # (/run/agenix/authelia-users-yaml) changes to this won't actually change
+    # the content of the Authelia config itself so we need to be explicit here.
+    systemd.services."authelia-main".restartTriggers = [
+      config.age.secrets.authelia-users-yaml.file
+    ];
+
     # Actually only need to persist db.sqlite3 but having symlinks to individual
     # files like that is awkward with systemd sandboxing. So just persist the
     # whole directory.
