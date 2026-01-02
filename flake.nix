@@ -79,6 +79,7 @@
         overlays = [
           self.overlays.default
           deploy-rs.overlays.default
+          agenix.overlays.default
         ];
         config.allowUnfreePredicate =
           pkg:
@@ -294,7 +295,7 @@
         packages = [
           home-manager.packages."${system}".default
           limmat.packages."${system}".default
-          agenix.packages."${system}".default
+          pkgs.agenix
           pkgs.nix-diff
           pkgs.nixos-rebuild
           deploy-rs.packages.x86_64-linux.default
