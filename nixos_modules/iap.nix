@@ -19,20 +19,31 @@ in
     ./impermanence.nix
   ];
 
-  options.bjackman.iap.users =
-    let
-      userType = lib.types.submodule (
+  options.bjackman.iap.users = lib.mkOption {
+    description = ''
+      The users for the identity-aware proxy to recognise. Either just pass a
+      username, or pass { name = "name"; admin = true; } for a god user.
+      When you add a user here, you need to also add it (with password hash) to
+      the Authelia user file by running this from the secrets/ dir:
+        agenix -e authelia/users.yaml.age
+    '';
+    # IIUC the function passed to submodule also gets a `name` argument but
+    # using this instead of config._module.args.name seems to be dispreferred. I
+    # don't really understand why so this is a bit of a cargo-cult exercise.
+    type = lib.types.attrsOf (
+      lib.types.submodule (
         { config, ... }:
         {
           options = {
             name = lib.mkOption {
               type = lib.types.str;
               description = "Username.";
+              default = config._module.args.name;
             };
             displayName = lib.mkOption {
               type = lib.types.str;
-              description = "Username in dieplay format.";
               default = lib.strings.toSentenceCase config.name;
+              description = "Username in dieplay format.";
             };
             admin = lib.mkOption {
               type = lib.types.bool;
@@ -41,22 +52,10 @@ in
             };
           };
         }
-      );
-    in
-    lib.mkOption {
-      description = ''
-        The users for the identity-aware proxy to recognise. Either just pass a
-        username, or pass { name = "name"; admin = true; } for a god user.
-        When you add a user here, you need to also add it (with password hash) to
-        the Authelia user file by running this from the secrets/ dir:
-          agenix -e authelia/users.yaml.age
-      '';
-      type = lib.types.listOf (
-        lib.types.coercedTo lib.types.str (name: { inherit name; }) # Only provide the name
-          userType
-      );
-      default = lib.importJSON ./iap_users.json;
-    };
+      )
+    );
+    default = lib.importJSON ./iap_users.json;
+  };
 
   config = {
     # Can connect to this locally over HTTPS if I bypass my browser's complaint

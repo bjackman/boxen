@@ -1,8 +1,7 @@
-[
-  {
-    "name": "brendan",
+{
+  "brendan": {
     "admin": true
   },
-  "ben",
-  "alex"
-]
+  "ben": {},
+  "alex": {}
+}

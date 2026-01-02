@@ -24,7 +24,7 @@ pkgs.writeShellApplication rec {
 
     # Create base user definition
     JSON=nixos_modules/iap_users.json
-    jq --arg user "$USERNAME" '. += [$user]' "$JSON" | sponge "$JSON"
+    jq --arg user "$USERNAME" '.[$user] = {}' "$JSON" | sponge "$JSON"
 
     # Add Authelia password
     (
