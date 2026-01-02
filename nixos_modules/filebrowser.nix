@@ -45,59 +45,66 @@
   # Configure users for filebrowser. I guess it would be nicer to do this with
   # an activationScript, but this doesn't work if the service is already
   # running, due to the database being constantly locked.
-  systemd.services.filebrowser.preStart =
-    let
-      dbPath = config.services.filebrowser.settings.database;
-      filebrowser = "${lib.getExe config.services.filebrowser.package} -d ${dbPath}";
-      serviceUser = config.services.filebrowser.user;
-      users = config.bjackman.iap.users;
-      mkUserCmds =
-        u:
-        let
-          userArgs = lib.concatStringsSep " " [
-            "--perm.admin=${lib.boolToString u.admin}"
-            "--scope=${if u.admin then "." else "users/${u.name}"}"
-            # FileBrowser password shouldn't matter anyway but to avoid confusion
-            "--lockPassword"
-          ];
-        in
-        ''
-          if ! ${filebrowser} users find "${u.name}" >/dev/null; then
-            echo "Provisioning FileBrowser user: ${u.name}"
-            ${filebrowser} users add "${u.name}" "dummy-unused-password" ${userArgs}
-          else
-            echo "Updating FileBrowser user: ${u.name}"
-            ${filebrowser} users update "${u.name}" ${userArgs}
+  systemd.services.filebrowser = {
+    preStart =
+      let
+        dbPath = config.services.filebrowser.settings.database;
+        filebrowser = "${lib.getExe config.services.filebrowser.package} -d ${dbPath}";
+        serviceUser = config.services.filebrowser.user;
+        users = config.bjackman.iap.users;
+        mkUserCmds =
+          u:
+          let
+            userArgs = lib.concatStringsSep " " [
+              "--perm.admin=${lib.boolToString u.admin}"
+              "--scope=${if u.admin then "." else "users/${u.name}"}"
+              # FileBrowser password shouldn't matter anyway but to avoid confusion
+              "--lockPassword"
+            ];
+          in
+          ''
+            if ! ${filebrowser} users find "${u.name}" >/dev/null; then
+              echo "Provisioning FileBrowser user: ${u.name}"
+              ${filebrowser} users add "${u.name}" "dummy-unused-password" ${userArgs}
+            else
+              echo "Updating FileBrowser user: ${u.name}"
+              ${filebrowser} users update "${u.name}" ${userArgs}
+            fi
+          '';
+        script = pkgs.writeShellScript "configure-filebrowser-db" ''
+          if [ ! -f "${dbPath}" ]; then
+            echo "Creating FileBrowser database at ${dbPath}"
+            ${filebrowser} config init
+            chown ${serviceUser}:${serviceUser} "${dbPath}"
           fi
+
+          # So that the user setup operations below work against the correct root
+          # dir, ensure that the root option is set in the DB as well as in the
+          # --config that gets passed to the service at runtime.
+          ${filebrowser} config set --root="${config.services.filebrowser.settings.root}"
+
+          # These settings can only be set in the database.
+          ${filebrowser} config set --signup=false
+          # This tells FileBrowser to trust headers from our proxy.
+          # Here FileBrowser is trusting the network. Anyone who can connect
+          # directly to it, can spoof arbitrary users by manually setting the
+          # Remote-User header.
+          ${filebrowser} config set --auth.method=proxy --auth.header=Remote-User
+          # Since we're effectively trusting the network it's important to only
+          # listen for local connections.
+          ${filebrowser} config set --address="localhost";
+
+          # Inject the generated user provisioning logic
+          ${lib.concatMapStringsSep "\n" mkUserCmds users}
         '';
-      script = pkgs.writeShellScript "configure-filebrowser-db" ''
-        if [ ! -f "${dbPath}" ]; then
-          echo "Creating FileBrowser database at ${dbPath}"
-          ${filebrowser} config init
-          chown ${serviceUser}:${serviceUser} "${dbPath}"
-        fi
-
-        # So that the user setup operations below work against the correct root
-        # dir, ensure that the root option is set in the DB as well as in the
-        # --config that gets passed to the service at runtime.
-        ${filebrowser} config set --root="${config.services.filebrowser.settings.root}"
-
-        # These settings can only be set in the database.
-        ${filebrowser} config set --signup=false
-        # This tells FileBrowser to trust headers from our proxy.
-        # Here FileBrowser is trusting the network. Anyone who can connect
-        # directly to it, can spoof arbitrary users by manually setting the
-        # Remote-User header.
-        ${filebrowser} config set --auth.method=proxy --auth.header=Remote-User
-        # Since we're effectively trusting the network it's important to only
-        # listen for local connections.
-        ${filebrowser} config set --address="localhost";
-
-        # Inject the generated user provisioning logic
-        ${lib.concatMapStringsSep "\n" mkUserCmds users}
-      '';
-    in
-    "${script}";
+      in
+      "${script}";
+    # Service can fail due to Samba issues so make sure it gets restarted.
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "10s";
+    };
+  };
 
   # Wiki says this is required
   environment.systemPackages = [ pkgs.cifs-utils ];
@@ -115,7 +122,8 @@
     device = with otherConfigs.sambaServer; "//${networking.hostName}.fritz.box/nas";
     fsType = "cifs";
     options = [
-      "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s"
+      "x-systemd.automount"
+      "noauto"
       "credentials=${config.age-template.files.samba-creds.path}"
       "nofail"
       # Local user that owns the files mounted here
