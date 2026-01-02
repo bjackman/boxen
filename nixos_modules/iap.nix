@@ -43,7 +43,7 @@ in
             displayName = lib.mkOption {
               type = lib.types.str;
               default = lib.strings.toSentenceCase config.name;
-              description = "Username in dieplay format.";
+              description = "Username in display format.";
             };
             admin = lib.mkOption {
               type = lib.types.bool;
