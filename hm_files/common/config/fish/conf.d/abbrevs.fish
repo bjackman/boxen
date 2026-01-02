@@ -3,3 +3,4 @@ abbr --add nrs 'nixos-rebuild switch --flake "$HOME_MANAGER_CONFIG_CHECKOUT#$(ho
 abbr --add fnd "find . -name"
 abbr --add scu "systemctl --user"
 abbr --add ju "journalctl --user"
+abbr --add ndcf "nix develop -c fish"
