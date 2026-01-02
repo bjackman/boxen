@@ -183,6 +183,10 @@
           modules = [ ./hm_modules/jackmanb01.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
+        niamh = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./hm_modules/niamh.nix ];
+        };
       };
 
       nixosConfigurations =
@@ -281,6 +285,14 @@
           profiles.system = {
             user = "root";
             path = pkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.pizza;
+          };
+        };
+        airbuntu = {
+          hostname = "airbuntu";
+          sshUser = "niamh";
+          profiles.home = {
+            user = "niamh";
+            path = deploy-rs.lib.x86_64-linux.activate.home-manager self.homeConfigurations.niamh;
           };
         };
       };
