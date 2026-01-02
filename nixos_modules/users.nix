@@ -16,6 +16,10 @@
                 type = str;
                 description = "Username.";
                 default = config._module.args.name;
+                # Ensuring that the key in the submodule matches this name means
+                # we can safely use plain mapAttrs on the overall option instead
+                # of needing a fancy mapAttrs'.
+                readOnly = true;
               };
               displayName = lib.mkOption {
                 type = str;
@@ -26,6 +30,16 @@
                 type = bool;
                 default = false;
                 description = "Whether the user has administrative rights.";
+              };
+              enableSftp = lib.mkOption {
+                type = bool;
+                default = false;
+                description = "Whether to let the user access their storage via SFTP.";
+              };
+              publicKey = lib.mkOption {
+                type = str;
+                default = "";
+                description = "Public SSH key for SFTP.";
               };
             };
           }

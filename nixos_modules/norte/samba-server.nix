@@ -46,7 +46,7 @@
         "/mnt/nas" = {
           d = {
             group = "samba";
-            mode = "0775";
+            mode = "0755";
             user = "root";
           };
         };

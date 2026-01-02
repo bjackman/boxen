@@ -18,8 +18,10 @@ in
     ../server.nix
     ../common.nix
     ../transmission.nix
+    ../users.nix
     ./nfs-server.nix
     ./samba-server.nix
+    ./sftp-server.nix
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
