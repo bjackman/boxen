@@ -15,25 +15,34 @@ in
   imports = [
     agenix.nixosModules.default
     agenix-template.nixosModules.default
+    ./derived-secrets.nix
     ./impermanence.nix
     ./iap-users.nix
   ];
 
   options.bjackman.iap.users =
     let
-      userType = lib.types.submodule {
-        options = {
-          name = lib.mkOption {
-            type = lib.types.str;
-            description = "Username.";
+      userType = lib.types.submodule (
+        { config, ... }:
+        {
+          options = {
+            name = lib.mkOption {
+              type = lib.types.str;
+              description = "Username.";
+            };
+            displayName = lib.mkOption {
+              type = lib.types.str;
+              description = "Username in dieplay format.";
+              default = lib.strings.toSentenceCase config.name;
+            };
+            admin = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+              description = "Whether the user has administrative rights.";
+            };
           };
-          admin = lib.mkOption {
-            type = lib.types.bool;
-            default = false;
-            description = "Whether the user has administrative rights.";
-          };
-        };
-      };
+        }
+      );
     in
     lib.mkOption {
       description = ''
@@ -129,8 +138,28 @@ in
         authelia-jwt-secret = mkSecret "jwt-secret";
         authelia-storage-encryption-key = mkSecret "storage-encryption-key";
         authelia-session-secret = mkSecret "session-secret";
-        authelia-users-yaml = mkSecret "users.yaml";
+        authelia-passwords-json = mkSecret "passwords.json";
       };
+    bjackman.derived-secrets.files."authelia_users.json" = {
+      script = ''
+        "${lib.getExe pkgs.jq}" -n \
+          --argjson users ${lib.escapeShellArg (builtins.toJSON config.bjackman.iap.users)} \
+          --argjson passwords "$(cat "${config.age.secrets.authelia-passwords-json.path}")" \
+          '{
+            users: ($users | map({
+              key: .name,
+              value: {
+                password: $passwords[.name],
+                displayname: .displayName,
+                email: "",
+                groups: []
+              }
+            }) | from_entries)
+          }'
+      '';
+      mode = "440";
+      group = config.services.authelia.instances.main.group;
+    };
 
     services.authelia.instances.main = with config.age.secrets; {
       enable = true;
@@ -153,8 +182,9 @@ in
           # on them. So you'd think we'd be able to define the users in Nix and
           # then just inject the password hashes as secrets. But, the user
           # config file is a kinda static resource that doesn't support that.
-          # So whatever, just encrypt the whole config.
-          file.path = authelia-users-yaml.path;
+          # So we use a more fancy technique where the file is generated at
+          # runtime.
+          file.path = config.bjackman.derived-secrets.files."authelia_users.json".path;
         };
 
         storage.local.path = "/var/lib/authelia-main/db.sqlite3";
@@ -187,10 +217,10 @@ in
     };
 
     # Reload the service when the secret changes - since its path is fixed
-    # (/run/agenix/authelia-users-yaml) changes to this won't actually change
+    # (/run/agenix/authelia-passwords-json) changes to this won't actually change
     # the content of the Authelia config itself so we need to be explicit here.
     systemd.services."authelia-main".restartTriggers = [
-      config.age.secrets.authelia-users-yaml.file
+      config.age.secrets.authelia-passwords-json.file
     ];
 
     # Actually only need to persist db.sqlite3 but having symlinks to individual

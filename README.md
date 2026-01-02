@@ -23,10 +23,7 @@
 
 ### Adding a new user for dä homelab
 
-- Add them to `nixos_modules/iap-users.nix`
-- Generate password: `nix run nixpkgs#openssl -- rand -base64 12`
-- Generate hash: `nix run nixpkgs#authelia -- crypto hash generate argon2 --password $PASSWORD`
-- `cd secrets; agenix -e authelia/users.yaml.age`, add user based on existing pattern.
+TODO: Not documented lol
 
 ## Installing
 
