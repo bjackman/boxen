@@ -112,7 +112,7 @@
   age-template.files.samba-creds = {
     vars.password = config.age.secrets.filebrowser-samba-password.path;
     content = ''
-      username=${otherConfigs.sambaServer.bjackman.samba.users.filebrowser}
+      username=${otherConfigs.sambaServer.bjackman.samba.users.filebrowser.name}
       password=$password
       domain=${otherConfigs.sambaServer.services.samba.settings.global.workgroup}
     '';
