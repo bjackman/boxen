@@ -5,30 +5,32 @@
     # IIUC the function passed to submodule also gets a `name` argument but
     # using this instead of config._module.args.name seems to be dispreferred. I
     # don't really understand why so this is a bit of a cargo-cult exercise.
-    type = lib.types.attrsOf (
-      lib.types.submodule (
-        { config, ... }:
-        {
-          options = {
-            name = lib.mkOption {
-              type = lib.types.str;
-              description = "Username.";
-              default = config._module.args.name;
+    type =
+      with lib.types;
+      attrsOf (
+        submodule (
+          { config, ... }:
+          {
+            options = {
+              name = lib.mkOption {
+                type = str;
+                description = "Username.";
+                default = config._module.args.name;
+              };
+              displayName = lib.mkOption {
+                type = str;
+                default = lib.strings.toSentenceCase config.name;
+                description = "Username in display format.";
+              };
+              admin = lib.mkOption {
+                type = bool;
+                default = false;
+                description = "Whether the user has administrative rights.";
+              };
             };
-            displayName = lib.mkOption {
-              type = lib.types.str;
-              default = lib.strings.toSentenceCase config.name;
-              description = "Username in display format.";
-            };
-            admin = lib.mkOption {
-              type = lib.types.bool;
-              default = false;
-              description = "Whether the user has administrative rights.";
-            };
-          };
-        }
-      )
-    );
+          }
+        )
+      );
     default = lib.importJSON ./users.json;
   };
 }
