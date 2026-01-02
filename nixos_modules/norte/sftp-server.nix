@@ -52,6 +52,9 @@ in
             mode = "0755";
           };
         };
+        # This subdirectory exists to be writable by the user.
+        # Note the name of this directory is implicitly coupled with the client
+        # configurations.
         "${cfg.chrootsDir}/${user.name}/uploads" = {
           d = {
             user = "${user.name}";
