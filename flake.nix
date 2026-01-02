@@ -160,6 +160,7 @@
         # annoying because it causes deploy-rs to fail. So, just put it as a
         # package and we can have Limmat build it.
         format = treefmtCfg.config.build.check self;
+        add-user = pkgs.callPackage ./packages/add-user.nix { };
       };
 
       # This defines the configurations for machines using standalone

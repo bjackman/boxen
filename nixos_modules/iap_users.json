@@ -1,8 +1,8 @@
 [
-    {
-      "name": "brendan",
-      "admin": true
-    },
-    "ben",
-    "alex"
+  {
+    "name": "brendan",
+    "admin": true
+  },
+  "ben",
+  "alex"
 ]

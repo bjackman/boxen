@@ -17,7 +17,6 @@ in
     agenix-template.nixosModules.default
     ./derived-secrets.nix
     ./impermanence.nix
-    ./iap-users.nix
   ];
 
   options.bjackman.iap.users =
@@ -56,7 +55,7 @@ in
         lib.types.coercedTo lib.types.str (name: { inherit name; }) # Only provide the name
           userType
       );
-      default = [ ];
+      default = lib.importJSON ./iap_users.json;
     };
 
   config = {

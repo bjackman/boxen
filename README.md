@@ -23,7 +23,7 @@
 
 ### Adding a new user for dä homelab
 
-TODO: Not documented lol
+`nix run .#add-user -- <username>`
 
 ## Installing
 
