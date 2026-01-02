@@ -15,7 +15,7 @@ pkgs.writeShellApplication rec {
     USERNAME="$1"
 
     if ! [[ "$USERNAME" =~ ^[a-z]+$ ]]; then
-      echo "To use non-alphabetical characters, update the displayName option in iap.nix"
+      echo "To use non-alphabetical characters, update the displayName option in users.nix"
       exit 1
     fi
 
@@ -23,7 +23,7 @@ pkgs.writeShellApplication rec {
     HASH="$(authelia crypto hash generate argon2 --password "$PASSWORD" | awk '{print $2}')"
 
     # Create base user definition
-    JSON=nixos_modules/iap_users.json
+    JSON=nixos_modules/users.json
     jq --arg user "$USERNAME" '.[$user] = {}' "$JSON" | sponge "$JSON"
 
     # Add Authelia password
