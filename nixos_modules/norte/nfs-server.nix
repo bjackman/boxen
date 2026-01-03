@@ -51,11 +51,12 @@ in
           let
             uid = builtins.toString config.users.users.nfs-media.uid;
             gid = builtins.toString config.users.groups.nfs-media.gid;
+            args = "ro,all_squash,anonuid=${uid},anongid=${gid},no_subtree_check";
           in
           # WARNING: The path of this export is coupled with the client
           # configuration. If you change it you'll need to update the users too.
           ''
-            ${nfsCfg.mediaDir} 192.168.0.0/16(ro,all_squash,anonuid=${uid},anongid=${gid},no_subtree_check)
+            ${nfsCfg.mediaDir} 192.168.0.0/16(${args}) [fe80::]/10(${args})
           '';
       };
       networking.firewall.allowedTCPPorts = [ 2049 ];

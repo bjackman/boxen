@@ -67,9 +67,9 @@
             # Use modern protocol
             "server min protocol" = "SMB3_11";
 
-            # LAN access only
-            "hosts allow" = "192.168. 127.0.0.1 localhost";
-            "hosts deny" = "0.0.0.0/0";
+            # LAN and localhost access only
+            "hosts allow" = "192.168. 100. 127. fe80:: ::1";
+            "hosts deny" = "0.0.0.0/0 ::/0";
           };
           # There's no "valid users" key here which means this is accessible to any
           # authenticated user.
