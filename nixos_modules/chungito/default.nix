@@ -63,5 +63,8 @@
 
   programs.steam.enable = true;
 
+  # https://wiki.nixos.org/wiki/Maintainers:Fastly#Cache_v2_plans
+  nix.settings.substituters = [ "https://aseipp-nix-cache.global.ssl.fastly.net" ];
+
   system.stateVersion = "25.05";
 }
