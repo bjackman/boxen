@@ -131,4 +131,8 @@
       "gid=${config.services.filebrowser.group}"
     ];
   };
+
+  bjackman.iap.services.filebrowser = {
+    port = config.services.filebrowser.settings.port;
+  };
 }

@@ -8,8 +8,8 @@
 }:
 let
   autheliaPort = 9092;
-  fileBrowserPort = config.services.filebrowser.settings.port;
   domain = "home.yawn.io";
+  cfg = config.bjackman.iap;
 in
 {
   imports = [
@@ -19,6 +19,40 @@ in
     ./impermanence.nix
     ./users.nix
   ];
+
+  options.bjackman.iap.services = lib.mkOption {
+    type =
+      with lib.types;
+      attrsOf (
+        submodule (
+          { config, ... }:
+          {
+            options = {
+              name = lib.mkOption {
+                type = lib.types.str;
+                default = config._module.args.name;
+                description = "Name of the service";
+              };
+              subdomain = lib.mkOption {
+                type = lib.types.str;
+                default = config._module.args.name;
+                description = "Subdomain to proxy the service under";
+              };
+              port = lib.mkOption {
+                type = lib.types.int;
+                description = "Port the service exposes on localhost";
+              };
+              url = lib.mkOption {
+                type = lib.types.str;
+                readOnly = true;
+                description = "URL where the service is available via the proxy";
+                default = "https://${config.subdomain}.${domain}";
+              };
+            };
+          }
+        )
+      );
+  };
 
   config = {
     # Can connect to this locally over HTTPS if I bypass my browser's complaint
@@ -48,17 +82,20 @@ in
               dns cloudflare {$CLOUDFLARE_API_TOKEN}
           }
         '';
-
-        # This is the authelia UI.
+        # This is the Authelia UI. It doesn't get configured via
+        # bjackman.iap.services since a) it shouldn't have a forward_auth rule
+        # in Caddy and b) it shouldn't have an access control rule in Authelia.
         "auth.${domain}".extraConfig = ''
           reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
         '';
-
-        # Proxy FileBrowser, behind Authelia auth.
-        # Gemini generated this and seems to have been cribbing from
-        # https://www.authelia.com/integration/proxies/caddy/. As per that doc
-        # this corresponds to the default configuration of Authelia's ForwardAuth
-        # Authz implementation.
+      }
+      // (lib.mapAttrs' (name: service: {
+        name = "${service.subdomain}.${domain}";
+        # Proxy services, behind Authelia auth.
+        # Gemini generated the actual config and seems to have been cribbing
+        # from https://www.authelia.com/integration/proxies/caddy/. As per that
+        # doc this corresponds to the default configuration of Authelia's
+        # ForwardAuth Authz implementation.
         # This makes a query to Authelia to get the auth state. If not
         # authenticated it redirects to the Authelia UI. If authenticated, it adds
         # the Remote-* headers to the request and forward it to the app.
@@ -66,14 +103,18 @@ in
         # included here, so that if the user sets them in their own request, that
         # doesn't get forwarded directly to the app (allowing users to spoof
         # stuff).
-        "filebrowser.${domain}".extraConfig = ''
+        # To be honest, I do now know exactly how the redirection part happens,
+        # presumably Caddy does not know the URL of the Authelia UI, so I guess
+        # Authelia must somehow (via the cookie config...?) know that URL and
+        # inform Caddy about it.
+        value.extraConfig = ''
           forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
             uri /api/authz/forward-auth
             copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
           }
-          reverse_proxy 127.0.0.1:${builtins.toString fileBrowserPort}
+          reverse_proxy 127.0.0.1:${builtins.toString service.port}
         '';
-      };
+      }) cfg.services);
     };
     age-template.files."caddy.env" = {
       vars.token = config.age.secrets.cloudflare-dns-api-token.path;
@@ -152,12 +193,10 @@ in
 
         access_control = {
           default_policy = "deny";
-          rules = [
-            {
-              domain = [ "filebrowser.${domain}" ];
-              policy = "one_factor";
-            }
-          ];
+          rules = lib.mapAttrsToList (name: service: {
+            domain = [ "${service.subdomain}.${domain}" ];
+            policy = "one_factor";
+          }) cfg.services;
         };
 
         session = {
