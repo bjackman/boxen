@@ -187,6 +187,10 @@
           inherit pkgs;
           modules = [ ./hm_modules/niamh.nix ];
         };
+        romy = home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs { system = "aarch64-darwin"; };
+          modules = [ ./hm_modules/romy.nix ];
+        };
       };
 
       nixosConfigurations =
@@ -293,6 +297,14 @@
           profiles.home = {
             user = "niamh";
             path = deploy-rs.lib.x86_64-linux.activate.home-manager self.homeConfigurations.niamh;
+          };
+        };
+        romy = {
+          hostname = "macbook-air-8";
+          sshUser = "romybinswanger";
+          profiles.home = {
+            user = "romybinswanger";
+            path = deploy-rs.lib.aarch64-darwin.activate.home-manager self.homeConfigurations.romy;
           };
         };
       };
