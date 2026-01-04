@@ -17,9 +17,7 @@
           };
           expr = "prometheus_rule_group_last_duration_seconds > prometheus_rule_group_interval_seconds";
           for = "5m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
       ];
     }
@@ -38,9 +36,7 @@
           };
           expr = "(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "2m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostMemoryUnderMemoryPressure";
@@ -54,9 +50,7 @@
           };
           expr = "(rate(node_vmstat_pgmajfault[1m]) > 1000) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "2m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostOutOfDiskSpace";
@@ -69,9 +63,7 @@
           };
           expr = "((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "2m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostDiskWillFillIn24Hours";
@@ -85,9 +77,7 @@
           };
           expr = "((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~\"tmpfs\"}[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "2m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostFilesystemDeviceError";
@@ -101,9 +91,7 @@
           };
           expr = "node_filesystem_device_error{fstype!=\"tmpfs\"} == 1";
           for = "2m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "HostHighCpuLoad";
@@ -117,9 +105,7 @@
           };
           expr = "(sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!=\"idle\"}[2m]))) > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "10m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostSystemdServiceCrashed";
@@ -133,9 +119,7 @@
           };
           expr = "(node_systemd_unit_state{state=\"failed\"} == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "0m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostPhysicalComponentTooHot";
@@ -149,9 +133,7 @@
           };
           expr = "((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!=\"tctl\"} > 75)) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "5m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostOomKillDetected";
@@ -165,9 +147,7 @@
           };
           expr = "(increase(node_vmstat_oom_kill[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "0m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "HostRequiresReboot";
@@ -181,9 +161,7 @@
           };
           expr = "(node_reboot_required > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
           for = "4h";
-          labels = {
-            severity = "info";
-          };
+          labels.severity = "info";
         }
       ];
     }
@@ -202,9 +180,7 @@
           };
           expr = "(avg_over_time(smartctl_device_temperature{temperature_type=\"current\"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type=\"drive_trip\"}) > 60";
           for = "0m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "SmartDeviceTemperatureCritical";
@@ -218,9 +194,7 @@
           };
           expr = "(max_over_time(smartctl_device_temperature{temperature_type=\"current\"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type=\"drive_trip\"}) > 70";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "SmartDeviceTemperatureOverTripValue";
@@ -234,9 +208,7 @@
           };
           expr = "max_over_time(smartctl_device_temperature{temperature_type=\"current\"} [10m]) >= on(device, instance) smartctl_device_temperature{temperature_type=\"drive_trip\"}";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "SmartDeviceTemperatureNearingTripValue";
@@ -250,9 +222,7 @@
           };
           expr = "max_over_time(smartctl_device_temperature{temperature_type=\"current\"} [10m]) >= on(device, instance) (smartctl_device_temperature{temperature_type=\"drive_trip\"} * .80)";
           for = "0m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "SmartStatus";
@@ -266,9 +236,7 @@
           };
           expr = "smartctl_device_smart_status != 1";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "SmartCriticalWarning";
@@ -282,9 +250,7 @@
           };
           expr = "smartctl_device_critical_warning > 0";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "SmartMediaErrors";
@@ -298,9 +264,7 @@
           };
           expr = "smartctl_device_media_errors > 0";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "SmartWearoutIndicator";
@@ -314,9 +278,7 @@
           };
           expr = "smartctl_device_available_spare < smartctl_device_available_spare_threshold";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
       ];
     }
@@ -335,9 +297,7 @@
           };
           expr = "node_zfs_zpool_state{state!=\"online\"} > 0";
           for = "1m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "ZfsPoolOutOfSpace";
@@ -351,9 +311,7 @@
           };
           expr = "zfs_pool_free_bytes * 100 / zfs_pool_size_bytes < 10 and ON (instance, device, mountpoint) zfs_pool_readonly == 0";
           for = "0m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
         {
           alert = "ZfsPoolUnhealthy";
@@ -367,9 +325,7 @@
           };
           expr = "zfs_pool_health > 0";
           for = "0m";
-          labels = {
-            severity = "critical";
-          };
+          labels.severity = "critical";
         }
         {
           alert = "ZfsCollectorFailed";
@@ -383,9 +339,7 @@
           };
           expr = "zfs_scrape_collector_success != 1";
           for = "0m";
-          labels = {
-            severity = "warning";
-          };
+          labels.severity = "warning";
         }
       ];
     }
