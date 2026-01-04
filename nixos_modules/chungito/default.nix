@@ -66,5 +66,27 @@
   # https://wiki.nixos.org/wiki/Maintainers:Fastly#Cache_v2_plans
   nix.settings.substituters = [ "https://aseipp-nix-cache.global.ssl.fastly.net" ];
 
+  # Try to build Darwin stuff on Romy's MacBook...
+  nix.buildMachines = [
+    {
+      hostName = "macbook-air-8";
+      sshUser = "romybinswanger";
+      # ay caramba
+      sshKey = "${config.users.users.brendan.home}/.ssh/id_ed25519";
+      # From base64 -w0, for some fucking reason lmao
+      publicHostKey = "c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSUp2anpnOG11WGRsczFDZ2sxVnJ6TWRrOW1EdGY1Uk8vYTh0MEJzRU5NRjkK";
+      system = "aarch64-darwin";
+      supportedFeatures = [
+        "nix-command"
+        "flakes"
+      ];
+    }
+  ];
+  nix.distributedBuilds = true;
+  # Optional: if you want the Linux box to offload everything it can't do locally
+  nix.extraOptions = ''
+    builders-use-substitutes = true
+  '';
+
   system.stateVersion = "25.05";
 }
