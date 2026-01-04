@@ -161,7 +161,7 @@ in
         };
 
         session = {
-          name = "filebrowser_session";
+          name = "session";
           cookies = [
             {
               domain = "${domain}";
