@@ -187,10 +187,6 @@
           inherit pkgs;
           modules = [ ./hm_modules/niamh.nix ];
         };
-        romy = home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs { system = "aarch64-darwin"; };
-          modules = [ ./hm_modules/romy.nix ];
-        };
       };
 
       nixosConfigurations =
@@ -291,6 +287,15 @@
             path = pkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.pizza;
           };
         };
+      };
+
+      # Since these are laptops and we can only deploy to them when they're
+      # powered on, don't put them in the "real" deploy field.
+      # I don't yet know if there's any real way to deploy this. I think maybe
+      # deploy-rs is not flexible enough here. Probably easiest to just deploy
+      # these freaky nodes via a simple custom script. I don't think I get any
+      # benefit out of higher-level tools here anyway.
+      extraDeploy.nodes = {
         airbuntu = {
           hostname = "airbuntu";
           sshUser = "niamh";
@@ -304,7 +309,18 @@
           sshUser = "romybinswanger";
           profiles.home = {
             user = "romybinswanger";
-            path = deploy-rs.lib.aarch64-darwin.activate.home-manager self.homeConfigurations.romy;
+            path =
+              let
+                # Also want to avoid trying to check this configurations since
+                # it can only be built with access to a Darwin builder, so we
+                # hide this down here away from the main homeConfigurations
+                # flake output.
+                config = home-manager.lib.homeManagerConfiguration {
+                  pkgs = import nixpkgs { system = "aarch64-darwin"; };
+                  modules = [ ./hm_modules/romy.nix ];
+                };
+              in
+              deploy-rs.lib.aarch64-darwin.activate.home-manager config;
           };
         };
       };
