@@ -100,6 +100,46 @@
     content = ''ALERTMANAGER_GMAIL_PASSWORD="$pass"'';
   };
 
+  services.grafana = {
+    enable = true;
+    settings = {
+      server = {
+        http_addr = "127.0.0.1";
+        http_port = 9097;
+        enable_gzip = true;
+      };
+      analytics = {
+        check_for_updates = false;
+        check_for_plugin_updates = false;
+      };
+      # Disable spam features
+      feature_toggles = {
+        featureHighlights = false;
+        dashgpt = false;
+        onPremToCloudMigrations = false;
+      };
+      news.news_feed_enabled = false;
+      security.disable_initial_admin_creation = true;
+      "auth.proxy" = {
+        enabled = true;
+        header_name = "Remote-User";
+      };
+    };
+
+    provision = {
+      enable = true;
+      datasources.settings.datasources = [
+        {
+          name = "Prometheus";
+          type = "prometheus";
+          url = "http://${config.services.prometheus.listenAddress}:${toString config.services.prometheus.port}";
+          isDefault = true;
+          editable = false;
+        }
+      ];
+    };
+  };
+
   bjackman.iap.services = {
     prometheus = {
       subdomain = "prom";
@@ -108,6 +148,10 @@
     alertmanager = {
       subdomain = "alerts";
       port = config.services.prometheus.alertmanager.port;
+    };
+    grafana = {
+      subdomain = "graf";
+      port = config.services.grafana.settings.server.http_port;
     };
   };
 }
