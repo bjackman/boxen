@@ -44,10 +44,45 @@
         "watchdog"
       ];
     };
+    # OK this is the weird dance to actually send alerts. Prometheus just
+    # evaluates rules, then alertmanager turns them into alerts. But
+    # alertmanager doesn't have a way to send notifications so we run a
+    # notification service called Gotify. But also you need a bridge between
+    # these services for some reason lol. So
+    # prometheus->alertmanager->alertmanager_gotify_bridge->gotify->me
+    # BUT for now let's just try and get it running.
+    alertmanager = {
+      enable = true;
+      configuration = {
+        route = {
+          receiver = "blackhole";
+          group_by = [ "alertname" ];
+        };
+        receivers = [
+          {
+            name = "blackhole";
+            webhook_configs = [ { url = "http://127.0.0.1:9999/unused"; } ];
+          }
+        ];
+      };
+    };
+    alertmanagers = [
+      {
+        static_configs = [
+          { targets = [ "localhost:${toString config.services.prometheus.alertmanager.port}" ]; }
+        ];
+      }
+    ];
   };
 
-  bjackman.iap.services.prometheus = {
-    subdomain = "prom";
-    port = config.services.prometheus.port;
+  bjackman.iap.services = {
+    prometheus = {
+      subdomain = "prom";
+      port = config.services.prometheus.port;
+    };
+    alertmanager = {
+      subdomain = "alerts";
+      port = config.services.prometheus.alertmanager.port;
+    };
   };
 }
