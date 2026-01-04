@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 {
-  imports = [ ./iap.nix ];
+  imports = [ ../iap.nix ];
 
   services.prometheus = {
     enable = true;
@@ -16,6 +16,7 @@
         ];
       }
     ];
+    ruleFiles = [ ./rules.yaml ];
     exporters.node = {
       enable = true;
       enabledCollectors = [

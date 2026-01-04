@@ -16,7 +16,7 @@
     ../impermanence.nix
     ../transmission.nix
     ../filebrowser.nix
-    ../prometheus.nix
+    ../prometheus
     ./disko.nix
     ./power.nix
     ./jellyfin.nix

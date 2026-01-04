@@ -1,0 +1,228 @@
+# All stolen from https://samber.github.io/awesome-prometheus-alerts/rules#host-and-hardware
+# via https://github.com/bjackman/nas/blob/486592769ca3fa7e186438520e745c485b116ebd/files/prometheus/rules.yaml
+groups:
+  - name: prometheus
+    rules:
+      - alert: PrometheusRuleEvaluationSlow
+        expr: prometheus_rule_group_last_duration_seconds > prometheus_rule_group_interval_seconds
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Prometheus rule evaluation slow (instance {{ $labels.instance }})
+          description: "Prometheus rule evaluation took more time than the scheduled interval. It indicates a slower storage backend access or too complex query.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+  - name: host
+    rules:
+      - alert: HostOutOfMemory
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host out of memory (instance {{ $labels.instance }})
+          description: "Node memory is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostMemoryUnderMemoryPressure
+        expr: (rate(node_vmstat_pgmajfault[1m]) > 1000) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host memory under memory pressure (instance {{ $labels.instance }})
+          description: "The node is under heavy memory pressure. High rate of major page faults\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostOutOfDiskSpace
+        expr: ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host out of disk space (instance {{ $labels.instance }})
+          description: "Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      # Please add ignored mountpoints in node_exporter parameters like
+      # "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)".
+      # Same rule using "node_filesystem_free_bytes" will fire when disk fills for non-root users.
+      - alert: HostDiskWillFillIn24Hours
+        expr: ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs"}[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host disk will fill in 24 hours (instance {{ $labels.instance }})
+          description: "Filesystem is predicted to run out of space within the next 24 hours at current write rate\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostFilesystemDeviceError
+        # Dunno why this fires for tmpfs but pretty sure I don't care.
+        expr: node_filesystem_device_error{fstype!="tmpfs"} == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Host filesystem device error (instance {{ $labels.instance }})
+          description: "{{ $labels.instance }}: Device error with the {{ $labels.mountpoint }} filesystem\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostHighCpuLoad
+        expr: (sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host high CPU load (instance {{ $labels.instance }})
+          description: "CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostSystemdServiceCrashed
+        expr: (node_systemd_unit_state{state="failed"} == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host systemd service crashed (instance {{ $labels.instance }})
+          description: "systemd service crashed\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostPhysicalComponentTooHot
+        expr: ((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!="tctl"} > 75)) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host physical component too hot (instance {{ $labels.instance }})
+          description: "Physical hardware component too hot\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostOomKillDetected
+        expr: (increase(node_vmstat_oom_kill[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: Host OOM kill detected (instance {{ $labels.instance }})
+          description: "OOM kill detected\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: HostRequiresReboot
+        expr: (node_reboot_required > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+        for: 4h
+        labels:
+          severity: info
+        annotations:
+          summary: Host requires reboot (instance {{ $labels.instance }})
+          description: "{{ $labels.instance }} requires a reboot.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+  - name: SMART
+    rules:
+      - alert: SmartDeviceTemperatureWarning
+        expr: '(avg_over_time(smartctl_device_temperature{temperature_type="current"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}) > 60'
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: SMART device temperature warning (instance {{ $labels.instance }})
+          description: "Device temperature warning on {{ $labels.instance }} drive {{ $labels.device }} over 60°C\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartDeviceTemperatureCritical
+        expr: '(max_over_time(smartctl_device_temperature{temperature_type="current"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}) > 70'
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: SMART device temperature critical (instance {{ $labels.instance }})
+          description: "Device temperature critical on {{ $labels.instance }} drive {{ $labels.device }} over 70°C\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartDeviceTemperatureOverTripValue
+        expr: 'max_over_time(smartctl_device_temperature{temperature_type="current"} [10m]) >= on(device, instance) smartctl_device_temperature{temperature_type="drive_trip"}'
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: SMART device temperature over trip value (instance {{ $labels.instance }})
+          description: "Device temperature over trip value on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartDeviceTemperatureNearingTripValue
+        expr: 'max_over_time(smartctl_device_temperature{temperature_type="current"} [10m]) >= on(device, instance) (smartctl_device_temperature{temperature_type="drive_trip"} * .80)'
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: SMART device temperature nearing trip value (instance {{ $labels.instance }})
+          description: "Device temperature at 80% of trip value on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartStatus
+        expr: "smartctl_device_smart_status != 1"
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: SMART status (instance {{ $labels.instance }})
+          description: "Device has a SMART status failure on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartCriticalWarning
+        expr: "smartctl_device_critical_warning > 0"
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: SMART critical warning (instance {{ $labels.instance }})
+          description: "Disk controller has critical warning on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartMediaErrors
+        expr: "smartctl_device_media_errors > 0"
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: SMART media errors (instance {{ $labels.instance }})
+          description: "Disk controller detected media errors on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: SmartWearoutIndicator
+        expr: "smartctl_device_available_spare < smartctl_device_available_spare_threshold"
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: SMART Wearout Indicator (instance {{ $labels.instance }})
+          description: "Device is wearing out on {{ $labels.instance }} drive {{ $labels.device }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+  - name: ZFS
+    rules:
+      - alert: ZfsOfflinePool
+        expr: node_zfs_zpool_state{state!="online"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: ZFS offline pool (instance {{ $labels.instance }})
+          description: "A ZFS zpool is in a unexpected state: {{ $labels.state }}.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: ZfsPoolOutOfSpace
+        expr: zfs_pool_free_bytes * 100 / zfs_pool_size_bytes < 10 and ON (instance, device, mountpoint) zfs_pool_readonly == 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZFS pool out of space (instance {{ $labels.instance }})
+          description: "Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      # 0: ONLINE
+      # 1: DEGRADED
+      # 2: FAULTED
+      # 3: OFFLINE
+      # 4: UNAVAIL
+      # 5: REMOVED
+      # 6: SUSPENDED
+      - alert: ZfsPoolUnhealthy
+        expr: zfs_pool_health > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: ZFS pool unhealthy (instance {{ $labels.instance }})
+          description: "ZFS pool state is {{ $value }}. See comments for more information.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: ZfsCollectorFailed
+        expr: zfs_scrape_collector_success != 1
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZFS collector failed (instance {{ $labels.instance }})
+          description: "ZFS collector for {{ $labels.instance }} has failed to collect information\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
