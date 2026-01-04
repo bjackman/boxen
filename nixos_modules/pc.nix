@@ -88,5 +88,9 @@
       directory = ".local/share/keyrings";
       mode = "0700";
     }
+    {
+      directory = ".ssh";
+      mode = "0700";
+    }
   ];
 }

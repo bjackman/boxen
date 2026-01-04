@@ -17,11 +17,4 @@
   };
   programs.fish.enable = true;
   nix.settings.trusted-users = [ "brendan" ];
-
-  bjackman.impermanence.extraPersistence.users.brendan.directories = [
-    {
-      directory = ".ssh";
-      mode = "0700";
-    }
-  ];
 }
