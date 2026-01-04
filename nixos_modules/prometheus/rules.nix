@@ -34,7 +34,10 @@
             '';
             summary = "Host out of memory (instance {{ $labels.instance }})";
           };
-          expr = "(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "2m";
           labels.severity = "warning";
         }
@@ -48,7 +51,10 @@
             '';
             summary = "Host memory under memory pressure (instance {{ $labels.instance }})";
           };
-          expr = "(rate(node_vmstat_pgmajfault[1m]) > 1000) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            (rate(node_vmstat_pgmajfault[1m]) > 1000)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "2m";
           labels.severity = "warning";
         }
@@ -58,10 +64,15 @@
             description = ''
               Disk is almost full (< 10% left)
                 VALUE = {{ $value }}
-                LABELS = {{ $labels }}'';
+                LABELS = {{ $labels }}
+            '';
             summary = "Host out of disk space (instance {{ $labels.instance }})";
           };
-          expr = "((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10
+            and ON (instance, device, mountpoint) node_filesystem_readonly == 0)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "2m";
           labels.severity = "warning";
         }
@@ -75,7 +86,12 @@
             '';
             summary = "Host disk will fill in 24 hours (instance {{ $labels.instance }})";
           };
-          expr = "((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~\"tmpfs\"}[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10
+            and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs"}[1h], 24 * 3600) < 0
+            and ON (instance, device, mountpoint) node_filesystem_readonly == 0)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "2m";
           labels.severity = "warning";
         }
@@ -89,7 +105,9 @@
             '';
             summary = "Host filesystem device error (instance {{ $labels.instance }})";
           };
-          expr = "node_filesystem_device_error{fstype!=\"tmpfs\"} == 1";
+          expr = ''
+            node_filesystem_device_error{fstype!="tmpfs"} == 1
+          '';
           for = "2m";
           labels.severity = "critical";
         }
@@ -103,7 +121,10 @@
             '';
             summary = "Host high CPU load (instance {{ $labels.instance }})";
           };
-          expr = "(sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!=\"idle\"}[2m]))) > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            (sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "10m";
           labels.severity = "warning";
         }
@@ -117,7 +138,10 @@
             '';
             summary = "Host systemd service crashed (instance {{ $labels.instance }})";
           };
-          expr = "(node_systemd_unit_state{state=\"failed\"} == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            (node_systemd_unit_state{state="failed"} == 1)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "0m";
           labels.severity = "warning";
         }
@@ -131,7 +155,10 @@
             '';
             summary = "Host physical component too hot (instance {{ $labels.instance }})";
           };
-          expr = "((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!=\"tctl\"} > 75)) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            ((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!="tctl"} > 75))
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "5m";
           labels.severity = "warning";
         }
@@ -145,7 +172,10 @@
             '';
             summary = "Host OOM kill detected (instance {{ $labels.instance }})";
           };
-          expr = "(increase(node_vmstat_oom_kill[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            (increase(node_vmstat_oom_kill[1m]) > 0)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "0m";
           labels.severity = "warning";
         }
@@ -159,7 +189,10 @@
             '';
             summary = "Host requires reboot (instance {{ $labels.instance }})";
           };
-          expr = "(node_reboot_required > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~\".+\"}";
+          expr = ''
+            (node_reboot_required > 0)
+            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+          '';
           for = "4h";
           labels.severity = "info";
         }
@@ -178,7 +211,10 @@
             '';
             summary = "SMART device temperature warning (instance {{ $labels.instance }})";
           };
-          expr = "(avg_over_time(smartctl_device_temperature{temperature_type=\"current\"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type=\"drive_trip\"}) > 60";
+          expr = ''
+            (avg_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
+            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}) > 60
+          '';
           for = "0m";
           labels.severity = "warning";
         }
@@ -192,7 +228,10 @@
             '';
             summary = "SMART device temperature critical (instance {{ $labels.instance }})";
           };
-          expr = "(max_over_time(smartctl_device_temperature{temperature_type=\"current\"} [5m]) unless on (instance, device) smartctl_device_temperature{temperature_type=\"drive_trip\"}) > 70";
+          expr = ''
+            (max_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
+            unless on (instance, device) smartctl_device_temperature{temperature_type="drive_trip"}) > 70
+          '';
           for = "0m";
           labels.severity = "critical";
         }
@@ -206,7 +245,10 @@
             '';
             summary = "SMART device temperature over trip value (instance {{ $labels.instance }})";
           };
-          expr = "max_over_time(smartctl_device_temperature{temperature_type=\"current\"} [10m]) >= on(device, instance) smartctl_device_temperature{temperature_type=\"drive_trip\"}";
+          expr = ''
+            max_over_time(smartctl_device_temperature{temperature_type="current"} [10m])
+            >= on(device, instance) smartctl_device_temperature{temperature_type="drive_trip"}
+          '';
           for = "0m";
           labels.severity = "critical";
         }
@@ -220,7 +262,10 @@
             '';
             summary = "SMART device temperature nearing trip value (instance {{ $labels.instance }})";
           };
-          expr = "max_over_time(smartctl_device_temperature{temperature_type=\"current\"} [10m]) >= on(device, instance) (smartctl_device_temperature{temperature_type=\"drive_trip\"} * .80)";
+          expr = ''
+            max_over_time(smartctl_device_temperature{temperature_type="current"} [10m])
+            >= on(device, instance) (smartctl_device_temperature{temperature_type="drive_trip"} * .80)
+          '';
           for = "0m";
           labels.severity = "warning";
         }
@@ -295,7 +340,9 @@
             '';
             summary = "ZFS offline pool (instance {{ $labels.instance }})";
           };
-          expr = "node_zfs_zpool_state{state!=\"online\"} > 0";
+          expr = ''
+            node_zfs_zpool_state{state!="online"} > 0
+          '';
           for = "1m";
           labels.severity = "critical";
         }
@@ -309,7 +356,10 @@
             '';
             summary = "ZFS pool out of space (instance {{ $labels.instance }})";
           };
-          expr = "zfs_pool_free_bytes * 100 / zfs_pool_size_bytes < 10 and ON (instance, device, mountpoint) zfs_pool_readonly == 0";
+          expr = ''
+            zfs_pool_free_bytes * 100 / zfs_pool_size_bytes < 10
+            and ON (instance, device, mountpoint) zfs_pool_readonly == 0
+          '';
           for = "0m";
           labels.severity = "warning";
         }
