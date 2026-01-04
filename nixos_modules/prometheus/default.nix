@@ -16,7 +16,7 @@
         ];
       }
     ];
-    ruleFiles = [ ./rules.yaml ];
+    ruleFiles = [ (pkgs.writers.writeJSON "prometheus-rules.json" (import ./rules.nix)) ];
     exporters.node = {
       enable = true;
       enabledCollectors = [
