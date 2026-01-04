@@ -1,6 +1,8 @@
 # Stuff for my user but on computers with screens and a keyboard and shit.
 { pkgs, ... }:
 {
+  imports = [ ./impermanence.nix ];
+
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
@@ -59,4 +61,32 @@
   networking.wireless.enable = false;
 
   services.tailscale.enable = true;
+
+  bjackman.impermanence.extraPersistence.users.brendan.directories = [
+    "Downloads"
+    "Music"
+    "Pictures"
+    "Documents"
+    "Videos"
+    "src"
+    ".cache"
+    ".local/share/z"
+    ".local/share/fish"
+    ".local/share/zed"
+    ".local/share/Steam"
+    ".steam"
+    # VSCode has a bunch of yucky stateful shit that leaks into .config and I
+    # can't be bothered to figure it out, just persist the whole mess.
+    ".config/Code"
+    ".vscode"
+    ".gemini" # yuck
+    {
+      directory = ".mozilla/firefox";
+      mode = "0700";
+    }
+    {
+      directory = ".local/share/keyrings";
+      mode = "0700";
+    }
+  ];
 }
