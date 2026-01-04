@@ -1,6 +1,12 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  agenix-template,
+  ...
+}:
 {
   imports = [
+    agenix-template.nixosModules.default
     ../iap.nix
     ./rules.nix
   ];
@@ -44,27 +50,41 @@
         "watchdog"
       ];
     };
-    # OK this is the weird dance to actually send alerts. Prometheus just
-    # evaluates rules, then alertmanager turns them into alerts. But
-    # alertmanager doesn't have a way to send notifications so we run a
-    # notification service called Gotify. But also you need a bridge between
-    # these services for some reason lol. So
-    # prometheus->alertmanager->alertmanager_gotify_bridge->gotify->me
-    # BUT for now let's just try and get it running.
     alertmanager = {
       enable = true;
+      # Copied from
+      # https://github.com/bjackman/nas/blob/486592769ca3fa7e186438520e745c485b116ebd/templates/alertmanager.yaml.jinja2
+      # I'd probably like to replace this with ntfy.sh - see the stash/ntfy
+      # branch.
       configuration = {
         route = {
-          receiver = "blackhole";
+          receiver = "email-me";
           group_by = [ "alertname" ];
         };
         receivers = [
           {
-            name = "blackhole";
-            webhook_configs = [ { url = "http://127.0.0.1:9999/unused"; } ];
+            name = "email-me";
+            email_configs = [
+              (
+                let
+                  addr = "bhenryj0117@gmail.com";
+                in
+                {
+                  from = addr;
+                  to = addr;
+                  smarthost = "smtp.gmail.com:587";
+                  auth_username = addr;
+                  auth_identity = addr;
+                  # These settings are processed via envsubst, we can use this to
+                  # inject secrets.
+                  auth_password = "$ALERTMANAGER_GMAIL_PASSWORD";
+                }
+              )
+            ];
           }
         ];
       };
+      environmentFile = config.age-template.files."alertmanager.env".path;
     };
     alertmanagers = [
       {
@@ -73,6 +93,11 @@
         ];
       }
     ];
+  };
+  age.secrets.alertmanager-gmail-password.file = ../../secrets/alertmanager-gmail-password.age;
+  age-template.files."alertmanager.env" = {
+    vars.pass = config.age.secrets.alertmanager-gmail-password.path;
+    content = ''ALERTMANAGER_GMAIL_PASSWORD="$pass"'';
   };
 
   bjackman.iap.services = {
