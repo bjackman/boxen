@@ -1,6 +1,9 @@
 { config, pkgs, ... }:
 {
-  imports = [ ../iap.nix ];
+  imports = [
+    ../iap.nix
+    ./rules.nix
+  ];
 
   services.prometheus = {
     enable = true;
@@ -16,7 +19,12 @@
         ];
       }
     ];
-    ruleFiles = [ (pkgs.writers.writeJSON "prometheus-rules.json" (import ./rules.nix)) ];
+    ruleFiles = [
+      # I over-engineered this coz I thought I was gonna write some complex
+      # rules that depend on other parts of the config. But then I changed my
+      # mind about that lol.
+      (pkgs.writers.writeJSON "prometheus-rules.json" config.bjackman.prometheus.rules)
+    ];
     exporters.node = {
       enable = true;
       enabledCollectors = [

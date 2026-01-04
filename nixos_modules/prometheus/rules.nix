@@ -1,5 +1,10 @@
+{ config, lib, ... }:
 {
-  groups = [
+  options.bjackman.prometheus.rules = lib.mkOption {
+    type = lib.types.attrs;
+    description = "Prometheus alerting rules.";
+  };
+  config.bjackman.prometheus.rules.groups = [
     {
       name = "prometheus";
       rules = [
