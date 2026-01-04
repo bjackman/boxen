@@ -8,5 +8,9 @@
   "niamh": {
     "enableSftp": true,
     "publicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEBdB8vK51nCFJj8LYfQhj871Wcedgl24rbexNPw3E1x niamh@airbuntu"
+  },
+  "romy": {
+    "enableSftp": true,
+    "publicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHBLYhca50FT6353jP+FjEipbMY5sgiwW1KeEfakWpxh romybinswanger@Mac.fritz.box"
   }
 }
