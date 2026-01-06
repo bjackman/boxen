@@ -44,6 +44,10 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    grafana-dashboard-node-exporter-full = {
+      url = "https://grafana.com/api/dashboards/1860/revisions/latest/download";
+      flake = false;
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.

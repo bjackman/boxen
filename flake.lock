@@ -206,6 +206,18 @@
         "type": "github"
       }
     },
+    "grafana-dashboard-node-exporter-full": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-5Wk9SD7jaLBtSzYBnTuwANt9LAkAq6ddu7bRO/CGP38=",
+        "type": "file",
+        "url": "https://grafana.com/api/dashboards/1860/revisions/latest/download"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://grafana.com/api/dashboards/1860/revisions/latest/download"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -478,6 +490,7 @@
         "agenix-template": "agenix-template",
         "deploy-rs": "deploy-rs",
         "disko": "disko",
+        "grafana-dashboard-node-exporter-full": "grafana-dashboard-node-exporter-full",
         "home-manager": "home-manager_2",
         "impermanence": "impermanence",
         "jellarr": "jellarr",
