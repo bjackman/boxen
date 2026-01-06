@@ -137,6 +137,25 @@
           editable = false;
         }
       ];
+      dashboards.settings.providers = [
+        {
+          name = "Provisioned Dashboards";
+          # The Wiki example points to /etc/grafana here for some reason, I
+          # think this is for UI mutability. Here we are just going straght to
+          # the Nix store, declarative or die.
+          options.path = pkgs.linkFarm "my-dashboards" [
+            {
+              name = "node-exporter.json";
+              path = pkgs.fetchurl {
+                # Node Exporter Full
+                # https://grafana.com/grafana/dashboards/1860-node-exporter-full/
+                url = "https://grafana.com/api/dashboards/1860/revisions/42/download";
+                hash = "sha256-pNgn6xgZBEu6LW0lc0cXX2gRkQ8lg/rer34SPE3yEl4=";
+              };
+            }
+          ];
+        }
+      ];
     };
   };
 
