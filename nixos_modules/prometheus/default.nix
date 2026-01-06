@@ -1,15 +1,28 @@
 {
   config,
   pkgs,
+  lib,
   agenix-template,
   grafana-dashboard-node-exporter-full,
   ...
 }:
+let
+  admins = builtins.attrNames (lib.filterAttrs (_: u: u.admin) config.bjackman.homelab.users);
+in
 {
   imports = [
     agenix-template.nixosModules.default
     ../iap.nix
     ./rules.nix
+  ];
+
+  # Couldn't get the stupid RBAC bullshit to work here, possibly it's
+  # hobbled in the open source version.
+  assertions = [
+    {
+      assertion = builtins.length admins <= 1;
+      message = "Multiple Grafana admins defined but only one is supported";
+    }
   ];
 
   services.prometheus = {
@@ -120,7 +133,8 @@
         onPremToCloudMigrations = false;
       };
       news.news_feed_enabled = false;
-      security.disable_initial_admin_creation = true;
+      # See warning at the top of the module.
+      security.admin_user = if admins != [ ] then builtins.head admins else null;
       "auth.proxy" = {
         enabled = true;
         header_name = "Remote-User";
