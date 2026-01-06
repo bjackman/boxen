@@ -159,6 +159,18 @@ in
           # think this is for UI mutability. Here we are just going straght to
           # the Nix store, declarative or die.
           options.path = pkgs.linkFarm "my-dashboards" [
+            # This one only partly works, but some of the graphs show "No data".
+            # I debugged this with AI and it says the variables/fields/thingies
+            # used by the dashboard definition aren't quite right (something
+            # like "node" and "instance" are mixed up). It suggested remappping
+            # them in Prometheus, which seems dumb. It also suggested
+            # reconfiguring it in the dashboard UI but my brain stopped working.
+            # If I'm really gonna think about this dashboarding shit I think I
+            # probably wanna port it to Perses instead. I think one way to make
+            # that happen would be to find some relatively simple Grafana
+            # dashboards and then use the Perses CLI's `migrate` tool to
+            # automatically convert them to Perses configs. Perhaps another
+            # would be: https://github.com/perses/community-mixins
             {
               name = "node-exporter.json";
               path = grafana-dashboard-node-exporter-full;
