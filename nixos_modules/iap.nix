@@ -154,7 +154,8 @@ in
                 password: $passwords[.name],
                 displayname: .displayName,
                 email: "",
-                groups: []
+                # Map the admin boolean to the "admin" group string
+                groups: (if .admin then ["admin"] else [] end)
               }
             }) | from_entries)
           }'
