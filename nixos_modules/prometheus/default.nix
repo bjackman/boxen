@@ -181,6 +181,11 @@ in
     };
   };
 
+  # I'm running into an error like this one:
+  # https://github.com/prometheus/node_exporter/issues/3220
+  # Let's see if being root changes it...
+  systemd.services.prometheus-node-exporter.serviceConfig.User = "root";
+
   bjackman.iap.services = {
     prometheus = {
       subdomain = "prom";
