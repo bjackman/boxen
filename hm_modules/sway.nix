@@ -86,7 +86,8 @@ in
           warnAfterSecs = 3 * 60;
           lockAfterSecs = 5;
           screenOffAfterSecs = 2 * 60;
-          sleepAfterSecs = 3 * 60;
+          # Suspend breaks Google's corp SSH connections so wait for ages.
+          sleepAfterSecs = 2 * 60 * 60;
         in
         [
           {
