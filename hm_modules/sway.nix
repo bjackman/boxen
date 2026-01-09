@@ -105,10 +105,8 @@ in
             resumeCommand = ''${pkgs.sway}/bin/swaymsg output "*" power on'';
           }
           {
-            timeout = warnAfterSecs + lockAfterSecs + screenOffAfterSecs;
-            # `systemctl --user show-environment` shows that systemctl is in the
-            # PATH for systemd services at least on NixOS.
-            command = ''systemctl sleep'';
+            timeout = warnAfterSecs + lockAfterSecs + screenOffAfterSecs + sleepAfterSecs;
+            command = "${config.systemd.user.systemctlPath} sleep";
           }
         ];
     };

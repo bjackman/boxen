@@ -15,6 +15,8 @@
   # special arg here.
   nix.registry.nixpkgs.flake = nixpkgs;
 
+  systemd.user.systemctlPath = "/usr/bin/systemctl";
+
   bjackman.nix-warmups = [
     # Note this might not actually be the configuration we're currently
     # building (e.g. we might be building a config named $USER@$HOST). But
