@@ -89,6 +89,7 @@
     matchBlocks."*" = {
       controlMaster = "auto";
       controlPersist = "8h";
+      controlPath = "~/.ssh/master-%r@%n:%p";
       forwardAgent = true; # For gnubby
     };
     # To pre-empt deprecation of default values:
