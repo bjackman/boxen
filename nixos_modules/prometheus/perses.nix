@@ -10,6 +10,7 @@ let
       encryption_key_file = config.age.secrets.perses-encryption-key.path;
       # Site is hosted behind SSL, so set this, shrug.
       cookie.secure = true;
+      enable_auth = true;
       authentication.providers.oidc = [
         {
           slug_id = "authelia";
@@ -18,6 +19,12 @@ let
           client_id = "4guwUub8JViSDX~HIjtshmlnStejSe-tL5g.IqyqHm1CTJz2lVekSkCKiwczqxG645bucmFE";
           client_secret_file = config.age.secrets.authelia-perses-client-secret.path;
           issuer = "https://auth.home.yawn.io";
+          redirect_uri = "https://perses.home.yawn.io/api/auth/providers/oidc/authelia/callback";
+          scopes = [
+            "openid"
+            "profile"
+            "email"
+          ];
         }
       ];
     };
@@ -66,10 +73,22 @@ in
   environment.systemPackages = [ pkgs.perses ];
 
   systemd.services.perses = {
-    after = [ "network.target" ];
+    # TODO Avoid coupling on name of service
+    after = [ "authelia-main.target" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
+      # Perses crashes on startup if the OIDC provider isn't available.
+      ExecStartPre =
+        let
+          checkScript = pkgs.writeShellScript "wait-for-authelia" ''
+            until ${pkgs.curl}/bin/curl -s --fail --max-time 5 https://auth.home.yawn.io/.well-known/openid-configuration; do
+              echo "Authelia not ready, waiting..."
+              ${pkgs.coreutils}/bin/sleep 2
+            done
+          '';
+        in
+        "${checkScript}";
       ExecStart =
         let
           configFile = pkgs.writeText "perses-config.json" (builtins.toJSON persesConfig);
@@ -121,5 +140,8 @@ in
     };
   };
 
-  bjackman.iap.services.perses.port = 8097;
+  bjackman.iap.services.perses = {
+    port = 8097;
+    useOidc = true;
+  };
 }

@@ -59,6 +59,9 @@ in
   # The below generates the plaintext secret ("Random Password") and a hash
   # ("Digest").
   # nix run nixpkgs#authelia -- crypto hash generate pbkdf2 --variant sha512 --random --random.length 72 --random.charset rfc3986
+  # echo -n $RANDOM_PASSWORD | agenix -e authelia/perses-client-secret.age
+  # echo -n '<HASH>' | agenix -e authelia/perses-client-secret-hash.age
+  # TODO: I leaked these secrets to Gemini, rekey them.
   "authelia/perses-client-secret.age".publicKeys = all-personal;
   "authelia/perses-client-secret-hash.age".publicKeys = all-personal;
   "cloudflare-ddns-api-token.age".publicKeys = all-personal;

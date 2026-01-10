@@ -42,6 +42,17 @@ in
                 type = int;
                 description = "Port the service exposes on localhost";
               };
+              useOidc = lib.mkOption {
+                type = bool;
+                description = ''
+                  Use OIDC instead of forward_auth.
+
+                  Service is directly reverse-proxied by Caddy. Hopefully it
+                  isn't trivially pwnable via its login page. It will then need
+                  to be configured to do SSO via Authelia.
+                '';
+                default = false;
+              };
               url = lib.mkOption {
                 type = str;
                 readOnly = true;
@@ -89,30 +100,36 @@ in
           reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
         }
 
-        # Proxy services, behind Authelia auth.
-        # Gemini generated the actual config and seems to have been cribbing
-        # from https://www.authelia.com/integration/proxies/caddy/. As per that
-        # doc this corresponds to the default configuration of Authelia's
-        # ForwardAuth Authz implementation.
-        # This makes a query to Authelia to get the auth state. If not
-        # authenticated it redirects to the Authelia UI. If authenticated, it adds
-        # the Remote-* headers to the request and forward it to the app.
-        # It's important that all the headers that are of security relevance are
-        # included here, so that if the user sets them in their own request, that
-        # doesn't get forwarded directly to the app (allowing users to spoof
-        # stuff).
-        # To be honest, I do now know exactly how the redirection part happens,
-        # presumably Caddy does not know the URL of the Authelia UI, so I guess
-        # Authelia must somehow (via the cookie config...?) know that URL and
-        # inform Caddy about it.
         ${lib.concatStringsSep "\n" (
           lib.mapAttrsToList (name: service: ''
             @${service.subdomain} host ${service.subdomain}.${domain}
             handle @${service.subdomain} {
-              forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
-                  uri /api/authz/forward-auth
-                  copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-              }
+              ${lib.optionalString (!service.useOidc) ''
+                # Proxy this service with header-based authentication.  Gemini
+                # generated the actual config and seems to have been cribbing
+                # from https://www.authelia.com/integration/proxies/caddy/. As
+                # per that doc this corresponds to the default configuration of
+                # Authelia's ForwardAuth Authz implementation.
+                #
+                # This makes a query to Authelia to get the auth state. If not
+                # authenticated it redirects to the Authelia UI. If
+                # authenticated, it adds the Remote-* headers to the request and
+                # forward it to the app.  
+                #
+                # It's important that all the headers that are of security
+                # relevance are included here, so that if the user sets them in
+                # their own request, that doesn't get forwarded directly to the
+                # app (allowing users to spoof stuff).  
+                #
+                # To be honest, I do now know exactly how the redirection part
+                # happens, presumably Caddy does not know the URL of the
+                # Authelia UI, so I guess Authelia must somehow (via the cookie
+                # config...?) know that URL and inform Caddy about it.
+                forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
+                    uri /api/authz/forward-auth
+                    copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+                }
+              ''}
               reverse_proxy 127.0.0.1:${builtins.toString service.port}
             }
           '') cfg.services
@@ -204,7 +221,8 @@ in
           default_policy = "deny";
           rules = lib.mapAttrsToList (name: service: {
             domain = [ "${service.subdomain}.${domain}" ];
-            policy = "one_factor";
+            # If using OIDC, disable the ForwardAuth middleware.
+            policy = if service.useOidc then "bypass" else "one_factor";
           }) cfg.services;
         };
 
@@ -229,13 +247,30 @@ in
             # https://www.authelia.com/configuration/methods/files/#file-filters
             # Note the client_secret is set separately via an environment
             # variable. (Most of the other secrets neeeded by Authelia are done via
-            client_secret = ''{{- secret "${authelia-perses-client-secret-hash.path}" }}'';
+            client_secret = "{{- fileContent \"${authelia-perses-client-secret-hash.path}\" | trim }}";
             authorization_policy = "one_factor";
             redirect_uris = [
               # IIUC the path here is coupled with Perses itself, this has to
               # match something set by Perses in a request it makes in the OIDC
               # flow. "authelia" is the "slug" used by Perses' auth config.
-              "${cfg.services.perses.url}/auth/providers/oidc/authelia/callback"
+              "${cfg.services.perses.url}/api/auth/providers/oidc/authelia/callback"
+            ];
+            # No fuckin idea what this is but without it there's an error when
+            # redirecting from Authelia back to Perses after the user approves
+            # the auth.
+            token_endpoint_auth_method = "client_secret_basic";
+            # This is needed to make the "Device Authorization Flow" work - this
+            # is how the "percli login" command works.
+            grant_types = [
+              "authorization_code"
+              "refresh_token"
+              "urn:ietf:params:oauth:grant-type:device_code"
+            ];
+            scopes = [
+              "openid"
+              "profile"
+              "email"
+              "offline_access"
             ];
           }
         ];
