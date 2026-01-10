@@ -10,6 +10,16 @@ let
       encryption_key_file = config.age.secrets.perses-encryption-key.path;
       # Site is hosted behind SSL, so set this, shrug.
       cookie.secure = true;
+      authentication.providers.oidc = [
+        {
+          slug_id = "authelia";
+          name = "Authelia";
+          # TODO: Avoid duping all these fields:
+          client_id = "4guwUub8JViSDX~HIjtshmlnStejSe-tL5g.IqyqHm1CTJz2lVekSkCKiwczqxG645bucmFE";
+          client_secret_file = config.age.secrets.authelia-perses-client-secret.path;
+          issuer = "https://auth.home.yawn.io";
+        }
+      ];
     };
   };
 in
@@ -82,6 +92,11 @@ in
       RestrictRealtime = true;
       BindReadOnlyPaths = [
         config.age.secrets.perses-encryption-key.path
+        config.age.secrets.authelia-perses-client-secret.path
+        "/etc/resolv.conf"
+        "/etc/hosts"
+        "/etc/ssl/certs/ca-bundle.crt"
+        "/etc/ssl/certs/ca-certificates.crt"
       ];
     };
 
@@ -93,10 +108,17 @@ in
   };
   users.groups.perses = { };
 
-  age.secrets.perses-encryption-key = {
-    file = ../../secrets/perses-encryption-key.age;
-    mode = "440";
-    group = config.systemd.services.perses.serviceConfig.Group;
+  age.secrets = {
+    perses-encryption-key = {
+      file = ../../secrets/perses-encryption-key.age;
+      mode = "440";
+      group = config.systemd.services.perses.serviceConfig.Group;
+    };
+    authelia-perses-client-secret = {
+      file = ../../secrets/authelia/perses-client-secret.age;
+      mode = "440";
+      group = config.systemd.services.perses.serviceConfig.Group;
+    };
   };
 
   bjackman.iap.services.perses.port = 8097;
