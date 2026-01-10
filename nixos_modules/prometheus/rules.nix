@@ -110,8 +110,10 @@
             '';
             summary = "Host filesystem device error (instance {{ $labels.instance }})";
           };
+          # I dunno why but I get EPERM for tmpfs and cifs even when running as
+          # root.
           expr = ''
-            node_filesystem_device_error{fstype!="tmpfs"} == 1
+            node_filesystem_device_error{fstype!="tmpfs", fstype!="cifs"}
           '';
           for = "2m";
           labels.severity = "critical";
