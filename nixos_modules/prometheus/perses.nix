@@ -30,6 +30,10 @@ in
       User = "perses";
       Group = "perses";
 
+      RuntimeDirectory = "perses";
+      StateDirectory = "perses";
+      WorkingDirectory = "/var/lib/perses";
+
       ProtectSystem = "full";
       ProtectHome = true;
       PrivateTmp = true;
