@@ -29,21 +29,21 @@ in
           {
             options = {
               name = lib.mkOption {
-                type = lib.types.str;
+                type = str;
                 default = config._module.args.name;
                 description = "Name of the service";
               };
               subdomain = lib.mkOption {
-                type = lib.types.str;
+                type = str;
                 default = config._module.args.name;
                 description = "Subdomain to proxy the service under";
               };
               port = lib.mkOption {
-                type = lib.types.int;
+                type = int;
                 description = "Port the service exposes on localhost";
               };
               url = lib.mkOption {
-                type = lib.types.str;
+                type = str;
                 readOnly = true;
                 description = "URL where the service is available via the proxy";
                 default = "https://${config.subdomain}.${domain}";
