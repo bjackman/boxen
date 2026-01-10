@@ -53,6 +53,14 @@ in
   "authelia/storage-encryption-key.age".publicKeys = all-personal;
   "authelia/session-secret.age".publicKeys = all-personal;
   "authelia/passwords.json.age".publicKeys = all-personal;
+  "authelia/hmac-secret.age".publicKeys = all-personal;
+  # nix run nixpkgs#authelia -- crypto pair rsa generate && agenix -e authelia/oidc-priv.pem.age < private.pem && rm private.pem
+  "authelia/oidc-priv.pem.age".publicKeys = all-personal;
+  # The below generates the plaintext secret ("Random Password") and a hash
+  # ("Digest").
+  # nix run nixpkgs#authelia -- crypto hash generate pbkdf2 --variant sha512 --random --random.length 72 --random.charset rfc3986
+  "authelia/perses-client-secret.age".publicKeys = all-personal;
+  "authelia/perses-client-secret-hash.age".publicKeys = all-personal;
   "cloudflare-ddns-api-token.age".publicKeys = all-personal;
   # nix run nixpkgs#openssl -- rand -base64 12 | agenix -e filebrowser-samba-password.age
   "filebrowser-samba-password.age".publicKeys = all-personal;

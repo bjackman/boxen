@@ -141,6 +141,9 @@ in
         authelia-storage-encryption-key = mkSecret "storage-encryption-key";
         authelia-session-secret = mkSecret "session-secret";
         authelia-passwords-json = mkSecret "passwords.json";
+        authelia-hmac-secret = mkSecret "hmac-secret";
+        authelia-oidc-privkey = mkSecret "oidc-priv.pem";
+        authelia-perses-client-secret-hash = mkSecret "perses-client-secret-hash";
       };
     bjackman.derived-secrets.files."authelia_users.json" = {
       script = ''
@@ -174,6 +177,8 @@ in
         jwtSecretFile = authelia-jwt-secret.path;
         storageEncryptionKeyFile = authelia-storage-encryption-key.path;
         sessionSecretFile = authelia-session-secret.path;
+        oidcHmacSecretFile = authelia-hmac-secret.path;
+        oidcIssuerPrivateKeyFile = authelia-oidc-privkey.path;
       };
 
       settings = {
@@ -210,6 +215,28 @@ in
           ];
         };
 
+        identity_providers.oidc.clients = [
+          # TODO: Avoid depending on Perses config here (optionize this).
+          {
+            # Not really clear why but docs say to use a random string here.
+            # nix run nixpkgs#authelia -- crypto rand --length 72 --charset rfc3986
+            client_id = "4guwUub8JViSDX~HIjtshmlnStejSe-tL5g.IqyqHm1CTJz2lVekSkCKiwczqxG645bucmFE";
+            client_name = "Perses";
+            # Note this is assuming that the "File Filters" feature is enabled:
+            # https://www.authelia.com/configuration/methods/files/#file-filters
+            # Note the client_secret is set separately via an environment
+            # variable. (Most of the other secrets neeeded by Authelia are done via
+            client_secret = ''{{- secret "${authelia-perses-client-secret-hash.path}" }}'';
+            authorization_policy = "one_factor";
+            redirect_uris = [
+              # IIUC the path here is coupled with Perses itself, this has to
+              # match something set by Perses in a request it makes in the OIDC
+              # flow. "authelia" is the "slug" used by Perses' auth config.
+              "${cfg.services.perses.url}/auth/providers/oidc/authelia/callback"
+            ];
+          }
+        ];
+
         # This is a dummy for sending email notifications. It's required for the
         # configuration to validate. I think for the way I've set this up (e.g. no
         # password reset flow), this is unused.
@@ -217,12 +244,16 @@ in
       };
     };
 
-    # Reload the service when the secret changes - since its path is fixed
-    # (/run/agenix/authelia-passwords-json) changes to this won't actually change
-    # the content of the Authelia config itself so we need to be explicit here.
-    systemd.services."authelia-main".restartTriggers = [
-      config.age.secrets.authelia-passwords-json.file
-    ];
+    systemd.services."authelia-main" = {
+      # Reload the service when the secret changes - since its path is fixed
+      # (/run/agenix/authelia-passwords-json) changes to this won't actually change
+      # the content of the Authelia config itself so we need to be explicit here.
+      restartTriggers = [
+        config.age.secrets.authelia-passwords-json.file
+      ];
+      # https://www.authelia.com/configuration/methods/files/#file-filters
+      environment.X_AUTHELIA_CONFIG_FILTERS = "template";
+    };
 
     # Actually only need to persist db.sqlite3 but having symlinks to individual
     # files like that is awkward with systemd sandboxing. So just persist the
