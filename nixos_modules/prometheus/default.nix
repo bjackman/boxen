@@ -13,6 +13,7 @@ in
   imports = [
     agenix-template.nixosModules.default
     ../iap.nix
+    ../impermanence.nix
     ./rules.nix
   ];
 
@@ -113,6 +114,18 @@ in
     vars.pass = config.age.secrets.alertmanager-gmail-password.path;
     content = ''ALERTMANAGER_GMAIL_PASSWORD="$pass"'';
   };
+
+  bjackman.impermanence.extraPersistence.directories =
+    let
+      service = config.systemd.services.prometheus.serviceConfig;
+    in
+    [
+      {
+        directory = service.WorkingDirectory;
+        mode = "0770";
+        user = service.User;
+      }
+    ];
 
   services.grafana = {
     enable = true;
