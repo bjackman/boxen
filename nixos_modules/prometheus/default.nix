@@ -15,6 +15,7 @@ in
     ../iap.nix
     ../impermanence.nix
     ./rules.nix
+    ./perses.nix
   ];
 
   # Couldn't get the stupid RBAC bullshit to work here, possibly it's
