@@ -68,11 +68,17 @@ in
       # to do the DNS-01 challenge, this supports that.
       globalConfig = ''
         debug
+        email bhenryj0117@gmail.com
         acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
       '';
+      # workaround. is a temporary hack to get certs from let's encrypt as suggested here:
+      # https://letsencrypt.org/docs/rate-limits/#new-certificates-per-exact-set-of-identifiers
       virtualHosts."*.${domain}, ${domain}".extraConfig = ''
         tls {
-            dns cloudflare {$CLOUDFLARE_API_TOKEN}
+            issuer acme {
+              dir https://acme.zerossl.com/v2/DV90
+              dns cloudflare {$CLOUDFLARE_API_TOKEN}
+            }
         }
 
         # This is the Authelia UI. It doesn't get configured via
