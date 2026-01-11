@@ -252,16 +252,27 @@ in
       environment.X_AUTHELIA_CONFIG_FILTERS = "template";
     };
 
-    # Actually only need to persist db.sqlite3 but having symlinks to individual
-    # files like that is awkward with systemd sandboxing. So just persist the
-    # whole directory.
     bjackman.impermanence.extraPersistence.directories = [
+      # Actually only need to persist db.sqlite3 but having symlinks to individual
+      # files like that is awkward with systemd sandboxing. So just persist the
+      # whole directory.
       {
         directory = "/var/lib/authelia-main";
         mode = "0700";
         user = "authelia-main";
         group = "authelia-main";
       }
+      # Persist certificates so we don't get rate-limited by Let's Encrypt.
+      (
+        let
+          service = config.systemd.services.caddy.serviceConfig;
+        in
+        {
+          directory = "/var/lib/caddy";
+          mode = "0700";
+          user = service.User;
+        }
+      )
     ];
   };
 }
