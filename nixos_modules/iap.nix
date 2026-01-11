@@ -70,27 +70,19 @@ in
         debug
         acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
       '';
-      virtualHosts = {
-        # This block is supposed to a) tell the ACME logic that we want a
-        # wildcard SSL cert and b) configure caddy to use that cert for all the
-        # other matching blocks. It looks like in practice it just registered
-        # separate certs for each domain as well, if I wanna use the wildcard
-        # domain I think I have to restructure the config. I don't think I
-        # actually care though.
-        "${domain}, *.${domain}".extraConfig = ''
-          tls {
-              dns cloudflare {$CLOUDFLARE_API_TOKEN}
-          }
-        '';
+      virtualHosts."*.${domain}, ${domain}".extraConfig = ''
+        tls {
+            dns cloudflare {$CLOUDFLARE_API_TOKEN}
+        }
+
         # This is the Authelia UI. It doesn't get configured via
         # bjackman.iap.services since a) it shouldn't have a forward_auth rule
         # in Caddy and b) it shouldn't have an access control rule in Authelia.
-        "auth.${domain}".extraConfig = ''
+        @auth host auth.${domain}
+        handle @auth {
           reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
-        '';
-      }
-      // (lib.mapAttrs' (name: service: {
-        name = "${service.subdomain}.${domain}";
+        }
+
         # Proxy services, behind Authelia auth.
         # Gemini generated the actual config and seems to have been cribbing
         # from https://www.authelia.com/integration/proxies/caddy/. As per that
@@ -107,14 +99,19 @@ in
         # presumably Caddy does not know the URL of the Authelia UI, so I guess
         # Authelia must somehow (via the cookie config...?) know that URL and
         # inform Caddy about it.
-        value.extraConfig = ''
-          forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
-            uri /api/authz/forward-auth
-            copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-          }
-          reverse_proxy 127.0.0.1:${builtins.toString service.port}
-        '';
-      }) cfg.services);
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (name: service: ''
+            @${service.subdomain} host ${service.subdomain}.${domain}
+            handle @${service.subdomain} {
+              forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
+                  uri /api/authz/forward-auth
+                  copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+              }
+              reverse_proxy 127.0.0.1:${builtins.toString service.port}
+            }
+          '') cfg.services
+        )}
+      '';
     };
     age-template.files."caddy.env" = {
       vars.token = config.age.secrets.cloudflare-dns-api-token.path;
