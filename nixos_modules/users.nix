@@ -26,6 +26,10 @@
                 default = lib.strings.toSentenceCase config.name;
                 description = "Username in display format.";
               };
+              email = lib.mkOption {
+                type = str;
+                default = "";
+              };
               admin = lib.mkOption {
                 type = bool;
                 default = false;

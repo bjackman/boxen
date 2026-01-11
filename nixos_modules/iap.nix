@@ -176,7 +176,7 @@ in
               value: {
                 password: $passwords[.name],
                 displayname: .displayName,
-                email: "",
+                email: .email,
                 # Map the admin boolean to the "admin" group string
                 groups: (if .admin then ["admin"] else [] end)
               }
