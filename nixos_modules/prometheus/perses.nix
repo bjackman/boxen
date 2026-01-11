@@ -39,8 +39,8 @@ let
             metadata.name = "admin";
             spec.permissions = [
               {
-                actions = ["*"];
-                scopes = ["*"];
+                actions = [ "*" ];
+                scopes = [ "*" ];
               }
             ];
           };
