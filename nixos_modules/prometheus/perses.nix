@@ -28,6 +28,43 @@ let
         }
       ];
     };
+    provisioning.folders = [
+      (pkgs.linkFarm "perses-provisioning" [
+        # Define the admin role.
+        {
+          name = "admin-role.json";
+          path = pkgs.writers.writeJSON "admin-role.json" {
+            kind = "GlobalRole";
+            metadata.name = "admin";
+            spec.permissions = [
+              {
+                actions = ["*"];
+                scopes = ["*"];
+              }
+            ];
+          };
+        }
+        # Grant admin access using the role defined above.
+        {
+          name = "admin-binding.json";
+          path = pkgs.writers.writeJSON "admin-binding.json" {
+            kind = "GlobalRoleBinding";
+            metadata.name = "brendan-admin-binding";
+            spec = {
+              # TODO: Perses doesn't yet support binding to OIDC groups so just
+              # directly configuring a user for now.
+              role = "admin";
+              subjects = [
+                {
+                  kind = "User";
+                  name = "brendan";
+                }
+              ];
+            };
+          };
+        }
+      ])
+    ];
   };
 in
 {
