@@ -24,6 +24,7 @@ let
             "openid"
             "profile"
             "email"
+            "offline_access"
           ];
         }
       ];
@@ -57,7 +58,8 @@ let
               subjects = [
                 {
                   kind = "User";
-                  name = "brendan";
+                  # TODO: Hmm, how do I use a username
+                  name = "5029299a-046c-4945-8188-3ebe4f68b17d";
                 }
               ];
             };

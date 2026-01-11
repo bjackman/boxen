@@ -266,6 +266,8 @@ in
               "refresh_token"
               "urn:ietf:params:oauth:grant-type:device_code"
             ];
+            # Needed for offline_access, I don't fucken know lol.
+            response_types = [ "code" ];
             scopes = [
               "openid"
               "profile"
