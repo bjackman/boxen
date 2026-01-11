@@ -29,35 +29,35 @@
       # another, it overrides its options instead of merging with them. I don't
       # know if that's true. Anyway, it gave me this fancy business which is
       # probably for the best anyway.
-      type = lib.types.submodule {
-        options = {
-          directories = lib.mkOption {
-            type = lib.types.listOf lib.types.anything;
-            default = [ ];
-          };
-          files = lib.mkOption {
-            type = lib.types.listOf lib.types.anything;
-            default = [ ];
-          };
-          users = lib.mkOption {
-            type = lib.types.attrsOf (
-              lib.types.submodule {
+      type =
+        with lib.types;
+        submodule {
+          options = {
+            directories = lib.mkOption {
+              type = listOf anything;
+              default = [ ];
+            };
+            files = lib.mkOption {
+              type = listOf anything;
+              default = [ ];
+            };
+            users = lib.mkOption {
+              type = attrsOf (submodule {
                 options = {
                   files = lib.mkOption {
-                    type = lib.types.listOf lib.types.str;
+                    type = listOf str;
                     default = [ ];
                   };
                   directories = lib.mkOption {
-                    type = lib.types.listOf lib.types.anything;
+                    type = listOf anything;
                     default = [ ];
                   };
                 };
-              }
-            );
-            default = { };
+              });
+              default = { };
+            };
           };
         };
-      };
       description = ''
         Overlay to apply to
         environment.persistence."${config.bjackman.impermanence.persistentMountPoint}"
