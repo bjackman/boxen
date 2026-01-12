@@ -65,6 +65,39 @@ let
             };
           };
         }
+        # Defining this here just coz I don't see a Cue helper for this,
+        # probably doesn't belong here.
+        {
+          name = "project-homelab.json";
+          path = pkgs.writers.writeJSON "project-homelab.json" {
+            kind = "Project";
+            metadata.name = "homelab";
+            spec.display.name = "Homelab";
+          };
+        }
+        # The datasource is coupled to the rest of the Nix code so defining it
+        # here makes sense.
+        {
+          name = "datasource-prometheus.json";
+          path = pkgs.writers.writeJSON "datasource-prometheus.json" {
+            kind = "GlobalDatasource";
+            metadata.name = "prometheus";
+            spec = {
+              display.name = "Prometheus";
+              default = true;
+              plugin = {
+                kind = "PrometheusDatasource";
+                spec = {
+                  # The proxy configuration belongs inside the plugin's spec
+                  proxy = {
+                    kind = "HTTPProxy";
+                    spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
+                  };
+                };
+              };
+            };
+          };
+        }
       ])
     ];
   };
