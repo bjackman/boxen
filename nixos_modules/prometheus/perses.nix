@@ -58,8 +58,8 @@ let
               subjects = [
                 {
                   kind = "User";
-                  # TODO: Hmm, how do I use a username
-                  name = "5029299a-046c-4945-8188-3ebe4f68b17d";
+                  # Perses uses the username part of the email to identify users, shrug.
+                  name = "bhenryj0117";
                 }
               ];
             };
