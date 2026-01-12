@@ -1,19 +1,34 @@
 package mydac
 
+// This was written by taking the example from
+// https://github.com/perses/community-mixins/blob/main/examples/dashboards/perses/node-exporter/node-exporter-nodes.yaml
+// Then having AI convert it to cue.
+// Then I passed it to a couple of AIs to get them to refactor it to make it
+// more concise.
+// Is this good Cue? No idea. It may be missing opportunities to better use the
+// Perses Cue SDK.
+// Does it make any sense to write this in Cue instead of Nix? No idea, it
+// depends on how much value it gets / should be getting from the SDK.
+//
+// Deploy with percli dac build -d . && percli apply -d built
+// Format with cue fmt
+//
+// TODO: Build that from Nix and then add it to the provisioning config.
+// TODO: Rename stuff.
+// TODO: Apparently at some point the AI broke the Cue code and I didn't test
+// it, go back through the history and figure out where it went wrong.
+
 import (
 	"github.com/perses/perses/cue/dac-utils/dashboard@v0"
 	"github.com/perses/perses/cue/dac-utils/panelgroups@v0"
 	"github.com/perses/perses/cue/dac-utils/panelgroup@v0"
 )
 
-// --- Definitions ---
-
 let #datasource = {
 	kind: "PrometheusDatasource"
 	name: "prometheus"
 }
 
-// Global selector to avoid repetition across all PromQL queries
 let #selector = #"{instance="$instance",job="node"}"#
 
 let #promQuery = {
@@ -60,8 +75,6 @@ let #panel = {
 // Helper for the standard 2-column group
 let #row = panelgroup & {#cols: 2, #height: 8}
 
-// --- Dashboard ---
-
 dashboard & {
 	#name:    "node-exporter-nodes"
 	#project: "homelab"
@@ -93,6 +106,9 @@ dashboard & {
 						#title: "CPU Usage"
 						#plugin: #tsChart & {#unit: "percent-decimal"}
 						#queries: [#promQuery & {
+							// TODO: This query is dumb. It gives me 8 copies of
+							// the same time series. All of them show about 80%
+							// util on a fully idle system.
 							#expr:   #"1 - sum without (mode) (rate(node_cpu_seconds_total\#(#selector),mode=~"idle|iowait|steal"}[$__rate_interval])) / ignoring (cpu) group_left () count without (cpu, mode) (node_cpu_seconds_total\#(#selector),mode="idle"})"#
 							#legend: "{{device}} - CPU - Usage"
 						}]
