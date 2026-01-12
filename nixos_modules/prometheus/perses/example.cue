@@ -6,6 +6,44 @@ import (
     "github.com/perses/perses/cue/dac-utils/panelgroup@v0"
 )
 
+// Common definitions
+let #datasource = {
+    kind: "PrometheusDatasource"
+    name: "prometheus"
+}
+
+let #promQuery = {
+    #query: string
+    #seriesNameFormat?: string
+    kind: "TimeSeriesQuery"
+    spec: plugin: {
+        kind: "PrometheusTimeSeriesQuery"
+        spec: {
+            datasource: #datasource
+            query: #query
+            if #seriesNameFormat != _|_ {
+                seriesNameFormat: #seriesNameFormat
+            }
+        }
+    }
+}
+
+let #tsChart = {
+    kind: "TimeSeriesChart"
+    spec: {
+        legend: {
+            position: "bottom"
+            mode: "table"
+            values: ["last"]
+        }
+    }
+}
+
+let #panelGroup8h = panelgroup & {
+    #cols: 2
+    #height: 8
+}
+
 dashboard & {
     #name: "node-exporter-nodes"
     #project: "homelab"
@@ -27,10 +65,7 @@ dashboard & {
                 plugin: {
                     kind: "PrometheusLabelValuesVariable"
                     spec: {
-                        datasource: {
-                            kind: "PrometheusDatasource"
-                            name: "prometheus"
-                        }
+                        datasource: #datasource
                         labelName: "instance"
                         matchers: [
                             "node_uname_info{job=\"node\",sysname!=\"Darwin\"}",
@@ -43,10 +78,8 @@ dashboard & {
 
     #panelGroups: panelgroups & {
         #input: [
-            panelgroup & {
+            #panelGroup8h & {
                 #title: "CPU"
-                #cols: 2
-                #height: 8
                 #panels: [
                     {
                         kind: "Panel"
@@ -55,38 +88,23 @@ dashboard & {
                                 name: "CPU Usage"
                                 description: "Shows CPU utilization percentage across cluster nodes"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                    yAxis: format: unit: "percent-decimal"
-                                }
+                            plugin: #tsChart & {
+                                spec: yAxis: format: unit: "percent-decimal"
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: """
-                                                1
-                                                  -
-                                                sum without (mode) (
-                                                  rate(
-                                                    node_cpu_seconds_total{instance="$instance",job="node",mode=~"idle|iowait|steal"}[$__rate_interval]
-                                                  )
-                                                )
-                                                / ignoring (cpu) group_left ()
-                                                  count without (cpu, mode) (node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})
-                                                """
-                                            seriesNameFormat: "{{device}} - CPU - Usage"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: """
+                                        1
+                                          -
+                                        sum without (mode) (
+                                          rate(
+                                            node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=~\"idle|iowait|steal\"}[$__rate_interval]
+                                          )
+                                        )
+                                        / ignoring (cpu) group_left ()
+                                          count without (cpu, mode) (node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=\"idle\"})
+                                        """
+                                    #seriesNameFormat: "{{device}} - CPU - Usage"
                                 }
                             ]
                         }
@@ -98,70 +116,31 @@ dashboard & {
                                 name: "CPU Usage"
                                 description: "Shows CPU utilization metrics"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                }
-                            }
+                            plugin: #tsChart
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "node_load1{instance=\"$instance\",job=\"node\"}"
-                                            seriesNameFormat: "CPU - 1m Average"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "node_load1{instance=\"$instance\",job=\"node\"}"
+                                    #seriesNameFormat: "CPU - 1m Average"
                                 },
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "node_load5{instance=\"$instance\",job=\"node\"}"
-                                            seriesNameFormat: "CPU - 5m Average"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "node_load5{instance=\"$instance\",job=\"node\"}"
+                                    #seriesNameFormat: "CPU - 5m Average"
                                 },
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "node_load15{instance=\"$instance\",job=\"node\"}"
-                                            seriesNameFormat: "CPU - 15m Average"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "node_load15{instance=\"$instance\",job=\"node\"}"
+                                    #seriesNameFormat: "CPU - 15m Average"
                                 },
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "count(node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=\"idle\"})"
-                                            seriesNameFormat: "CPU - Logical Cores"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "count(node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=\"idle\"})"
+                                    #seriesNameFormat: "CPU - Logical Cores"
                                 },
                             ]
                         }
                     },
                 ]
             },
-            panelgroup & {
+            #panelGroup8h & {
                 #title: "Memory"
-                #cols: 2
-                #height: 8
                 #panels: [
                     {
                         kind: "Panel"
@@ -170,53 +149,24 @@ dashboard & {
                                 name: "Memory Usage"
                                 description: "Shows memory utilization metrics"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                    yAxis: format: {
-                                        unit: "bytes"
-                                        shortValues: true
-                                    }
+                            plugin: #tsChart & {
+                                spec: yAxis: format: {
+                                    unit: "bytes"
+                                    shortValues: true
                                 }
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "node_memory_Buffers_bytes{instance=\"$instance\",job=\"node\"}"
-                                            seriesNameFormat: "Memory - Buffers"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "node_memory_Buffers_bytes{instance=\"$instance\",job=\"node\"}"
+                                    #seriesNameFormat: "Memory - Buffers"
                                 },
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "node_memory_Cached_bytes{instance=\"$instance\",job=\"node\"}"
-                                            seriesNameFormat: "Memory - Cached"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "node_memory_Cached_bytes{instance=\"$instance\",job=\"node\"}"
+                                    #seriesNameFormat: "Memory - Cached"
                                 },
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "node_memory_MemFree_bytes{instance=\"$instance\",job=\"node\"}"
-                                            seriesNameFormat: "Memory - Free"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "node_memory_MemFree_bytes{instance=\"$instance\",job=\"node\"}"
+                                    #seriesNameFormat: "Memory - Free"
                                 },
                             ]
                         }
@@ -244,32 +194,23 @@ dashboard & {
                                 }
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: """
-                                              100
-                                                -
-                                                avg(node_memory_MemAvailable_bytes{instance="$instance",job="node"})
-                                                /
-                                                avg(node_memory_MemTotal_bytes{instance="$instance",job="node"}) * 100
-                                              """
-                                            seriesNameFormat: "Memory - Usage"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: """
+                                      100
+                                        -
+                                        avg(node_memory_MemAvailable_bytes{instance=\"$instance\",job=\"node\"})
+                                        /
+                                        avg(node_memory_MemTotal_bytes{instance=\"$instance\",job=\"node\"}) * 100
+                                      """
+                                    #seriesNameFormat: "Memory - Usage"
                                 },
                             ]
                         }
                     },
                 ]
             },
-            panelgroup & {
+            #panelGroup8h & {
                 #title: "Disk"
-                #cols: 2
-                #height: 8
                 #panels: [
                     {
                         kind: "Panel"
@@ -278,39 +219,17 @@ dashboard & {
                                 name: "Disk I/O Bytes"
                                 description: "Shows disk I/O metrics in bytes"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                    yAxis: format: unit: "bytes"
-                                }
+                            plugin: #tsChart & {
+                                spec: yAxis: format: unit: "bytes"
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "rate(node_disk_read_bytes_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
-                                            seriesNameFormat: "{{device}} - Disk - Usage"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "rate(node_disk_read_bytes_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
+                                    #seriesNameFormat: "{{device}} - Disk - Usage"
                                 },
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "rate(node_disk_io_time_seconds_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
-                                            seriesNameFormat: "{{device}} - Disk - Written"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "rate(node_disk_io_time_seconds_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
+                                    #seriesNameFormat: "{{device}} - Disk - Written"
                                 },
                             ]
                         }
@@ -322,38 +241,21 @@ dashboard & {
                                 name: "Disk I/O Seconds"
                                 description: "Shows disk I/O duration metrics"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                    yAxis: format: unit: "seconds"
-                                }
+                            plugin: #tsChart & {
+                                spec: yAxis: format: unit: "seconds"
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: "rate(node_disk_io_time_seconds_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
-                                            seriesNameFormat: "{{device}} - Disk - IO Time"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: "rate(node_disk_io_time_seconds_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
+                                    #seriesNameFormat: "{{device}} - Disk - IO Time"
                                 },
                             ]
                         }
                     },
                 ]
             },
-            panelgroup & {
+            #panelGroup8h & {
                 #title: "Network"
-                #cols: 2
-                #height: 8
                 #panels: [
                     {
                         kind: "Panel"
@@ -362,32 +264,17 @@ dashboard & {
                                 name: "Network Received"
                                 description: "Shows network received bytes metrics"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                    yAxis: format: unit: "bytes/sec"
-                                }
+                            plugin: #tsChart & {
+                                spec: yAxis: format: unit: "bytes/sec"
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: """
-                                              rate(
-                                                node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval]
-                                              )
-                                              """
-                                            seriesNameFormat: "{{device}} - Network - Received"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: """
+                                      rate(
+                                        node_network_receive_bytes_total{device!=\"lo\",instance=\"$instance\",job=\"node\"}[$__rate_interval]
+                                      )
+                                      """
+                                    #seriesNameFormat: "{{device}} - Network - Received"
                                 },
                             ]
                         }
@@ -399,32 +286,17 @@ dashboard & {
                                 name: "Network Transmitted"
                                 description: "Shows network transmitted bytes metrics"
                             }
-                            plugin: {
-                                kind: "TimeSeriesChart"
-                                spec: {
-                                    legend: {
-                                        position: "bottom"
-                                        mode: "table"
-                                        values: ["last"]
-                                    }
-                                    yAxis: format: unit: "bytes/sec"
-                                }
+                            plugin: #tsChart & {
+                                spec: yAxis: format: unit: "bytes/sec"
                             }
                             queries: [
-                                {
-                                    kind: "TimeSeriesQuery"
-                                    spec: plugin: {
-                                        kind: "PrometheusTimeSeriesQuery"
-                                        spec: {
-                                            datasource: { kind: "PrometheusDatasource", name: "prometheus" }
-                                            query: """
-                                              rate(
-                                                node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval]
-                                              )
-                                              """
-                                            seriesNameFormat: "{{device}} - Network - Transmitted"
-                                        }
-                                    }
+                                #promQuery & {
+                                    #query: """
+                                      rate(
+                                        node_network_receive_bytes_total{device!=\"lo\",instance=\"$instance\",job=\"node\"}[$__rate_interval]
+                                      )
+                                      """
+                                    #seriesNameFormat: "{{device}} - Network - Transmitted"
                                 },
                             ]
                         }
