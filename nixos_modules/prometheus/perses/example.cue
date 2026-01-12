@@ -68,7 +68,7 @@ dashboard & {
                         datasource: #datasource
                         labelName: "instance"
                         matchers: [
-                            "node_uname_info{job=\"node\",sysname!=\"Darwin\"}",
+                            #"node_uname_info{job="node",sysname!="Darwin"}"#,
                         ]
                     }
                 }
@@ -93,17 +93,17 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: """
+                                    #query: #"""
                                         1
                                           -
                                         sum without (mode) (
                                           rate(
-                                            node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=~\"idle|iowait|steal\"}[$__rate_interval]
+                                            node_cpu_seconds_total{instance="$instance",job="node",mode=~"idle|iowait|steal"}[$__rate_interval]
                                           )
                                         )
                                         / ignoring (cpu) group_left ()
-                                          count without (cpu, mode) (node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=\"idle\"})
-                                        """
+                                          count without (cpu, mode) (node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})
+                                        """#
                                     #seriesNameFormat: "{{device}} - CPU - Usage"
                                 }
                             ]
@@ -119,19 +119,19 @@ dashboard & {
                             plugin: #tsChart
                             queries: [
                                 #promQuery & {
-                                    #query: "node_load1{instance=\"$instance\",job=\"node\"}"
+                                    #query: #"node_load1{instance="$instance",job="node"}"#
                                     #seriesNameFormat: "CPU - 1m Average"
                                 },
                                 #promQuery & {
-                                    #query: "node_load5{instance=\"$instance\",job=\"node\"}"
+                                    #query: #"node_load5{instance="$instance",job="node"}"#
                                     #seriesNameFormat: "CPU - 5m Average"
                                 },
                                 #promQuery & {
-                                    #query: "node_load15{instance=\"$instance\",job=\"node\"}"
+                                    #query: #"node_load15{instance="$instance",job="node"}"#
                                     #seriesNameFormat: "CPU - 15m Average"
                                 },
                                 #promQuery & {
-                                    #query: "count(node_cpu_seconds_total{instance=\"$instance\",job=\"node\",mode=\"idle\"})"
+                                    #query: #"count(node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})"#
                                     #seriesNameFormat: "CPU - Logical Cores"
                                 },
                             ]
@@ -157,15 +157,15 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: "node_memory_Buffers_bytes{instance=\"$instance\",job=\"node\"}"
+                                    #query: #"node_memory_Buffers_bytes{instance="$instance",job="node"}"#
                                     #seriesNameFormat: "Memory - Buffers"
                                 },
                                 #promQuery & {
-                                    #query: "node_memory_Cached_bytes{instance=\"$instance\",job=\"node\"}"
+                                    #query: #"node_memory_Cached_bytes{instance="$instance",job="node"}"#
                                     #seriesNameFormat: "Memory - Cached"
                                 },
                                 #promQuery & {
-                                    #query: "node_memory_MemFree_bytes{instance=\"$instance\",job=\"node\"}"
+                                    #query: #"node_memory_MemFree_bytes{instance="$instance",job="node"}"#
                                     #seriesNameFormat: "Memory - Free"
                                 },
                             ]
@@ -195,13 +195,13 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: """
+                                    #query: #"""
                                       100
                                         -
-                                        avg(node_memory_MemAvailable_bytes{instance=\"$instance\",job=\"node\"})
+                                        avg(node_memory_MemAvailable_bytes{instance="$instance",job="node"})
                                         /
-                                        avg(node_memory_MemTotal_bytes{instance=\"$instance\",job=\"node\"}) * 100
-                                      """
+                                        avg(node_memory_MemTotal_bytes{instance="$instance",job="node"}) * 100
+                                      """#
                                     #seriesNameFormat: "Memory - Usage"
                                 },
                             ]
@@ -224,11 +224,11 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: "rate(node_disk_read_bytes_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
+                                    #query: #"rate(node_disk_read_bytes_total{device!="",instance="$instance",job="node"}[$__rate_interval])"#
                                     #seriesNameFormat: "{{device}} - Disk - Usage"
                                 },
                                 #promQuery & {
-                                    #query: "rate(node_disk_io_time_seconds_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
+                                    #query: #"rate(node_disk_io_time_seconds_total{device!="",instance="$instance",job="node"}[$__rate_interval])"#
                                     #seriesNameFormat: "{{device}} - Disk - Written"
                                 },
                             ]
@@ -246,7 +246,7 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: "rate(node_disk_io_time_seconds_total{device!=\"\",instance=\"$instance\",job=\"node\"}[$__rate_interval])"
+                                    #query: #"rate(node_disk_io_time_seconds_total{device!="",instance="$instance",job="node"}[$__rate_interval])"#
                                     #seriesNameFormat: "{{device}} - Disk - IO Time"
                                 },
                             ]
@@ -269,11 +269,11 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: """
+                                    #query: #"""
                                       rate(
-                                        node_network_receive_bytes_total{device!=\"lo\",instance=\"$instance\",job=\"node\"}[$__rate_interval]
+                                        node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval]
                                       )
-                                      """
+                                      """#
                                     #seriesNameFormat: "{{device}} - Network - Received"
                                 },
                             ]
@@ -291,11 +291,11 @@ dashboard & {
                             }
                             queries: [
                                 #promQuery & {
-                                    #query: """
+                                    #query: #"""
                                       rate(
-                                        node_network_receive_bytes_total{device!=\"lo\",instance=\"$instance\",job=\"node\"}[$__rate_interval]
+                                        node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval]
                                       )
-                                      """
+                                      """#
                                     #seriesNameFormat: "{{device}} - Network - Transmitted"
                                 },
                             ]
