@@ -6,300 +6,158 @@ import (
     "github.com/perses/perses/cue/dac-utils/panelgroup@v0"
 )
 
-// Common definitions
+// --- Definitions ---
+
 let #datasource = {
     kind: "PrometheusDatasource"
     name: "prometheus"
 }
 
+// Global selector to avoid repetition across all PromQL queries
+let #selector = #"{instance="$instance",job="node"}"#
+
 let #promQuery = {
-    #query: string
-    #seriesNameFormat?: string
-    kind: "TimeSeriesQuery"
+    #expr:   string
+    #legend?: string
+    kind:    "TimeSeriesQuery"
     spec: plugin: {
         kind: "PrometheusTimeSeriesQuery"
         spec: {
             datasource: #datasource
-            query: #query
-            if #seriesNameFormat != _|_ {
-                seriesNameFormat: #seriesNameFormat
-            }
+            query:      #expr
+            if #legend != _|_ {seriesNameFormat: #legend}
         }
     }
 }
 
 let #tsChart = {
-    kind: "TimeSeriesChart"
+    #unit?: string
+    kind:   "TimeSeriesChart"
     spec: {
-        legend: {
-            position: "bottom"
-            mode: "table"
-            values: ["last"]
-        }
+        if #unit != _|_ {yAxis: format: unit: #unit}
+        legend: {position: "bottom", mode: "table", values: ["last"]}
     }
 }
 
-let #panelGroup8h = panelgroup & {
-    #cols: 2
-    #height: 8
+// Generic panel helper to remove 4 levels of nesting
+let #panel = {
+    #title:   string
+    #desc?:   string
+    #plugin:  _
+    #queries: [...#promQuery]
+
+    kind: "Panel"
+    spec: {
+        display: {
+            name: #title
+            if #desc != _|_ {description: #desc}
+        }
+        plugin:  #plugin
+        queries: #queries
+    }
 }
+
+// Helper for the standard 2-column group
+let #row = panelgroup & {#cols: 2, #height: 8}
+
+// --- Dashboard ---
 
 dashboard & {
-    #name: "node-exporter-nodes"
+    #name:    "node-exporter-nodes"
     #project: "homelab"
-    #display: {
-        name: "Node Exporter / Nodes"
-    }
+    #display: name: "Node Exporter / Nodes"
 
-    #variables: [
-        {
-            kind: "ListVariable"
-            spec: {
-                name: "instance"
-                display: {
-                    name: "instance"
-                    hidden: false
-                }
-                allowAllValue: true
-                allowMultiple: false
-                plugin: {
-                    kind: "PrometheusLabelValuesVariable"
-                    spec: {
-                        datasource: #datasource
-                        labelName: "instance"
-                        matchers: [
-                            #"node_uname_info{job="node",sysname!="Darwin"}"#,
-                        ]
-                    }
+    #variables: [{
+        kind: "ListVariable"
+        spec: {
+            name: "instance"
+            display: name: "instance"
+            allowAllValue: true
+            plugin: {
+                kind: "PrometheusLabelValuesVariable"
+                spec: {
+                    datasource: #datasource
+                    labelName:  "instance"
+                    matchers: [#"node_uname_info{job="node",sysname!="Darwin"}"#]
                 }
             }
-        },
-    ]
+        }
+    }]
 
     #panelGroups: panelgroups & {
         #input: [
-            #panelGroup8h & {
+            #row & {
                 #title: "CPU"
                 #panels: [
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "CPU Usage"
-                                description: "Shows CPU utilization percentage across cluster nodes"
-                            }
-                            plugin: #tsChart & {
-                                spec: yAxis: format: unit: "percent-decimal"
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"""
-                                        1
-                                          -
-                                        sum without (mode) (
-                                          rate(
-                                            node_cpu_seconds_total{instance="$instance",job="node",mode=~"idle|iowait|steal"}[$__rate_interval]
-                                          )
-                                        )
-                                        / ignoring (cpu) group_left ()
-                                          count without (cpu, mode) (node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})
-                                        """#
-                                    #seriesNameFormat: "{{device}} - CPU - Usage"
-                                }
-                            ]
-                        }
+                    #panel & {
+                        #title:  "CPU Usage"
+                        #plugin: #tsChart & {#unit: "percent-decimal"}
+                        #queries: [#promQuery & {
+                            #expr:   #"1 - sum without (mode) (rate(node_cpu_seconds_total\#(#selector),mode=~"idle|iowait|steal"}[$__rate_interval])) / ignoring (cpu) group_left () count without (cpu, mode) (node_cpu_seconds_total\#(#selector),mode="idle"})"#
+                            #legend: "{{device}} - CPU - Usage"
+                        }]
                     },
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "CPU Usage"
-                                description: "Shows CPU utilization metrics"
-                            }
-                            plugin: #tsChart
-                            queries: [
-                                #promQuery & {
-                                    #query: #"node_load1{instance="$instance",job="node"}"#
-                                    #seriesNameFormat: "CPU - 1m Average"
-                                },
-                                #promQuery & {
-                                    #query: #"node_load5{instance="$instance",job="node"}"#
-                                    #seriesNameFormat: "CPU - 5m Average"
-                                },
-                                #promQuery & {
-                                    #query: #"node_load15{instance="$instance",job="node"}"#
-                                    #seriesNameFormat: "CPU - 15m Average"
-                                },
-                                #promQuery & {
-                                    #query: #"count(node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})"#
-                                    #seriesNameFormat: "CPU - Logical Cores"
-                                },
-                            ]
-                        }
+                    #panel & {
+                        #title:  "CPU Load"
+                        #plugin: #tsChart
+                        #queries: [
+                            #promQuery & {#expr: #"node_load1\#(#selector)"#, #legend: "CPU - 1m Average"},
+                            #promQuery & {#expr: #"node_load5\#(#selector)"#, #legend: "CPU - 5m Average"},
+                            #promQuery & {#expr: #"node_load15\#(#selector)"#, #legend: "CPU - 15m Average"},
+                        ]
                     },
                 ]
             },
-            #panelGroup8h & {
+            #row & {
                 #title: "Memory"
                 #panels: [
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "Memory Usage"
-                                description: "Shows memory utilization metrics"
-                            }
-                            plugin: #tsChart & {
-                                spec: yAxis: format: {
-                                    unit: "bytes"
-                                    shortValues: true
-                                }
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"node_memory_Buffers_bytes{instance="$instance",job="node"}"#
-                                    #seriesNameFormat: "Memory - Buffers"
-                                },
-                                #promQuery & {
-                                    #query: #"node_memory_Cached_bytes{instance="$instance",job="node"}"#
-                                    #seriesNameFormat: "Memory - Cached"
-                                },
-                                #promQuery & {
-                                    #query: #"node_memory_MemFree_bytes{instance="$instance",job="node"}"#
-                                    #seriesNameFormat: "Memory - Free"
-                                },
-                            ]
-                        }
+                    #panel & {
+                        #title:  "Memory Usage Detail"
+                        #plugin: #tsChart & {#unit: "bytes"}
+                        #queries: [
+                            #promQuery & {#expr: #"node_memory_Buffers_bytes\#(#selector)"#, #legend: "Memory - Buffers"},
+                            #promQuery & {#expr: #"node_memory_Cached_bytes\#(#selector)"#, #legend: "Memory - Cached"},
+                            #promQuery & {#expr: #"node_memory_MemFree_bytes\#(#selector)"#, #legend: "Memory - Free"},
+                        ]
                     },
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "Memory Usage"
-                                description: "Shows memory utilization across nodes"
+                    #panel & {
+                        #title: "Memory Usage %"
+                        #plugin: {
+                            kind: "GaugeChart"
+                            spec: {
+                                calculation: "last"
+                                format: unit: "percent"
+                                thresholds: steps: [
+                                    {value: 80, color: "orange"},
+                                    {value: 90, color: "red"},
+                                ]
                             }
-                            plugin: {
-                                kind: "GaugeChart"
-                                spec: {
-                                    calculation: "last"
-                                    format: unit: "percent"
-                                    thresholds: {
-                                        mode: "absolute"
-                                        defaultColor: "green"
-                                        steps: [
-                                            { value: 80, color: "orange" },
-                                            { value: 90, color: "red" },
-                                        ]
-                                    }
-                                }
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"""
-                                      100
-                                        -
-                                        avg(node_memory_MemAvailable_bytes{instance="$instance",job="node"})
-                                        /
-                                        avg(node_memory_MemTotal_bytes{instance="$instance",job="node"}) * 100
-                                      """#
-                                    #seriesNameFormat: "Memory - Usage"
-                                },
-                            ]
                         }
+                        #queries: [#promQuery & {
+                            #expr:   #"100 - avg(node_memory_MemAvailable_bytes\#(#selector)) / avg(node_memory_MemTotal_bytes\#(#selector)) * 100"#
+                            #legend: "Memory - Usage"
+                        }]
                     },
                 ]
             },
-            #panelGroup8h & {
-                #title: "Disk"
+            #row & {
+                #title: "Disk & Network"
                 #panels: [
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "Disk I/O Bytes"
-                                description: "Shows disk I/O metrics in bytes"
-                            }
-                            plugin: #tsChart & {
-                                spec: yAxis: format: unit: "bytes"
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"rate(node_disk_read_bytes_total{device!="",instance="$instance",job="node"}[$__rate_interval])"#
-                                    #seriesNameFormat: "{{device}} - Disk - Usage"
-                                },
-                                #promQuery & {
-                                    #query: #"rate(node_disk_io_time_seconds_total{device!="",instance="$instance",job="node"}[$__rate_interval])"#
-                                    #seriesNameFormat: "{{device}} - Disk - Written"
-                                },
-                            ]
-                        }
+                    #panel & {
+                        #title:  "Disk I/O Bytes"
+                        #plugin: #tsChart & {#unit: "bytes"}
+                        #queries: [
+                            #promQuery & {#expr: #"rate(node_disk_read_bytes_total{device!="",\#(#selector)}[$__rate_interval])"#, #legend: "{{device}} - Read"},
+                            #promQuery & {#expr: #"rate(node_disk_written_bytes_total{device!="",\#(#selector)}[$__rate_interval])"#, #legend: "{{device}} - Written"},
+                        ]
                     },
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "Disk I/O Seconds"
-                                description: "Shows disk I/O duration metrics"
-                            }
-                            plugin: #tsChart & {
-                                spec: yAxis: format: unit: "seconds"
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"rate(node_disk_io_time_seconds_total{device!="",instance="$instance",job="node"}[$__rate_interval])"#
-                                    #seriesNameFormat: "{{device}} - Disk - IO Time"
-                                },
-                            ]
-                        }
-                    },
-                ]
-            },
-            #panelGroup8h & {
-                #title: "Network"
-                #panels: [
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "Network Received"
-                                description: "Shows network received bytes metrics"
-                            }
-                            plugin: #tsChart & {
-                                spec: yAxis: format: unit: "bytes/sec"
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"""
-                                      rate(
-                                        node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval]
-                                      )
-                                      """#
-                                    #seriesNameFormat: "{{device}} - Network - Received"
-                                },
-                            ]
-                        }
-                    },
-                    {
-                        kind: "Panel"
-                        spec: {
-                            display: {
-                                name: "Network Transmitted"
-                                description: "Shows network transmitted bytes metrics"
-                            }
-                            plugin: #tsChart & {
-                                spec: yAxis: format: unit: "bytes/sec"
-                            }
-                            queries: [
-                                #promQuery & {
-                                    #query: #"""
-                                      rate(
-                                        node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval]
-                                      )
-                                      """#
-                                    #seriesNameFormat: "{{device}} - Network - Transmitted"
-                                },
-                            ]
-                        }
+                    #panel & {
+                        #title:  "Network Traffic"
+                        #plugin: #tsChart & {#unit: "bytes/sec"}
+                        #queries: [
+                            #promQuery & {#expr: #"rate(node_network_receive_bytes_total{device!="lo",\#(#selector)}[$__rate_interval])"#, #legend: "{{device}} - RX"},
+                            #promQuery & {#expr: #"rate(node_network_transmit_bytes_total{device!="lo",\#(#selector)}[$__rate_interval])"#, #legend: "{{device}} - TX"},
+                        ]
                     },
                 ]
             },
