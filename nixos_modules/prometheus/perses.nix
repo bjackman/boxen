@@ -233,7 +233,7 @@ in
       ProtectHome = true;
       PrivateTmp = true;
       NoNewPrivileges = true;
-      CapabilityBoundingSet = ""; # Removes all kernel capabilities
+      CapabilityBoundingSet = "";
       RestrictRealtime = true;
       BindReadOnlyPaths = [
         config.age.secrets.perses-encryption-key.path
