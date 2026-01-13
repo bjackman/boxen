@@ -5,11 +5,68 @@
   ...
 }:
 let
+  autheliaConfig = {
+    # Not really clear why but docs say to use a random string here.
+    # nix run nixpkgs#authelia -- crypto rand --length 72 --charset rfc3986
+    client_id = "4guwUub8JViSDX~HIjtshmlnStejSe-tL5g.IqyqHm1CTJz2lVekSkCKiwczqxG645bucmFE";
+    client_name = "Perses";
+    # Note this is assuming that the "File Filters" feature is enabled:
+    # https://www.authelia.com/configuration/methods/files/#file-filters
+    # Note the client_secret is set separately via an environment
+    # variable. (Most of the other secrets neeeded by Authelia are done via
+    client_secret = "{{- fileContent \"${config.age.secrets.authelia-perses-client-secret-hash.path}\" | trim }}";
+    authorization_policy = "one_factor";
+    redirect_uris = [
+      # IIUC the path here is coupled with Perses itself, this has to
+      # match something set by Perses in a request it makes in the OIDC
+      # flow. "authelia" is the "slug" used by Perses' auth config.
+      "${config.bjackman.iap.services.perses.url}/api/auth/providers/oidc/authelia/callback"
+    ];
+    # No fuckin idea what this is but without it there's an error when
+    # redirecting from Authelia back to Perses after the user approves
+    # the auth.
+    token_endpoint_auth_method = "client_secret_basic";
+    # This is needed to make the "Device Authorization Flow" work - this
+    # is how the "percli login" command works.
+    grant_types = [
+      "authorization_code"
+      "refresh_token"
+      "urn:ietf:params:oauth:grant-type:device_code"
+    ];
+    # Needed for offline_access, I don't fucken know lol.
+    response_types = [ "code" ];
+    scopes = [
+      "openid"
+      "profile"
+      # Email is needed because (according to the AI that read the code) that's
+      # the only user ID that Perses (0.53) actually takes from the OIDC
+      # provider.
+      "email"
+      "offline_access"
+    ];
+  };
   persesConfig = {
     security = {
       encryption_key_file = config.age.secrets.perses-encryption-key.path;
       # Site is hosted behind SSL, so set this, shrug.
       cookie.secure = true;
+      enable_auth = true;
+      authentication.providers.oidc = [
+        {
+          slug_id = "authelia";
+          name = "Authelia";
+          client_id = autheliaConfig.client_id;
+          client_secret_file = config.age.secrets.authelia-perses-client-secret.path;
+          # This is something that services need to know in order to be able to
+          # accept Authelia as a source of OIDC auth. I'm not 100% sure exactly
+          # what it "means" and to be honest I'm not really sure where Authelia
+          # derives this from.  Anyway, AI tells me that we do want this to be
+          # the SSL URL and not just a localhost thingy.
+          issuer = config.bjackman.iap.autheliaUrl;
+          redirect_uri = "${config.bjackman.iap.services.perses.url}/api/auth/providers/oidc/authelia/callback";
+          scopes = autheliaConfig.scopes;
+        }
+      ];
     };
   };
 in
@@ -17,6 +74,14 @@ in
   imports = [
     ../iap.nix
   ];
+
+  bjackman.iap.services.perses = {
+    port = 8097;
+    oidc = {
+      enable = true;
+      inherit autheliaConfig;
+    };
+  };
 
   # Delete the overlay below.
   warnings = lib.optional (
@@ -60,10 +125,25 @@ in
   environment.systemPackages = [ pkgs.perses ];
 
   systemd.services.perses = {
-    after = [ "network.target" ];
+    # We're gonna wait for the service to appear on the network anyway but as a
+    # hack to avoid doing that unnecessarily we take advantage of the assumption
+    # that it's on the same host.
+    after = [ "authelia-main.target" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
+      # Perses crashes on startup if the OIDC provider isn't available.
+      ExecStartPre =
+        let
+          url = "${config.bjackman.iap.autheliaUrl}/.well-known/openid-configuration";
+          checkScript = pkgs.writeShellScript "wait-for-authelia" ''
+            until ${pkgs.curl}/bin/curl -s --fail --max-time 5 "${url}"; do
+              echo "Authelia not ready, waiting..."
+              ${pkgs.coreutils}/bin/sleep 2
+            done
+          '';
+        in
+        "${checkScript}";
       ExecStart =
         let
           configFile = pkgs.writeText "perses-config.json" (builtins.toJSON persesConfig);
@@ -86,6 +166,11 @@ in
       RestrictRealtime = true;
       BindReadOnlyPaths = [
         config.age.secrets.perses-encryption-key.path
+        config.age.secrets.authelia-perses-client-secret.path
+        "/etc/resolv.conf"
+        "/etc/hosts"
+        "/etc/ssl/certs/ca-bundle.crt"
+        "/etc/ssl/certs/ca-certificates.crt"
       ];
     };
 
@@ -97,11 +182,22 @@ in
   };
   users.groups.perses = { };
 
-  age.secrets.perses-encryption-key = {
-    file = ../../secrets/perses-encryption-key.age;
-    mode = "440";
-    group = config.systemd.services.perses.serviceConfig.Group;
+  age.secrets = {
+    perses-encryption-key = {
+      file = ../../secrets/perses-encryption-key.age;
+      mode = "440";
+      group = config.systemd.services.perses.serviceConfig.Group;
+    };
+    authelia-perses-client-secret = {
+      file = ../../secrets/authelia/perses-client-secret.age;
+      mode = "440";
+      group = config.systemd.services.perses.serviceConfig.Group;
+    };
+    authelia-perses-client-secret-hash = {
+      file = ../../secrets/authelia/perses-client-secret-hash.age;
+      mode = "440";
+      # Note this is readable by _Authelia_.
+      group = config.systemd.services.authelia-main.serviceConfig.Group;
+    };
   };
-
-  bjackman.iap.services.perses.port = 8097;
 }
