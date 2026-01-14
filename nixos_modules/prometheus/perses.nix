@@ -103,9 +103,14 @@ in
             description = "Perses resource type";
             example = "Dashboard";
           };
-          metadata.name = lib.mkOption {
-            type = str;
-            description = "Perses resource name";
+          metadata = lib.mkOption {
+            type = submodule {
+              freeformType = attrs;
+              options.name = lib.mkOption {
+                type = str;
+                description = "Perses resource name";
+              };
+            };
           };
         };
       });
@@ -302,6 +307,7 @@ in
           };
         };
       }
+      (import ./dashboards/nodes.nix)
     ];
   };
 }
