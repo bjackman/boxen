@@ -68,10 +68,19 @@ let
         }
       ];
     };
-    # Hard-code a specific directory for this rather than putting a store path
-    # into the config directly - this means we can update the provisioned
-    # resources. We then populate this directory separately.
-    provisioning.folders = [ "/etc/perses/resources" ];
+    # Originally we hard-coded a specific directory here then populated that
+    # separately, reasoning that this way we can update the provisioned
+    # resources without restart Perses. But no. Perses doesn't have inotify set
+    # up.
+    provisioning.folders = [
+      (pkgs.linkFarm "perses-provisioning" (
+        lib.imap0 (i: res: rec {
+          # Fiddly prefix ensures ordering (e.g., 00_GlobalRole..., 01_GlobalRoleBinding...).
+          name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.kind}_${res.metadata.name}.json";
+          path = pkgs.writers.writeJSON name res;
+        }) config.bjackman.perses.resources
+      ))
+    ];
   };
 in
 {
@@ -157,69 +166,61 @@ in
 
     environment.systemPackages = [ pkgs.perses ];
 
-    systemd.services.perses = {
-      # We're gonna wait for the service to appear on the network anyway but as a
-      # hack to avoid doing that unnecessarily we take advantage of the assumption
-      # that it's on the same host.
-      after = [ "authelia-main.target" ];
-      wantedBy = [ "multi-user.target" ];
+    systemd.services.perses =
+      let
+        configFile = pkgs.writeText "perses-config.json" (builtins.toJSON persesConfig);
+      in
+      {
+        # We're gonna wait for the service to appear on the network anyway but as a
+        # hack to avoid doing that unnecessarily we take advantage of the assumption
+        # that it's on the same host.
+        after = [ "authelia-main.target" ];
+        wantedBy = [ "multi-user.target" ];
 
-      serviceConfig = {
-        # Perses crashes on startup if the OIDC provider isn't available.
-        ExecStartPre =
-          let
-            url = "${config.bjackman.iap.autheliaUrl}/.well-known/openid-configuration";
-            checkScript = pkgs.writeShellScript "wait-for-authelia" ''
-              until ${pkgs.curl}/bin/curl -s --fail --max-time 5 "${url}"; do
-                echo "Authelia not ready, waiting..."
-                ${pkgs.coreutils}/bin/sleep 2
-              done
-            '';
-          in
-          "${checkScript}";
-        ExecStart =
-          let
-            configFile = pkgs.writeText "perses-config.json" (builtins.toJSON persesConfig);
-            listenAddr = "127.0.0.1:${toString config.bjackman.iap.services.perses.port}";
-          in
-          "${pkgs.perses}/bin/perses --config ${configFile} --web.listen-address ${listenAddr}";
-        Restart = "always";
-        User = "perses";
-        Group = "perses";
+        serviceConfig = {
+          # Perses crashes on startup if the OIDC provider isn't available.
+          ExecStartPre =
+            let
+              url = "${config.bjackman.iap.autheliaUrl}/.well-known/openid-configuration";
+              checkScript = pkgs.writeShellScript "wait-for-authelia" ''
+                until ${pkgs.curl}/bin/curl -s --fail --max-time 5 "${url}"; do
+                  echo "Authelia not ready, waiting..."
+                  ${pkgs.coreutils}/bin/sleep 2
+                done
+              '';
+            in
+            "${checkScript}";
+          ExecStart =
+            let
+              listenAddr = "127.0.0.1:${toString config.bjackman.iap.services.perses.port}";
+            in
+            "${pkgs.perses}/bin/perses --config ${configFile} --web.listen-address ${listenAddr}";
+          Restart = "always";
+          User = "perses";
+          Group = "perses";
 
-        RuntimeDirectory = "perses";
-        StateDirectory = "perses";
-        WorkingDirectory = "/var/lib/perses";
+          RuntimeDirectory = "perses";
+          StateDirectory = "perses";
+          WorkingDirectory = "/var/lib/perses";
 
-        ProtectSystem = "full";
-        ProtectHome = true;
-        PrivateTmp = true;
-        NoNewPrivileges = true;
-        CapabilityBoundingSet = "";
-        RestrictRealtime = true;
-        BindReadOnlyPaths = [
-          config.age.secrets.perses-encryption-key.path
-          config.age.secrets.authelia-perses-client-secret.path
-          "/etc/resolv.conf"
-          "/etc/hosts"
-          "/etc/ssl/certs/ca-bundle.crt"
-          "/etc/ssl/certs/ca-certificates.crt"
-          "/etc/perses/resources"
-        ];
+          ProtectSystem = "full";
+          ProtectHome = true;
+          PrivateTmp = true;
+          NoNewPrivileges = true;
+          CapabilityBoundingSet = "";
+          RestrictRealtime = true;
+          BindReadOnlyPaths = [
+            config.age.secrets.perses-encryption-key.path
+            config.age.secrets.authelia-perses-client-secret.path
+            "/etc/resolv.conf"
+            "/etc/hosts"
+            "/etc/ssl/certs/ca-bundle.crt"
+            "/etc/ssl/certs/ca-certificates.crt"
+          ];
+        };
+
+        confinement.enable = true;
       };
-
-      confinement = {
-        enable = true;
-        # We mounted the resource definitions at /etc/perses/resources and then
-        # bound that into the service environment, but we also need to make the
-        # underlying Nix store files available, this takes care of that.
-        #
-        # Note there's actually no need for /etc/perses to even exist in the
-        # main host namespace, but we put it there anyway just to keep things
-        # from being too confusing.
-        packages = [ config.environment.etc."perses/resources".source ];
-      };
-    };
     users.users.perses = {
       isSystemUser = true;
       group = "perses";
@@ -244,14 +245,6 @@ in
         group = config.systemd.services.authelia-main.serviceConfig.Group;
       };
     };
-
-    environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" (
-      lib.imap0 (i: res: rec {
-        # Fiddly prefix ensures ordering (e.g., 00_GlobalRole..., 01_GlobalRoleBinding...).
-        name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.kind}_${res.metadata.name}.json";
-        path = pkgs.writers.writeJSON name res;
-      }) config.bjackman.perses.resources
-    );
 
     # Define base resources for the overall Perses deployment.
     bjackman.perses.resources = [
