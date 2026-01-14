@@ -79,6 +79,31 @@ in
     ../iap.nix
   ];
 
+  options.bjackman.perses.resources = lib.mkOption {
+    type =
+      with lib.types;
+      listOf (submodule {
+        # Allow arbitrary other fields, this is the Perses attribute spec we
+        # don't care about thge details.
+        freeformType = attrs;
+        # Require these two core fields of the resource, since they'll be used
+        # to construct the JSON filename (ensuring uniqueness).
+        options = {
+          kind = lib.mkOption {
+            type = str;
+            description = "Perses resource type";
+            example = "Dashboard";
+          };
+          metadata.name = lib.mkOption {
+            type = str;
+            description = "Perses resource name";
+          };
+        };
+      });
+    description = "Perses resources to provision";
+    default = [ ];
+  };
+
   config = {
     bjackman.iap.services.perses = {
       port = 8097;
@@ -207,69 +232,64 @@ in
       };
     };
 
-    environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" [
-      # Define the admin role.
+    environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" (
+      map (res: rec {
+        name = "${res.kind}_${res.metadata.name}.json";
+        path = pkgs.writers.writeJSON name res;
+      }) config.bjackman.perses.resources
+    );
+
+    # Define base resources for the overall Perses deployment.
+    bjackman.perses.resources = [
       {
-        name = "admin-role.json";
-        path = pkgs.writers.writeJSON "admin-role.json" {
-          kind = "GlobalRole";
-          metadata.name = "admin";
-          spec.permissions = [
-            {
-              actions = [ "*" ];
-              scopes = [ "*" ];
-            }
-          ];
-        };
+        kind = "GlobalRole";
+        metadata.name = "admin";
+        spec.permissions = [
+          {
+            actions = [ "*" ];
+            scopes = [ "*" ];
+          }
+        ];
       }
       # Grant admin access using the role defined above.
       {
-        name = "admin-binding.json";
-        path = pkgs.writers.writeJSON "admin-binding.json" {
-          kind = "GlobalRoleBinding";
-          metadata.name = "brendan-admin-binding";
-          spec = {
-            # TODO: Perses doesn't yet support binding to OIDC groups so just
-            # directly configuring a user for now.
-            role = "admin";
-            subjects = [
-              {
-                kind = "User";
-                # Perses uses the username part of the email to identify users, shrug.
-                name = "bhenryj0117";
-              }
-            ];
-          };
+        kind = "GlobalRoleBinding";
+        metadata.name = "brendan-admin-binding";
+        spec = {
+          # TODO: Perses doesn't yet support binding to OIDC groups so just
+          # directly configuring a user for now.
+          role = "admin";
+          subjects = [
+            {
+              kind = "User";
+              # Perses uses the username part of the email to identify users, shrug.
+              name = "bhenryj0117";
+            }
+          ];
         };
       }
       # Defining this here just coz I don't see a Cue helper for this,
       # probably doesn't belong here.
       {
-        name = "project-homelab.json";
-        path = pkgs.writers.writeJSON "project-homelab.json" {
-          kind = "Project";
-          metadata.name = "homelab";
-          spec.display.name = "Homelab";
-        };
+        kind = "Project";
+        metadata.name = "homelab";
+        spec.display.name = "Homelab";
       }
       # The datasource is coupled to the rest of the Nix code so defining it
       # here makes sense.
       {
-        name = "datasource-prometheus.json";
-        path = pkgs.writers.writeJSON "datasource-prometheus.json" {
-          kind = "GlobalDatasource";
-          metadata.name = "prometheus";
-          spec = {
-            display.name = "Prometheus";
-            default = true;
-            plugin = {
-              kind = "PrometheusDatasource";
-              spec = {
-                # The proxy configuration belongs inside the plugin's spec
-                proxy = {
-                  kind = "HTTPProxy";
-                  spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
-                };
+        kind = "GlobalDatasource";
+        metadata.name = "prometheus";
+        spec = {
+          display.name = "Prometheus";
+          default = true;
+          plugin = {
+            kind = "PrometheusDatasource";
+            spec = {
+              # The proxy configuration belongs inside the plugin's spec
+              proxy = {
+                kind = "HTTPProxy";
+                spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
               };
             };
           };
