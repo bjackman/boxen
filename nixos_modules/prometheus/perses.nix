@@ -100,7 +100,10 @@ in
           };
         };
       });
-    description = "Perses resources to provision";
+    description = ''
+      Perses resources to provision. Files are prefixed so that they are
+      alphanumerically sorted according to the order in this list.
+    '';
     default = [ ];
   };
 
@@ -243,8 +246,9 @@ in
     };
 
     environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" (
-      map (res: rec {
-        name = "${res.kind}_${res.metadata.name}.json";
+      lib.imap0 (i: res: rec {
+        # Fiddly prefix ensures ordering (e.g., 00_GlobalRole..., 01_GlobalRoleBinding...).
+        name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.kind}_${res.metadata.name}.json";
         path = pkgs.writers.writeJSON name res;
       }) config.bjackman.perses.resources
     );
