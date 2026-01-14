@@ -29,6 +29,7 @@ let
       queries,
       unit ? null,
       shortValues ? false,
+      fromZero ? false,
     }:
     {
       kind = "Panel";
@@ -46,10 +47,13 @@ let
           // (
             if unit != null then
               {
-                yAxis.format = {
-                  inherit unit;
+                yAxis = {
+                  format = {
+                    inherit unit;
+                  }
+                  // (if shortValues then { inherit shortValues; } else { });
                 }
-                // (if shortValues then { inherit shortValues; } else { });
+                // (if fromZero then { min = 0; } else { });
               }
             else
               { }
@@ -142,6 +146,10 @@ in
         shortValues = true;
         queries = [
           (mkPromQuery {
+            query = ''node_memory_MemFree_bytes{instance="$instance",job="node"}'';
+            seriesNameFormat = "Memory - Free";
+          })
+          (mkPromQuery {
             query = ''node_memory_Buffers_bytes{instance="$instance",job="node"}'';
             seriesNameFormat = "Memory - Buffers";
           })
@@ -150,8 +158,8 @@ in
             seriesNameFormat = "Memory - Cached";
           })
           (mkPromQuery {
-            query = ''node_memory_MemFree_bytes{instance="$instance",job="node"}'';
-            seriesNameFormat = "Memory - Free";
+            query = ''node_memory_Slab_bytes{instance="$instance",job="node"}'';
+            seriesNameFormat = "Memory - Slab";
           })
         ];
       };
