@@ -115,23 +115,6 @@ in
     panels = {
       "0_0" = mkTSPanel {
         name = "CPU Usage";
-        description = "Shows CPU utilization percentage across cluster nodes";
-        unit = "percent-decimal";
-        queries = [
-          (mkPromQuery {
-            query = ''
-              1 - sum without (mode) (
-                rate(node_cpu_seconds_total{instance="$instance",job="node",mode=~"idle|iowait|steal"}[$__rate_interval])
-              )
-              / ignoring (cpu) group_left ()
-              count without (cpu, mode) (node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})
-            '';
-            seriesNameFormat = "{{device}} - CPU - Usage";
-          })
-        ];
-      };
-      "0_1" = mkTSPanel {
-        name = "CPU Usage";
         description = "Shows CPU utilization metrics";
         queries = [
           (mkPromQuery {
@@ -268,10 +251,6 @@ in
           {
             x = 0;
             ref = "0_0";
-          }
-          {
-            x = 12;
-            ref = "0_1";
           }
         ];
       })
