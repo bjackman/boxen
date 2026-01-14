@@ -79,200 +79,202 @@ in
     ../iap.nix
   ];
 
-  bjackman.iap.services.perses = {
-    port = 8097;
-    oidc = {
-      enable = true;
-      inherit autheliaConfig;
-    };
-  };
-
-  # Delete the overlay below.
-  warnings = lib.optional (
-    let
-      pkgsVersion = pkgs.filebrowser.version;
-      myVersion = config.services.filebrowser.package.version;
-    in
-    lib.versionAtLeast pkgsVersion myVersion
-  ) "Nixpkgs has caught up to pinned Perses version";
-
-  # Need very latest version to get 76bcf7ca8699 (adds client_secret_file).
-  # (This is actually already in the tip of 25.11 but hasn't been released yet).
-  # Also pull in my slop fix for https://github.com/zitadel/oidc/issues/830
-  nixpkgs.overlays = [
-    (final: prev: {
-      perses = prev.perses.overrideAttrs (old: rec {
-        version = "0.53.0-client-secret-fix.8";
-
-        src = final.fetchFromGitHub {
-          # OK so in fact we need a fix for
-          # https://github.com/zitadel/oidc/issues/830 too so this is a fork
-          # with some slop in it.
-          owner = "bjackman";
-          repo = "perses";
-          tag = "v${version}";
-          hash = "sha256-S5bwCbAOUDKA4XayX/6NogjWuJEd4rVah46Y59Smx2U=";
-        };
-
-        vendorHash = "sha256-oR9KL+gJxxy/VKYVYechaBA+zrn9Wjh6dZPEKLYXm7o=";
-
-        npmDeps = final.fetchNpmDeps {
-          inherit (final.perses) src version;
-          pname = "${old.pname}-ui";
-          sourceRoot = "source/${old.npmRoot}";
-          hash = "sha256-mHmadLRY9FwfaIbXLpfLXzrIbf6hUPi71jZ3hipoIUE=";
-        };
-      });
-    })
-  ];
-
-  environment.systemPackages = [ pkgs.perses ];
-
-  systemd.services.perses = {
-    # We're gonna wait for the service to appear on the network anyway but as a
-    # hack to avoid doing that unnecessarily we take advantage of the assumption
-    # that it's on the same host.
-    after = [ "authelia-main.target" ];
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      # Perses crashes on startup if the OIDC provider isn't available.
-      ExecStartPre =
-        let
-          url = "${config.bjackman.iap.autheliaUrl}/.well-known/openid-configuration";
-          checkScript = pkgs.writeShellScript "wait-for-authelia" ''
-            until ${pkgs.curl}/bin/curl -s --fail --max-time 5 "${url}"; do
-              echo "Authelia not ready, waiting..."
-              ${pkgs.coreutils}/bin/sleep 2
-            done
-          '';
-        in
-        "${checkScript}";
-      ExecStart =
-        let
-          configFile = pkgs.writeText "perses-config.json" (builtins.toJSON persesConfig);
-          listenAddr = "127.0.0.1:${toString config.bjackman.iap.services.perses.port}";
-        in
-        "${pkgs.perses}/bin/perses --config ${configFile} --web.listen-address ${listenAddr}";
-      Restart = "always";
-      User = "perses";
-      Group = "perses";
-
-      RuntimeDirectory = "perses";
-      StateDirectory = "perses";
-      WorkingDirectory = "/var/lib/perses";
-
-      ProtectSystem = "full";
-      ProtectHome = true;
-      PrivateTmp = true;
-      NoNewPrivileges = true;
-      CapabilityBoundingSet = "";
-      RestrictRealtime = true;
-      BindReadOnlyPaths = [
-        config.age.secrets.perses-encryption-key.path
-        config.age.secrets.authelia-perses-client-secret.path
-        "/etc/resolv.conf"
-        "/etc/hosts"
-        "/etc/ssl/certs/ca-bundle.crt"
-        "/etc/ssl/certs/ca-certificates.crt"
-        "/etc/perses"
-      ];
+  config = {
+    bjackman.iap.services.perses = {
+      port = 8097;
+      oidc = {
+        enable = true;
+        inherit autheliaConfig;
+      };
     };
 
-    confinement.enable = true;
-  };
-  users.users.perses = {
-    isSystemUser = true;
-    group = "perses";
-  };
-  users.groups.perses = { };
+    # Delete the overlay below.
+    warnings = lib.optional (
+      let
+        pkgsVersion = pkgs.filebrowser.version;
+        myVersion = config.services.filebrowser.package.version;
+      in
+      lib.versionAtLeast pkgsVersion myVersion
+    ) "Nixpkgs has caught up to pinned Perses version";
 
-  age.secrets = {
-    perses-encryption-key = {
-      file = ../../secrets/perses-encryption-key.age;
-      mode = "440";
-      group = config.systemd.services.perses.serviceConfig.Group;
-    };
-    authelia-perses-client-secret = {
-      file = ../../secrets/authelia/perses-client-secret.age;
-      mode = "440";
-      group = config.systemd.services.perses.serviceConfig.Group;
-    };
-    authelia-perses-client-secret-hash = {
-      file = ../../secrets/authelia/perses-client-secret-hash.age;
-      mode = "440";
-      # Note this is readable by _Authelia_.
-      group = config.systemd.services.authelia-main.serviceConfig.Group;
-    };
-  };
+    # Need very latest version to get 76bcf7ca8699 (adds client_secret_file).
+    # (This is actually already in the tip of 25.11 but hasn't been released yet).
+    # Also pull in my slop fix for https://github.com/zitadel/oidc/issues/830
+    nixpkgs.overlays = [
+      (final: prev: {
+        perses = prev.perses.overrideAttrs (old: rec {
+          version = "0.53.0-client-secret-fix.8";
 
-  environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" [
-    # Define the admin role.
-    {
-      name = "admin-role.json";
-      path = pkgs.writers.writeJSON "admin-role.json" {
-        kind = "GlobalRole";
-        metadata.name = "admin";
-        spec.permissions = [
-          {
-            actions = [ "*" ];
-            scopes = [ "*" ];
-          }
+          src = final.fetchFromGitHub {
+            # OK so in fact we need a fix for
+            # https://github.com/zitadel/oidc/issues/830 too so this is a fork
+            # with some slop in it.
+            owner = "bjackman";
+            repo = "perses";
+            tag = "v${version}";
+            hash = "sha256-S5bwCbAOUDKA4XayX/6NogjWuJEd4rVah46Y59Smx2U=";
+          };
+
+          vendorHash = "sha256-oR9KL+gJxxy/VKYVYechaBA+zrn9Wjh6dZPEKLYXm7o=";
+
+          npmDeps = final.fetchNpmDeps {
+            inherit (final.perses) src version;
+            pname = "${old.pname}-ui";
+            sourceRoot = "source/${old.npmRoot}";
+            hash = "sha256-mHmadLRY9FwfaIbXLpfLXzrIbf6hUPi71jZ3hipoIUE=";
+          };
+        });
+      })
+    ];
+
+    environment.systemPackages = [ pkgs.perses ];
+
+    systemd.services.perses = {
+      # We're gonna wait for the service to appear on the network anyway but as a
+      # hack to avoid doing that unnecessarily we take advantage of the assumption
+      # that it's on the same host.
+      after = [ "authelia-main.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      serviceConfig = {
+        # Perses crashes on startup if the OIDC provider isn't available.
+        ExecStartPre =
+          let
+            url = "${config.bjackman.iap.autheliaUrl}/.well-known/openid-configuration";
+            checkScript = pkgs.writeShellScript "wait-for-authelia" ''
+              until ${pkgs.curl}/bin/curl -s --fail --max-time 5 "${url}"; do
+                echo "Authelia not ready, waiting..."
+                ${pkgs.coreutils}/bin/sleep 2
+              done
+            '';
+          in
+          "${checkScript}";
+        ExecStart =
+          let
+            configFile = pkgs.writeText "perses-config.json" (builtins.toJSON persesConfig);
+            listenAddr = "127.0.0.1:${toString config.bjackman.iap.services.perses.port}";
+          in
+          "${pkgs.perses}/bin/perses --config ${configFile} --web.listen-address ${listenAddr}";
+        Restart = "always";
+        User = "perses";
+        Group = "perses";
+
+        RuntimeDirectory = "perses";
+        StateDirectory = "perses";
+        WorkingDirectory = "/var/lib/perses";
+
+        ProtectSystem = "full";
+        ProtectHome = true;
+        PrivateTmp = true;
+        NoNewPrivileges = true;
+        CapabilityBoundingSet = "";
+        RestrictRealtime = true;
+        BindReadOnlyPaths = [
+          config.age.secrets.perses-encryption-key.path
+          config.age.secrets.authelia-perses-client-secret.path
+          "/etc/resolv.conf"
+          "/etc/hosts"
+          "/etc/ssl/certs/ca-bundle.crt"
+          "/etc/ssl/certs/ca-certificates.crt"
+          "/etc/perses"
         ];
       };
-    }
-    # Grant admin access using the role defined above.
-    {
-      name = "admin-binding.json";
-      path = pkgs.writers.writeJSON "admin-binding.json" {
-        kind = "GlobalRoleBinding";
-        metadata.name = "brendan-admin-binding";
-        spec = {
-          # TODO: Perses doesn't yet support binding to OIDC groups so just
-          # directly configuring a user for now.
-          role = "admin";
-          subjects = [
+
+      confinement.enable = true;
+    };
+    users.users.perses = {
+      isSystemUser = true;
+      group = "perses";
+    };
+    users.groups.perses = { };
+
+    age.secrets = {
+      perses-encryption-key = {
+        file = ../../secrets/perses-encryption-key.age;
+        mode = "440";
+        group = config.systemd.services.perses.serviceConfig.Group;
+      };
+      authelia-perses-client-secret = {
+        file = ../../secrets/authelia/perses-client-secret.age;
+        mode = "440";
+        group = config.systemd.services.perses.serviceConfig.Group;
+      };
+      authelia-perses-client-secret-hash = {
+        file = ../../secrets/authelia/perses-client-secret-hash.age;
+        mode = "440";
+        # Note this is readable by _Authelia_.
+        group = config.systemd.services.authelia-main.serviceConfig.Group;
+      };
+    };
+
+    environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" [
+      # Define the admin role.
+      {
+        name = "admin-role.json";
+        path = pkgs.writers.writeJSON "admin-role.json" {
+          kind = "GlobalRole";
+          metadata.name = "admin";
+          spec.permissions = [
             {
-              kind = "User";
-              # Perses uses the username part of the email to identify users, shrug.
-              name = "bhenryj0117";
+              actions = [ "*" ];
+              scopes = [ "*" ];
             }
           ];
         };
-      };
-    }
-    # Defining this here just coz I don't see a Cue helper for this,
-    # probably doesn't belong here.
-    {
-      name = "project-homelab.json";
-      path = pkgs.writers.writeJSON "project-homelab.json" {
-        kind = "Project";
-        metadata.name = "homelab";
-        spec.display.name = "Homelab";
-      };
-    }
-    # The datasource is coupled to the rest of the Nix code so defining it
-    # here makes sense.
-    {
-      name = "datasource-prometheus.json";
-      path = pkgs.writers.writeJSON "datasource-prometheus.json" {
-        kind = "GlobalDatasource";
-        metadata.name = "prometheus";
-        spec = {
-          display.name = "Prometheus";
-          default = true;
-          plugin = {
-            kind = "PrometheusDatasource";
-            spec = {
-              # The proxy configuration belongs inside the plugin's spec
-              proxy = {
-                kind = "HTTPProxy";
-                spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
+      }
+      # Grant admin access using the role defined above.
+      {
+        name = "admin-binding.json";
+        path = pkgs.writers.writeJSON "admin-binding.json" {
+          kind = "GlobalRoleBinding";
+          metadata.name = "brendan-admin-binding";
+          spec = {
+            # TODO: Perses doesn't yet support binding to OIDC groups so just
+            # directly configuring a user for now.
+            role = "admin";
+            subjects = [
+              {
+                kind = "User";
+                # Perses uses the username part of the email to identify users, shrug.
+                name = "bhenryj0117";
+              }
+            ];
+          };
+        };
+      }
+      # Defining this here just coz I don't see a Cue helper for this,
+      # probably doesn't belong here.
+      {
+        name = "project-homelab.json";
+        path = pkgs.writers.writeJSON "project-homelab.json" {
+          kind = "Project";
+          metadata.name = "homelab";
+          spec.display.name = "Homelab";
+        };
+      }
+      # The datasource is coupled to the rest of the Nix code so defining it
+      # here makes sense.
+      {
+        name = "datasource-prometheus.json";
+        path = pkgs.writers.writeJSON "datasource-prometheus.json" {
+          kind = "GlobalDatasource";
+          metadata.name = "prometheus";
+          spec = {
+            display.name = "Prometheus";
+            default = true;
+            plugin = {
+              kind = "PrometheusDatasource";
+              spec = {
+                # The proxy configuration belongs inside the plugin's spec
+                proxy = {
+                  kind = "HTTPProxy";
+                  spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
+                };
               };
             };
           };
         };
-      };
-    }
-  ];
+      }
+    ];
+  };
 }
