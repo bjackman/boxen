@@ -68,77 +68,10 @@ let
         }
       ];
     };
-    provisioning.folders = [
-      (pkgs.linkFarm "perses-provisioning" [
-        # Define the admin role.
-        {
-          name = "admin-role.json";
-          path = pkgs.writers.writeJSON "admin-role.json" {
-            kind = "GlobalRole";
-            metadata.name = "admin";
-            spec.permissions = [
-              {
-                actions = [ "*" ];
-                scopes = [ "*" ];
-              }
-            ];
-          };
-        }
-        # Grant admin access using the role defined above.
-        {
-          name = "admin-binding.json";
-          path = pkgs.writers.writeJSON "admin-binding.json" {
-            kind = "GlobalRoleBinding";
-            metadata.name = "brendan-admin-binding";
-            spec = {
-              # TODO: Perses doesn't yet support binding to OIDC groups so just
-              # directly configuring a user for now.
-              role = "admin";
-              subjects = [
-                {
-                  kind = "User";
-                  # Perses uses the username part of the email to identify users, shrug.
-                  name = "bhenryj0117";
-                }
-              ];
-            };
-          };
-        }
-        # Defining this here just coz I don't see a Cue helper for this,
-        # probably doesn't belong here.
-        {
-          name = "project-homelab.json";
-          path = pkgs.writers.writeJSON "project-homelab.json" {
-            kind = "Project";
-            metadata.name = "homelab";
-            spec.display.name = "Homelab";
-          };
-        }
-        # The datasource is coupled to the rest of the Nix code so defining it
-        # here makes sense.
-        {
-          name = "datasource-prometheus.json";
-          path = pkgs.writers.writeJSON "datasource-prometheus.json" {
-            kind = "GlobalDatasource";
-            metadata.name = "prometheus";
-            spec = {
-              display.name = "Prometheus";
-              default = true;
-              plugin = {
-                kind = "PrometheusDatasource";
-                spec = {
-                  # The proxy configuration belongs inside the plugin's spec
-                  proxy = {
-                    kind = "HTTPProxy";
-                    spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
-                  };
-                };
-              };
-            };
-          };
-        }
-      ])
-    ];
+    # Hard-code a specific directory for this rather than putting a store path
+    # into the config directly - this means we can update the provisioned
+    # resources. We then populate this directory separately.
+    provisioning.folders = [ "/etc/perses/resources" ];
   };
 in
 {
@@ -242,6 +175,7 @@ in
         "/etc/hosts"
         "/etc/ssl/certs/ca-bundle.crt"
         "/etc/ssl/certs/ca-certificates.crt"
+        "/etc/perses"
       ];
     };
 
@@ -271,4 +205,74 @@ in
       group = config.systemd.services.authelia-main.serviceConfig.Group;
     };
   };
+
+  environment.etc."perses/resources".source = pkgs.linkFarm "perses-provisioning" [
+    # Define the admin role.
+    {
+      name = "admin-role.json";
+      path = pkgs.writers.writeJSON "admin-role.json" {
+        kind = "GlobalRole";
+        metadata.name = "admin";
+        spec.permissions = [
+          {
+            actions = [ "*" ];
+            scopes = [ "*" ];
+          }
+        ];
+      };
+    }
+    # Grant admin access using the role defined above.
+    {
+      name = "admin-binding.json";
+      path = pkgs.writers.writeJSON "admin-binding.json" {
+        kind = "GlobalRoleBinding";
+        metadata.name = "brendan-admin-binding";
+        spec = {
+          # TODO: Perses doesn't yet support binding to OIDC groups so just
+          # directly configuring a user for now.
+          role = "admin";
+          subjects = [
+            {
+              kind = "User";
+              # Perses uses the username part of the email to identify users, shrug.
+              name = "bhenryj0117";
+            }
+          ];
+        };
+      };
+    }
+    # Defining this here just coz I don't see a Cue helper for this,
+    # probably doesn't belong here.
+    {
+      name = "project-homelab.json";
+      path = pkgs.writers.writeJSON "project-homelab.json" {
+        kind = "Project";
+        metadata.name = "homelab";
+        spec.display.name = "Homelab";
+      };
+    }
+    # The datasource is coupled to the rest of the Nix code so defining it
+    # here makes sense.
+    {
+      name = "datasource-prometheus.json";
+      path = pkgs.writers.writeJSON "datasource-prometheus.json" {
+        kind = "GlobalDatasource";
+        metadata.name = "prometheus";
+        spec = {
+          display.name = "Prometheus";
+          default = true;
+          plugin = {
+            kind = "PrometheusDatasource";
+            spec = {
+              # The proxy configuration belongs inside the plugin's spec
+              proxy = {
+                kind = "HTTPProxy";
+                spec.url = "http://127.0.0.1:${builtins.toString config.bjackman.iap.services.prometheus.port}";
+              };
+            };
+          };
+        };
+      };
+    }
+  ];
 }
