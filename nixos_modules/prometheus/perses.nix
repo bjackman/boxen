@@ -201,11 +201,21 @@ in
           "/etc/hosts"
           "/etc/ssl/certs/ca-bundle.crt"
           "/etc/ssl/certs/ca-certificates.crt"
-          "/etc/perses"
+          "/etc/perses/resources"
         ];
       };
 
-      confinement.enable = true;
+      confinement = {
+        enable = true;
+        # We mounted the resource definitions at /etc/perses/resources and then
+        # bound that into the service environment, but we also need to make the
+        # underlying Nix store files available, this takes care of that.
+        #
+        # Note there's actually no need for /etc/perses to even exist in the
+        # main host namespace, but we put it there anyway just to keep things
+        # from being too confusing.
+        packages = [ config.environment.etc."perses/resources".source ];
+      };
     };
     users.users.perses = {
       isSystemUser = true;
