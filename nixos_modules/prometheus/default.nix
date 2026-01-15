@@ -14,6 +14,7 @@ in
     agenix-template.nixosModules.default
     ../iap.nix
     ../impermanence.nix
+    ../node-exporter.nix
     ./rules.nix
     ./perses.nix
   ];
@@ -47,25 +48,6 @@ in
       # mind about that lol.
       (pkgs.writers.writeJSON "prometheus-rules.json" config.bjackman.prometheus.rules)
     ];
-    exporters.node = {
-      enable = true;
-      enabledCollectors = [
-        "cpu"
-        "diskstats"
-        "ethtool"
-        "filefd"
-        "filesystem"
-        "hwmon"
-        "loadavg"
-        "meminfo"
-        "nfs"
-        "nvme"
-        "os"
-        "pcidevice"
-        "systemd"
-        "watchdog"
-      ];
-    };
     alertmanager = {
       enable = true;
       # Copied from

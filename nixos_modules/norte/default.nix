@@ -19,6 +19,7 @@ in
     ../common.nix
     ../transmission.nix
     ../users.nix
+    ../node-exporter.nix
     ./nfs-server.nix
     ./samba-server.nix
     ./sftp-server.nix
