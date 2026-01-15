@@ -86,9 +86,7 @@ in
   kind = "Dashboard";
   metadata = {
     name = "node-exporter-nodes";
-    createdAt = "0001-01-01T00:00:00Z";
     project = "homelab";
-    updatedAt = "0001-01-01T00:00:00Z";
     version = 0;
   };
   spec = {
