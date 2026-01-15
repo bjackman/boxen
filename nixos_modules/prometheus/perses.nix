@@ -72,15 +72,7 @@ let
     # separately, reasoning that this way we can update the provisioned
     # resources without restart Perses. But no. Perses doesn't have inotify set
     # up.
-    provisioning.folders = [
-      (pkgs.linkFarm "perses-provisioning" (
-        lib.imap0 (i: res: rec {
-          # Fiddly prefix ensures ordering (e.g., 00_GlobalRole..., 01_GlobalRoleBinding...).
-          name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.kind}_${res.metadata.name}.json";
-          path = pkgs.writers.writeJSON name res;
-        }) config.bjackman.perses.resources
-      ))
-    ];
+    provisioning.folders = [ config.bjackman.perses.resourceConfigs ];
   };
 in
 {
@@ -88,37 +80,52 @@ in
     ../iap.nix
   ];
 
-  options.bjackman.perses.resources = lib.mkOption {
-    type =
-      with lib.types;
-      listOf (submodule {
-        # Allow arbitrary other fields, this is the Perses attribute spec we
-        # don't care about thge details.
-        freeformType = attrs;
-        # Require these two core fields of the resource, since they'll be used
-        # to construct the JSON filename (ensuring uniqueness).
-        options = {
-          kind = lib.mkOption {
-            type = str;
-            description = "Perses resource type";
-            example = "Dashboard";
-          };
-          metadata = lib.mkOption {
-            type = submodule {
-              freeformType = attrs;
-              options.name = lib.mkOption {
-                type = str;
-                description = "Perses resource name";
+  options.bjackman.perses = {
+    resources = lib.mkOption {
+      type =
+        with lib.types;
+        listOf (submodule {
+          # Allow arbitrary other fields, this is the Perses attribute spec we
+          # don't care about thge details.
+          freeformType = attrs;
+          # Require these two core fields of the resource, since they'll be used
+          # to construct the JSON filename (ensuring uniqueness).
+          options = {
+            kind = lib.mkOption {
+              type = str;
+              description = "Perses resource type";
+              example = "Dashboard";
+            };
+            metadata = lib.mkOption {
+              type = submodule {
+                freeformType = attrs;
+                options.name = lib.mkOption {
+                  type = str;
+                  description = "Perses resource name";
+                };
               };
             };
           };
-        };
-      });
-    description = ''
-      Perses resources to provision. Files are prefixed so that they are
-      alphanumerically sorted according to the order in this list.
-    '';
-    default = [ ];
+        });
+      description = ''
+        Perses resources to provision. Files are prefixed so that they are
+        alphanumerically sorted according to the order in this list.
+      '';
+      default = [ ];
+    };
+    resourceConfigs = lib.mkOption {
+      type = lib.types.package;
+      readOnly = true;
+      description = "For convenience, an option to expose the built configuration";
+      default = pkgs.linkFarm "perses-provisioning" (
+        lib.imap0 (i: res: rec {
+          # Fiddly prefix ensures ordering (e.g., 00_GlobalRole..., 01_GlobalRoleBinding...).
+          # 99 resources ought to be enough for anyone.
+          name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.kind}_${res.metadata.name}.json";
+          path = pkgs.writers.writeJSON name res;
+        }) config.bjackman.perses.resources
+      );
+    };
   };
 
   config = {

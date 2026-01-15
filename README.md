@@ -25,6 +25,15 @@
 
 `nix run .#add-user -- <username>`
 
+### Deploying dashboards
+
+Either just deploy (slow) or be a legend and deploy directly:
+
+```sh
+percli login https://perses.home.yawn.io
+nix build .#nixosConfigurations.pizza.config.bjackman.perses.resourceConfigs && percli apply -d result/
+```
+
 ## Installing
 
 How I installed `pizza`:
