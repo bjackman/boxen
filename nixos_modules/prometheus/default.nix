@@ -4,6 +4,7 @@
   lib,
   agenix-template,
   grafana-dashboard-node-exporter-full,
+  homelabConfigs,
   ...
 }:
 let
@@ -32,16 +33,23 @@ in
     enable = true;
     # No auth, assume we're behind a reverse proxy.
     listenAddress = "127.0.0.1";
-    scrapeConfigs = [
-      {
-        job_name = "node";
-        static_configs = [
+    scrapeConfigs = lib.mapAttrsToList (_: nodeConfig: {
+      # Note this job_name is coupled with the dashboards, it will become the
+      # "job" label in Prometheus.
+      job_name = "node_${nodeConfig.networking.hostName}";
+      static_configs = [
+        (
+          let
+            hostName = nodeConfig.networking.hostName;
+            port = nodeConfig.services.prometheus.exporters.node.port;
+          in
           {
-            targets = [ "localhost:${toString config.services.prometheus.exporters.node.port}" ];
+            targets = [ "${hostName}:${toString port}" ];
+            labels.instance = hostName;
           }
-        ];
-      }
-    ];
+        )
+      ];
+    }) homelabConfigs;
     ruleFiles = [
       # I over-engineered this coz I thought I was gonna write some complex
       # rules that depend on other parts of the config. But then I changed my

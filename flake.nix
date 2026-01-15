@@ -226,6 +226,12 @@
               sambaServer = self.nixosConfigurations.norte.config;
               jellyfinServer = self.nixosConfigurations.pizza.config;
             };
+            # Similar thing for the nodes in the homelab for stuff that cares
+            # about that, like Prometheus.
+            homelabConfigs = {
+              pizza = self.nixosConfigurations.pizza.config;
+              norte = self.nixosConfigurations.norte.config;
+            };
           };
         in
         {

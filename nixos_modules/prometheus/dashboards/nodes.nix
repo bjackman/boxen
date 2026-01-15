@@ -78,7 +78,7 @@ let
       };
     };
   # Filter to data coming from the node-exporter scrape jobs.
-  jobFilter = ''job="node"'';
+  jobFilter = ''job=~"node_.*"'';
   # Filter to data for the selected instance (in this case that means a node).
   instanceFilter = ''instance="$instance",${jobFilter}'';
 in
@@ -111,7 +111,7 @@ in
                 name = "prometheus";
               };
               labelName = "instance";
-              matchers = [ ''node_uname_info{${jobFilter}",sysname!="Darwin"}'' ];
+              matchers = [ ''node_uname_info{${jobFilter},sysname!="Darwin"}'' ];
             };
           };
         };
