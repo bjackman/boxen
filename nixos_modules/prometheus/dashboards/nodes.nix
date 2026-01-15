@@ -77,6 +77,10 @@ let
         }) panels;
       };
     };
+  # Filter to data coming from the node-exporter scrape jobs.
+  jobFilter = ''job="node"'';
+  # Filter to data for the selected instance (in this case that means a node).
+  instanceFilter = ''instance="$instance",${jobFilter}'';
 in
 {
   kind = "Dashboard";
@@ -109,7 +113,7 @@ in
                 name = "prometheus";
               };
               labelName = "instance";
-              matchers = [ ''node_uname_info{job="node",sysname!="Darwin"}'' ];
+              matchers = [ ''node_uname_info{${jobFilter}",sysname!="Darwin"}'' ];
             };
           };
         };
@@ -122,19 +126,19 @@ in
         description = "Shows CPU utilization metrics";
         queries = [
           (mkPromQuery {
-            query = ''node_load1{instance="$instance",job="node"}'';
+            query = "node_load1{${instanceFilter}}";
             seriesNameFormat = "CPU - 1m Average";
           })
           (mkPromQuery {
-            query = ''node_load5{instance="$instance",job="node"}'';
+            query = "node_load5{${instanceFilter}}";
             seriesNameFormat = "CPU - 5m Average";
           })
           (mkPromQuery {
-            query = ''node_load15{instance="$instance",job="node"}'';
+            query = "node_load15{${instanceFilter}}";
             seriesNameFormat = "CPU - 15m Average";
           })
           (mkPromQuery {
-            query = ''count(node_cpu_seconds_total{instance="$instance",job="node",mode="idle"})'';
+            query = ''count(node_cpu_seconds_total{${instanceFilter},mode="idle"})'';
             seriesNameFormat = "CPU - Logical Cores";
           })
         ];
@@ -146,19 +150,19 @@ in
         shortValues = true;
         queries = [
           (mkPromQuery {
-            query = ''node_memory_MemFree_bytes{instance="$instance",job="node"}'';
+            query = "node_memory_MemFree_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Free";
           })
           (mkPromQuery {
-            query = ''node_memory_Buffers_bytes{instance="$instance",job="node"}'';
+            query = "node_memory_Buffers_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Buffers";
           })
           (mkPromQuery {
-            query = ''node_memory_Cached_bytes{instance="$instance",job="node"}'';
+            query = "node_memory_Cached_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Cached";
           })
           (mkPromQuery {
-            query = ''node_memory_Slab_bytes{instance="$instance",job="node"}'';
+            query = "node_memory_Slab_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Slab";
           })
         ];
@@ -194,8 +198,8 @@ in
           queries = [
             (mkPromQuery {
               query = ''
-                100 - avg(node_memory_MemAvailable_bytes{instance="$instance",job="node"})
-                / avg(node_memory_MemTotal_bytes{instance="$instance",job="node"}) * 100
+                100 - avg(node_memory_MemAvailable_bytes{${instanceFilter}})
+                / avg(node_memory_MemTotal_bytes{${instanceFilter}}) * 100
               '';
               seriesNameFormat = "Memory - Usage";
             })
@@ -208,11 +212,11 @@ in
         unit = "bytes";
         queries = [
           (mkPromQuery {
-            query = ''rate(node_disk_read_bytes_total{device!="",instance="$instance",job="node"}[$__rate_interval])'';
+            query = ''rate(node_disk_read_bytes_total{device!="",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Disk - Usage";
           })
           (mkPromQuery {
-            query = ''rate(node_disk_io_time_seconds_total{device!="",instance="$instance",job="node"}[$__rate_interval])'';
+            query = ''rate(node_disk_io_time_seconds_total{device!="",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Disk - Written";
           })
         ];
@@ -223,7 +227,7 @@ in
         unit = "seconds";
         queries = [
           (mkPromQuery {
-            query = ''rate(node_disk_io_time_seconds_total{device!="",instance="$instance",job="node"}[$__rate_interval])'';
+            query = ''rate(node_disk_io_time_seconds_total{device!="",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Disk - IO Time";
           })
         ];
@@ -234,7 +238,7 @@ in
         unit = "bytes/sec";
         queries = [
           (mkPromQuery {
-            query = ''rate(node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval])'';
+            query = ''rate(node_network_receive_bytes_total{device!="lo",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Network - Received";
           })
         ];
@@ -245,7 +249,7 @@ in
         unit = "bytes/sec";
         queries = [
           (mkPromQuery {
-            query = ''rate(node_network_receive_bytes_total{device!="lo",instance="$instance",job="node"}[$__rate_interval])'';
+            query = ''rate(node_network_receive_bytes_total{device!="lo",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Network - Transmitted";
           })
         ];
