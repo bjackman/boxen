@@ -23,6 +23,11 @@ in
     ./nfs-server.nix
     ./samba-server.nix
     ./sftp-server.nix
+    # Warning: she doesn't have vewwy much WAM uwu
+    # Check https://perses.home.yawn.io/projects/homelab/dashboards/node-exporter-nodes?var-instance=norte
+    # I haven't checked carefully but I'm guessing the RAM is being eaten by
+    # ZFS's special page cache thingy - may be able to get more by fiddling with
+    # sysctls.
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
