@@ -25,9 +25,6 @@ in
     ./sftp-server.nix
     # Warning: she doesn't have vewwy much WAM uwu
     # Check https://perses.home.yawn.io/projects/homelab/dashboards/node-exporter-nodes?var-instance=norte
-    # I haven't checked carefully but I'm guessing the RAM is being eaten by
-    # ZFS's special page cache thingy - may be able to get more by fiddling with
-    # sysctls.
   ];
 
   boot.loader.raspberryPi.bootloader = "kernel";
@@ -69,6 +66,9 @@ in
   };
   services.zfs.autoScrub.enable = true;
   services.zfs.autoSnapshot.enable = true;
+
+  # This wittle cornputer doesn't weally hvae enough WAM to wun ZFS
+  boot.kernelParams = [ "zfs.zfs_arc_max=${builtins.toString (512 * 1024 * 1024)}" ];
 
   users.groups.media-writers = { };
   systemd.services.transmission.serviceConfig = {
