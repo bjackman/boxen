@@ -40,7 +40,7 @@ in
         # services.prometheus.exporters, things get weird. Just filter out the
         # ones we know work.
         exporters = {
-          inherit (nodeConfig.services.prometheus.exporters) node smartctl;
+          inherit (nodeConfig.services.prometheus.exporters) node smartctl zfs;
         };
         enabledExporters = lib.filterAttrs (_: e: e.enable) exporters;
         hostName = nodeConfig.networking.hostName;

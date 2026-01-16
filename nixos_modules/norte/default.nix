@@ -60,6 +60,11 @@ in
     fsType = "zfs";
   };
 
+  services.prometheus.exporters = {
+    smartctl.enable = true;
+    zfs.enable = true;
+  };
+
   users.groups.media-writers = { };
   systemd.services.transmission.serviceConfig = {
     SupplementaryGroups = [ "media-writers" ];
