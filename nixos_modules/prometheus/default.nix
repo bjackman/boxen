@@ -33,23 +33,30 @@ in
     enable = true;
     # No auth, assume we're behind a reverse proxy.
     listenAddress = "127.0.0.1";
-    scrapeConfigs = lib.mapAttrsToList (_: nodeConfig: {
-      # Note this job_name is coupled with the dashboards, it will become the
-      # "job" label in Prometheus.
-      job_name = "node_${nodeConfig.networking.hostName}";
-      static_configs = [
-        (
-          let
-            hostName = nodeConfig.networking.hostName;
-            port = nodeConfig.services.prometheus.exporters.node.port;
-          in
+    scrapeConfigs = builtins.concatMap (
+      nodeConfig:
+      let
+        # If we try to be too clever and operate on the whole of
+        # services.prometheus.exporters, things get weird. Just filter out the
+        # ones we know work.
+        exporters = {
+          inherit (nodeConfig.services.prometheus.exporters) node smartctl;
+        };
+        enabledExporters = lib.filterAttrs (_: e: e.enable) exporters;
+        hostName = nodeConfig.networking.hostName;
+      in
+      lib.mapAttrsToList (name: exporter: {
+        # Note this is coupled with the dashboard/alert definitions. It
+        # becomes the "job" label in Prometheus.
+        job_name = "${name}_${hostName}";
+        static_configs = [
           {
-            targets = [ "${hostName}:${toString port}" ];
+            targets = [ "${hostName}:${toString exporter.port}" ];
             labels.instance = hostName;
           }
-        )
-      ];
-    }) homelabConfigs;
+        ];
+      }) enabledExporters
+    ) (builtins.attrValues homelabConfigs);
     ruleFiles = [
       # I over-engineered this coz I thought I was gonna write some complex
       # rules that depend on other parts of the config. But then I changed my
