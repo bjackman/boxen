@@ -75,7 +75,22 @@ in
     SupplementaryGroups = [ "media-writers" ];
     ReadWritePaths = [ nfsCfg.mediaDir ];
   };
-  services.transmission.settings.download-dir = nfsCfg.mediaDir;
+  services.transmission.settings = {
+    download-dir = nfsCfg.mediaDir;
+    incomplete-dir = "/mnt/nas/transmission-incomplete";
+  };
+  # I dunno why but by default the incomplete-dir doesn't get created.
+  systemd.tmpfiles.settings."10-transmission-incomplete" = {
+    "${config.services.transmission.settings.incomplete-dir}".d =
+      let
+        service = config.systemd.services.transmission.serviceConfig;
+      in
+      {
+        user = service.User;
+        group = service.Group;
+        mode = "0755";
+      };
+  };
 
   # NFS/CIFS doesn't support file notifications so the Jellyfin watcher doesn't
   # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
