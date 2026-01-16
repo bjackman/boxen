@@ -7,76 +7,7 @@
 # It should be possible to deploy this without a full system update by
 # evaluating this to JSON and then sending it via percli apply.
 let
-  mkPromQuery =
-    { query, seriesNameFormat }:
-    {
-      kind = "TimeSeriesQuery";
-      spec.plugin = {
-        kind = "PrometheusTimeSeriesQuery";
-        spec = {
-          datasource = {
-            kind = "PrometheusDatasource";
-            name = "prometheus";
-          };
-          inherit query seriesNameFormat;
-        };
-      };
-    };
-  mkTSPanel =
-    {
-      name,
-      description,
-      queries,
-      unit ? null,
-      shortValues ? false,
-      fromZero ? false,
-    }:
-    {
-      kind = "Panel";
-      spec = {
-        display = { inherit name description; };
-        plugin = {
-          kind = "TimeSeriesChart";
-          spec = {
-            legend = {
-              mode = "table";
-              position = "bottom";
-              values = [ "last" ];
-            };
-          }
-          // (
-            if unit != null then
-              {
-                yAxis = {
-                  format = {
-                    inherit unit;
-                  }
-                  // (if shortValues then { inherit shortValues; } else { });
-                }
-                // (if fromZero then { min = 0; } else { });
-              }
-            else
-              { }
-          );
-        };
-        inherit queries;
-      };
-    };
-  mkGrid =
-    { title, panels }:
-    {
-      kind = "Grid";
-      spec = {
-        display.title = title;
-        items = map (p: {
-          x = p.x;
-          y = 0;
-          width = 12;
-          height = 8;
-          content."$ref" = "#/spec/panels/${p.ref}";
-        }) panels;
-      };
-    };
+  lib = import ./lib.nix;
   # Filter to data coming from the node-exporter scrape jobs.
   jobFilter = ''job=~"node_.*"'';
   # Filter to data for the selected instance (in this case that means a node).
@@ -119,47 +50,47 @@ in
     ];
 
     panels = {
-      "0_0" = mkTSPanel {
+      "0_0" = lib.mkTSPanel {
         name = "CPU Usage";
         description = "Shows CPU utilization metrics";
         queries = [
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_load1{${instanceFilter}}";
             seriesNameFormat = "CPU - 1m Average";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_load5{${instanceFilter}}";
             seriesNameFormat = "CPU - 5m Average";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_load15{${instanceFilter}}";
             seriesNameFormat = "CPU - 15m Average";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = ''count(node_cpu_seconds_total{${instanceFilter},mode="idle"})'';
             seriesNameFormat = "CPU - Logical Cores";
           })
         ];
       };
-      "1_0" = mkTSPanel {
+      "1_0" = lib.mkTSPanel {
         name = "Memory Usage";
         description = "Shows memory utilization metrics";
         unit = "bytes";
         shortValues = true;
         queries = [
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_memory_MemFree_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Free";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_memory_Buffers_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Buffers";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_memory_Cached_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Cached";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = "node_memory_Slab_bytes{${instanceFilter}}";
             seriesNameFormat = "Memory - Slab";
           })
@@ -194,7 +125,7 @@ in
             };
           };
           queries = [
-            (mkPromQuery {
+            (lib.mkPromQuery {
               query = ''
                 100 - avg(node_memory_MemAvailable_bytes{${instanceFilter}})
                 / avg(node_memory_MemTotal_bytes{${instanceFilter}}) * 100
@@ -204,49 +135,49 @@ in
           ];
         };
       };
-      "2_0" = mkTSPanel {
+      "2_0" = lib.mkTSPanel {
         name = "Disk I/O Bytes";
         description = "Shows disk I/O metrics in bytes";
         unit = "bytes";
         queries = [
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = ''rate(node_disk_read_bytes_total{device!="",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Disk - Usage";
           })
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = ''rate(node_disk_io_time_seconds_total{device!="",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Disk - Written";
           })
         ];
       };
-      "2_1" = mkTSPanel {
+      "2_1" = lib.mkTSPanel {
         name = "Disk I/O Seconds";
         description = "Shows disk I/O duration metrics";
         unit = "seconds";
         queries = [
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = ''rate(node_disk_io_time_seconds_total{device!="",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Disk - IO Time";
           })
         ];
       };
-      "3_0" = mkTSPanel {
+      "3_0" = lib.mkTSPanel {
         name = "Network Received";
         description = "Shows network received bytes metrics";
         unit = "bytes/sec";
         queries = [
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = ''rate(node_network_receive_bytes_total{device!="lo",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Network - Received";
           })
         ];
       };
-      "3_1" = mkTSPanel {
+      "3_1" = lib.mkTSPanel {
         name = "Network Transmitted";
         description = "Shows network transmitted bytes metrics";
         unit = "bytes/sec";
         queries = [
-          (mkPromQuery {
+          (lib.mkPromQuery {
             query = ''rate(node_network_receive_bytes_total{device!="lo",${instanceFilter}}[$__rate_interval])'';
             seriesNameFormat = "{{device}} - Network - Transmitted";
           })
@@ -255,7 +186,7 @@ in
     };
 
     layouts = [
-      (mkGrid {
+      (lib.mkGrid {
         title = "CPU";
         panels = [
           {
@@ -264,7 +195,7 @@ in
           }
         ];
       })
-      (mkGrid {
+      (lib.mkGrid {
         title = "Memory";
         panels = [
           {
@@ -277,7 +208,7 @@ in
           }
         ];
       })
-      (mkGrid {
+      (lib.mkGrid {
         title = "Disk";
         panels = [
           {
@@ -290,7 +221,7 @@ in
           }
         ];
       })
-      (mkGrid {
+      (lib.mkGrid {
         title = "Network";
         panels = [
           {
