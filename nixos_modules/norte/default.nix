@@ -23,6 +23,7 @@ in
     ./nfs-server.nix
     ./samba-server.nix
     ./sftp-server.nix
+    ./zfs.nix
     # Warning: she doesn't have vewwy much WAM uwu
     # Check https://perses.home.yawn.io/projects/homelab/dashboards/node-exporter-nodes?var-instance=norte
   ];
@@ -49,12 +50,6 @@ in
     };
   };
 
-  # AI says ZFS needs a machine ID. Somehow even before I set this, there was a
-  # hostId already set when I evaliated the configuration. I dunno if this is
-  # some weird nixos-raspberrypi shit or what. Anyway let's just set a stable
-  # fixed one to keep things sane.
-  networking.hostId = "39bb2a74";
-  boot.supportedFilesystems.zfs = true;
   # The ZFS pool attached to this system was created before I installed NixOS,
   # using Ubuntu.
   # Following the suggestion of AI, I set mountpoint=legacy for each of the
@@ -64,11 +59,6 @@ in
     device = "nas";
     fsType = "zfs";
   };
-  services.zfs.autoScrub.enable = true;
-  services.zfs.autoSnapshot.enable = true;
-
-  # This wittle cornputer doesn't weally hvae enough WAM to wun ZFS
-  boot.kernelParams = [ "zfs.zfs_arc_max=${builtins.toString (512 * 1024 * 1024)}" ];
 
   users.groups.media-writers = { };
   systemd.services.transmission.serviceConfig = {
