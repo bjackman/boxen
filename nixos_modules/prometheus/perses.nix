@@ -51,22 +51,26 @@ let
       # Site is hosted behind SSL, so set this, shrug.
       cookie.secure = true;
       enable_auth = true;
-      authentication.providers.oidc = [
-        {
-          slug_id = "authelia";
-          name = "Authelia";
-          client_id = autheliaConfig.client_id;
-          client_secret_file = config.age.secrets.authelia-perses-client-secret.path;
-          # This is something that services need to know in order to be able to
-          # accept Authelia as a source of OIDC auth. I'm not 100% sure exactly
-          # what it "means" and to be honest I'm not really sure where Authelia
-          # derives this from.  Anyway, AI tells me that we do want this to be
-          # the SSL URL and not just a localhost thingy.
-          issuer = config.bjackman.iap.autheliaUrl;
-          redirect_uri = "${config.bjackman.iap.services.perses.url}/api/auth/providers/oidc/authelia/callback";
-          scopes = autheliaConfig.scopes;
-        }
-      ];
+      authentication = {
+        access_token_ttl = "24h";
+        refresh_token_ttl = "30d";
+        providers.oidc = [
+          {
+            slug_id = "authelia";
+            name = "Authelia";
+            client_id = autheliaConfig.client_id;
+            client_secret_file = config.age.secrets.authelia-perses-client-secret.path;
+            # This is something that services need to know in order to be able to
+            # accept Authelia as a source of OIDC auth. I'm not 100% sure exactly
+            # what it "means" and to be honest I'm not really sure where Authelia
+            # derives this from.  Anyway, AI tells me that we do want this to be
+            # the SSL URL and not just a localhost thingy.
+            issuer = config.bjackman.iap.autheliaUrl;
+            redirect_uri = "${config.bjackman.iap.services.perses.url}/api/auth/providers/oidc/authelia/callback";
+            scopes = autheliaConfig.scopes;
+          }
+        ];
+      };
     };
     # Originally we hard-coded a specific directory here then populated that
     # separately, reasoning that this way we can update the provisioned
