@@ -110,6 +110,14 @@ in
       description = ''
         Perses resources to provision. Files are prefixed so that they are
         alphanumerically sorted according to the order in this list.
+
+        Note this whole thing is pretty silly, it's a weird leftover from a few
+        phases of experimentation with different ways to configure Perses.
+        Defining the resources directly in Nix like this does kinda make sense
+        for stuff that's global and coupled to the rest of the Nix code and
+        pretty straightforward. For dashboards though, you probably just wanna
+        edit the Cue code that's built and hard-coded into the resourceConfigs
+        option alongside this option.
       '';
       default = [ ];
     };
@@ -117,14 +125,44 @@ in
       type = lib.types.package;
       readOnly = true;
       description = "For convenience, an option to expose the built configuration";
-      default = pkgs.linkFarm "perses-provisioning" (
-        lib.imap0 (i: res: rec {
-          # Fiddly prefix ensures ordering (e.g., 00_GlobalRole..., 01_GlobalRoleBinding...).
-          # 99 resources ought to be enough for anyone.
-          name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.kind}_${res.metadata.name}.json";
-          path = pkgs.writers.writeJSON name res;
-        }) config.bjackman.perses.resources
-      );
+      default =
+        let
+          # Build linkFarm args for each of the resources defined via the
+          # resources option.
+          rawResources = map (res: rec {
+            name = "${res.kind}_${res.metadata.name}.json";
+            path = pkgs.writers.writeJSON name res;
+          }) config.bjackman.perses.resources;
+          # Ditto for the resources defined in Cue.
+          # Not sure if this will actually work once there is more than one Cue
+          # file, problem for future Brendan.
+          cueResources = rec {
+            name = "CueResources.json";
+            # The CUE_CACHE_DIR thing is a hack to work around the fact that cue
+            # doesn't really support dependency vendoring, nor pinning
+            # dependency versions to a hash.
+            # You can check dependencies into cue.mod/pkg (deprecated) but
+            # there's no tooling to manage the recursive dependencies or
+            # updating them or anything.
+            # Instead, just use the Cue cli to build the code, then there will
+            # be a cache in ~/.cache/cue. Check the contents of that into
+            # ./dashboards/.cue-cache and you are HOT TO TROT baby.
+            path = pkgs.runCommand name { } ''
+              cd ${./dashboards}
+              export CUE_CACHE_DIR=${./dashboards/.cue-cache}
+              ${lib.getExe pkgs.cue} export ./... > $out
+            '';
+          };
+          # Apply a fiddly prefix to ensures correct ordering so that resources
+          # can safely refer to each other (e.g., 00_GlobalRole...,
+          # 01_GlobalRoleBinding...). 99 resources ought to be enough for
+          # anyone.
+          resources = lib.imap0 (i: res: rec {
+            name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.name}";
+            path = res.path;
+          }) (rawResources ++ [ cueResources ]);
+        in
+        pkgs.linkFarm "perses-provisioning" resources;
     };
   };
 
@@ -314,7 +352,6 @@ in
           };
         };
       }
-      (import ./dashboards/nodes.nix)
     ];
   };
 }

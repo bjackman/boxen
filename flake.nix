@@ -351,6 +351,7 @@
           pkgs.nixos-rebuild
           deploy-rs.packages.x86_64-linux.default
           pkgs.perses # For percli
+          pkgs.cue
         ];
       };
     };
