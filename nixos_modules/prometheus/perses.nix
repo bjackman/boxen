@@ -9,7 +9,7 @@ let
     # Not really clear why but docs say to use a random string here.
     # nix run nixpkgs#authelia -- crypto rand --length 72 --charset rfc3986
     client_id = "4guwUub8JViSDX~HIjtshmlnStejSe-tL5g.IqyqHm1CTJz2lVekSkCKiwczqxG645bucmFE";
-    client_name = "Perses";
+    client_name = "Perses (server)";
     # Note this is assuming that the "File Filters" feature is enabled:
     # https://www.authelia.com/configuration/methods/files/#file-filters
     # Note the client_secret is set separately via an environment
@@ -26,15 +26,6 @@ let
     # redirecting from Authelia back to Perses after the user approves
     # the auth.
     token_endpoint_auth_method = "client_secret_basic";
-    # This is needed to make the "Device Authorization Flow" work - this
-    # is how the "percli login" command works.
-    grant_types = [
-      "authorization_code"
-      "refresh_token"
-      "urn:ietf:params:oauth:grant-type:device_code"
-    ];
-    # Needed for offline_access, I don't fucken know lol.
-    response_types = [ "code" ];
     scopes = [
       "openid"
       "profile"
@@ -42,8 +33,24 @@ let
       # the only user ID that Perses (0.53) actually takes from the OIDC
       # provider.
       "email"
-      "offline_access"
     ];
+  };
+  autheliaCliClient = {
+    client_id = "WJIks9IaH7qOXNl1FbyiZManq8O4pNRFRQ1JhGrd6RnOPHtnyXK0sSt5BB1Q.IyI5~mD~_ah";
+    client_name = "Perses (CLI)";
+
+    # This is needed to make the "Device Authorization Flow" work - this
+    # is how the "percli login" command works.
+    grant_types = [
+      "urn:ietf:params:oauth:grant-type:device_code"
+    ];
+    public = true;
+
+    # Needed for offline_access, I don't fucken know lol.
+    response_types = [ "code" ];
+    # I think this lets the CLI refresh access tokens.
+    scopes = autheliaServerClient.scopes ++ [ "offline_access" ];
+    inherit (autheliaServerClient) authorization_policy;
   };
   persesConfig = {
     security = {
@@ -59,6 +66,10 @@ let
             slug_id = "authelia";
             name = "Authelia";
             client_id = autheliaServerClient.client_id;
+            device_code = {
+              client_id = autheliaCliClient.client_id;
+              client_secret = "";
+            };
             client_secret_file = config.age.secrets.authelia-perses-client-secret.path;
             # This is something that services need to know in order to be able to
             # accept Authelia as a source of OIDC auth. I'm not 100% sure exactly
@@ -175,7 +186,10 @@ in
       port = 8097;
       oidc = {
         enable = true;
-        autheliaClients = [ autheliaServerClient ];
+        autheliaClients = [
+          autheliaServerClient
+          autheliaCliClient
+        ];
       };
     };
 
