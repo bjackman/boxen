@@ -190,29 +190,25 @@ in
 
     # Need very latest version to get 76bcf7ca8699 (adds client_secret_file).
     # (This is actually already in the tip of 25.11 but hasn't been released yet).
-    # Also pull in my slop fix for https://github.com/zitadel/oidc/issues/830
     nixpkgs.overlays = [
       (final: prev: {
         perses = prev.perses.overrideAttrs (old: rec {
-          version = "0.53.0-client-secret-fix.8";
+          version = "0.53.0-beta.4";
 
           src = final.fetchFromGitHub {
-            # OK so in fact we need a fix for
-            # https://github.com/zitadel/oidc/issues/830 too so this is a fork
-            # with some slop in it.
-            owner = "bjackman";
+            owner = "perses";
             repo = "perses";
             tag = "v${version}";
-            hash = "sha256-S5bwCbAOUDKA4XayX/6NogjWuJEd4rVah46Y59Smx2U=";
+            hash = "sha256-YEXecZwnG1PxllEVcE//6BbYhFp/H+8UAYfqh2C+MCM=";
           };
 
-          vendorHash = "sha256-oR9KL+gJxxy/VKYVYechaBA+zrn9Wjh6dZPEKLYXm7o=";
+          vendorHash = "sha256-wW5mejf7TmXd4JmnAkuF6Rbb53Ixrai5M4xvwTZ09z8=";
 
           npmDeps = final.fetchNpmDeps {
             inherit (final.perses) src version;
             pname = "${old.pname}-ui";
             sourceRoot = "source/${old.npmRoot}";
-            hash = "sha256-mHmadLRY9FwfaIbXLpfLXzrIbf6hUPi71jZ3hipoIUE=";
+            hash = "sha256-Nw7OovFF6mSeHd7mBL17zu9pyf/mlQ257N8j/U0NbYk=";
           };
         });
       })
