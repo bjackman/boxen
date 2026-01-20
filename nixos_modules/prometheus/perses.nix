@@ -5,6 +5,13 @@
   ...
 }:
 let
+  # Note that I suspect things are amiss here. I think it's wrong that we are
+  # using the "confidential" client type for the CLI auth, instead it should be
+  # configured with "public = true" instead of having a client secret. However,
+  # when I tried to set that up, I found that it failed and looking in tcpdump
+  # it seemed that even with Perses configured with device_code.client_secret =
+  # "", it was setting a client_secret. It rather seems like the Perses server
+  # leaks its client secret to the CLI? Perhaps Perses is broken here.
   autheliaConfig = {
     # Not really clear why but docs say to use a random string here.
     # nix run nixpkgs#authelia -- crypto rand --length 72 --charset rfc3986
@@ -44,6 +51,8 @@ let
       "email"
       "offline_access"
     ];
+    # https://github.com/zitadel/oidc/issues/830#issuecomment-3775205814
+    allow_multiple_auth_methods = true;
   };
   persesConfig = {
     security = {
