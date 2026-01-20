@@ -54,10 +54,10 @@ in
                   '';
                   default = false;
                 };
-                autheliaConfig = lib.mkOption {
-                  type = attrs;
+                autheliaClients = lib.mkOption {
+                  type = listOf attrs;
                   description = ''
-                    Client configuration to add to Athelia's client list for
+                    Client configurations to add to Athelia's client list for
                     this service.
 
                     https://www.authelia.com/configuration/identity-providers/openid-connect/clients/
@@ -254,7 +254,7 @@ in
         };
 
         identity_providers.oidc.clients = lib.concatMap (
-          s: lib.optional s.oidc.enable s.oidc.autheliaConfig
+          s: lib.optionals s.oidc.enable s.oidc.autheliaClients
         ) (builtins.attrValues cfg.services);
 
         # This is a dummy for sending email notifications. It's required for the
