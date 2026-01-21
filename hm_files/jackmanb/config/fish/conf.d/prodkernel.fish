@@ -36,4 +36,34 @@ if status is-interactive
         set --local upstream_version (git tag --sort version:refname --contains $commit | egrep -m1 '^v[0-9]+\.[0-9]+$')
         kdt cherry-pick --upstream $upstream_version $commit
     end
+
+    function kdt_setup
+        argparse 'asi' -- $argv
+        or return
+
+        if set -q _flag_asi
+            set -gx KDT_EFFORT "mm/asi"
+            set -gx KDT_GOOGLE_FEATURE_DOC "ntation/google/mm/asi/asi.txtpb"
+            set -gx KDT_UPSTREAM_PLAN "298091561"
+            echo "ASI defaults applied: KDT_EFFORT, KDT_GOOGLE_FEATURE_DOC, KDT_UPSTREAM_PLAN."
+        else
+            read -P "Enter KDT_EFFORT (effort-group): " effort
+            set -gx KDT_EFFORT "$effort"
+
+            read -P "Enter KDT_GOOGLE_FEATURE_DOC (feature-doc-link): " feat_doc
+            set -gx KDT_GOOGLE_FEATURE_DOC "$feat_doc"
+
+            read -P "Enter KDT_UPSTREAM_PLAN (upstream-plan-details): " upstream
+            set -gx KDT_UPSTREAM_PLAN "$upstream"
+        end
+
+        read -P "Enter KDT_GOOGLE_BUG_ID (buganizer-id): " bug_id
+        set -gx KDT_GOOGLE_BUG_ID "$bug_id"
+
+        read -P "Enter KDT_TESTED (tested-explanation): " tested
+        set -gx KDT_TESTED "$tested"
+
+        read -P "Enter KDT_FIXES (commit-ish): " fixes
+        set -gx KDT_FIXES "$fixes"
+    end
 end
