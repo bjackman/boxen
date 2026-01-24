@@ -29,7 +29,7 @@ import (
 // Wrapper for TimeSeries Panels using the official schema.
 #TSPanel: {
 	#name:        string
-	#description: string
+	#description: string | *#name
 	#queries: [...]
 	#unit?:       string
 	#shortValues: bool | *false

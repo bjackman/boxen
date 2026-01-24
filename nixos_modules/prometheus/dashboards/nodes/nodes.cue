@@ -1,4 +1,4 @@
-package mydac
+package nodes
 
 import (
 	// General Perses SDK
