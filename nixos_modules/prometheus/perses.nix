@@ -142,30 +142,47 @@ in
         let
           # Build linkFarm args for each of the resources defined via the
           # resources option.
-          rawResources = map (res: rec {
+          nixResourceLinks = map (res: rec {
             name = "${res.kind}_${res.metadata.name}.json";
             path = pkgs.writers.writeJSON name res;
           }) config.bjackman.perses.resources;
+          # Compile Cue code into a directory using the Perses CLI. This is
+          # probably a dumb way to do this I dunno.
           # Ditto for the resources defined in Cue.
-          # Not sure if this will actually work once there is more than one Cue
-          # file, problem for future Brendan.
-          cueResources = rec {
-            name = "CueResources.json";
-            # The CUE_CACHE_DIR thing is a hack to work around the fact that cue
-            # doesn't really support dependency vendoring, nor pinning
-            # dependency versions to a hash.
-            # You can check dependencies into cue.mod/pkg (deprecated) but
-            # there's no tooling to manage the recursive dependencies or
-            # updating them or anything.
-            # Instead, just use the Cue cli to build the code, then there will
-            # be a cache in ~/.cache/cue. Check the contents of that into
-            # ./dashboards/.cue-cache and you are HOT TO TROT baby.
-            path = pkgs.runCommand name { } ''
-              cd ${./dashboards}
-              export CUE_CACHE_DIR=${./.cue-cache}
-              ${lib.getExe pkgs.cue} export ./... > $out
+          cueResources = pkgs.stdenv.mkDerivation {
+            name = "cue-resources";
+            src = ./.;
+            nativeBuildInputs = with pkgs; [
+              cue
+              perses
+            ];
+            buildPhase = ''
+              export CUE_CACHE_DIR=$(pwd)/.cue-cache
+              cd dashboards
+              percli dac build -d .
+            '';
+
+            installPhase = ''
+              mkdir -p $out
+
+              # Copy the built artifacts from the 'built' subdirectory
+              # Adjust '../built' if the 'built' dir is created inside 'dashboards'
+              cp -r built/* $out/
             '';
           };
+          # Empirically, if we just link the output of the above derivation
+          # straight into the resulting linkFarm, percli apply doesn't seem to
+          # recurse into it. So we just directly set up individual links to the
+          # relevant resources.
+          cueResourceLinks =
+            map
+              (name: {
+                name = "${name}.yaml";
+                path = "${cueResources}/${name}/${name}_output.yaml";
+              })
+              [
+                "nodes"
+              ];
           # Apply a fiddly prefix to ensures correct ordering so that resources
           # can safely refer to each other (e.g., 00_GlobalRole...,
           # 01_GlobalRoleBinding...). 99 resources ought to be enough for
@@ -173,7 +190,7 @@ in
           resources = lib.imap0 (i: res: rec {
             name = "${lib.strings.fixedWidthString 2 "0" (toString i)}_${res.name}";
             path = res.path;
-          }) (rawResources ++ [ cueResources ]);
+          }) (nixResourceLinks ++ cueResourceLinks);
         in
         pkgs.linkFarm "perses-provisioning" resources;
     };
