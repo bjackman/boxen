@@ -162,7 +162,7 @@ in
             # ./dashboards/.cue-cache and you are HOT TO TROT baby.
             path = pkgs.runCommand name { } ''
               cd ${./dashboards}
-              export CUE_CACHE_DIR=${./dashboards/.cue-cache}
+              export CUE_CACHE_DIR=${./.cue-cache}
               ${lib.getExe pkgs.cue} export ./... > $out
             '';
           };
