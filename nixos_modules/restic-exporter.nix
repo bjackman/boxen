@@ -59,6 +59,11 @@
                   type = str;
                   description = "File containing repository password";
                 };
+                refreshIntervalSecs = lib.mkOption {
+                  type = int;
+                  description = "Refresh interval for scraping the repo";
+                  default = 60 * 60;
+                };
               };
             }
           )
@@ -89,6 +94,7 @@
           LISTEN_ADDRESS = instance.listenAddress;
           LISTEN_PORT = toString instance.port;
           RESTIC_CACHE_DIR = "$CACHE_DIRECTORY";
+          REFRESH_INTERVAL = toString instance.refreshIntervalSecs;
         };
         script = "${pkgs.prometheus-restic-exporter}/bin/restic-exporter.py";
       };
