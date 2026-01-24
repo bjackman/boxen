@@ -18,6 +18,7 @@
     ../filebrowser.nix
     ../prometheus
     ../bitmagnet.nix
+    ../miniflux.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
