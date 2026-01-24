@@ -1,4 +1,4 @@
-module: "cue.example"
+module: "github.com/bjackman/boxen/nixos_modules/prometheus/dashboards"
 language: {
 	version: "v0.15.1"
 }

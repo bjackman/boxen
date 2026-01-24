@@ -9,13 +9,9 @@ import (
 	// Cue SDK for the Prometheus plugin
 	labelValuesVarBuilder "github.com/perses/plugins/prometheus/sdk/cue/variable/labelvalues"
 	promFilterBuilder "github.com/perses/plugins/prometheus/sdk/cue/filter"
-
-	// Raw Schema Imports
-	// I'm not too sure exactly why for these cases we import the :model, maybe
-	// just coz no higher-level wrapper is needed.
-	timeseriesChart "github.com/perses/plugins/timeserieschart/schemas:model"
-	gaugeChart "github.com/perses/plugins/gaugechart/schemas:model"
-	promQuery "github.com/perses/plugins/prometheus/schemas/prometheus-time-series-query:model"
+	
+	// Local helper library
+	lib "github.com/bjackman/boxen/nixos_modules/prometheus/dashboards/lib"
 )
 
 // Comment spam in here coz I don't expect to still understand this shit next
@@ -71,101 +67,6 @@ let instanceMatcher = (promFilterBuilder & {
 // Combine the dynamic instance matcher with the static job filter.
 let commonFilter = "\(instanceMatcher),\(jobFilter)"
 
-// -- Panel & Query Definitions --
-
-// Wrapper for the raw TimeSeriesQuery resource, I'm not too sure why we need to
-// define this ourselves here.
-#PromQuery: {
-	#query:            string
-	#seriesNameFormat: string
-	kind:              "TimeSeriesQuery"
-	spec: plugin: promQuery & {
-		spec: {
-			datasource: {
-				kind: "PrometheusDatasource"
-				name: "prometheus"
-			}
-			query:            #query
-			seriesNameFormat: #seriesNameFormat
-		}
-	}
-}
-
-// Wrapper for TimeSeries Panels using the official schema, also not sure why we
-// have this.
-#TSPanel: {
-	#name:        string
-	#description: string
-	#queries: [...]
-	#unit?:       string
-	#shortValues: bool | *false
-	kind:         "Panel"
-	spec: {
-		display: {
-			name:        #name
-			description: #description
-		}
-		// Validate the plugin spec against the TimeSeriesChart schema
-		plugin: timeseriesChart & {
-			spec: {
-				legend: {
-					mode:     "table"
-					position: "bottom"
-					values: ["last"]
-				}
-				if #unit != _|_ {
-					yAxis: {
-						format: {
-							unit: #unit
-							if #shortValues {
-								shortValues: true
-							}
-						}
-					}
-				}
-			}
-		}
-		queries: #queries
-	}
-}
-
-// Wrapper for Gauge Panels using the official schema, also not sure why we
-// have this.
-#GaugePanel: {
-	#name:        string
-	#description: string
-	#queries: [...]
-	kind: "Panel"
-	spec: {
-		display: {
-			name:        #name
-			description: #description
-		}
-		// Validate the plugin spec against the GaugeChart schema
-		plugin: gaugeChart & {
-			spec: {
-				calculation: "last"
-				format: unit: "percent"
-				thresholds: {
-					mode:         "absolute"
-					defaultColor: "green"
-					steps: [
-						{
-							value: 80
-							color: "orange"
-						},
-						{
-							value: 90
-							color: "red"
-						},
-					]
-				}
-			}
-		}
-		queries: #queries
-	}
-}
-
 // -- Dashboard Definition --
 
 dashboardBuilder & {
@@ -188,23 +89,23 @@ dashboardBuilder & {
 				#cols:   2
 				#height: 8
 				#panels: [
-					#TSPanel & {
+					lib.#TSPanel & {
 						#name:        "CPU Usage"
 						#description: "Shows CPU utilization metrics"
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_load1{\(commonFilter)}"
 								#seriesNameFormat: "CPU - 1m Average"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_load5{\(commonFilter)}"
 								#seriesNameFormat: "CPU - 5m Average"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_load15{\(commonFilter)}"
 								#seriesNameFormat: "CPU - 15m Average"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            #"count(node_cpu_seconds_total{\#(commonFilter),mode="idle"})"#
 								#seriesNameFormat: "CPU - Logical Cores"
 							},
@@ -217,35 +118,35 @@ dashboardBuilder & {
 				#cols:   2
 				#height: 8
 				#panels: [
-					#TSPanel & {
+					lib.#TSPanel & {
 						#name:        "Memory Usage"
 						#description: "Shows memory utilization metrics"
 						#unit:        "bytes"
 						#shortValues: true
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_memory_MemFree_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Free"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_memory_Buffers_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Buffers"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_memory_Cached_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Cached"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            "node_memory_Slab_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Slab"
 							},
 						]
 					},
-					#GaugePanel & {
+					lib.#GaugePanel & {
 						#name:        "Memory Usage"
 						#description: "Shows memory utilization across nodes"
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            """
 									100 - avg(node_memory_MemAvailable_bytes{\(commonFilter)})
 									/ avg(node_memory_MemTotal_bytes{\(commonFilter)}) * 100
@@ -260,27 +161,27 @@ dashboardBuilder & {
 				#cols:   2
 				#height: 8
 				#panels: [
-					#TSPanel & {
+					lib.#TSPanel & {
 						#name:        "Disk I/O Bytes"
 						#description: "Shows disk I/O metrics in bytes"
 						#unit:        "bytes"
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            #"rate(node_disk_read_bytes_total{device!="",\#(commonFilter)}[$__rate_interval])"#
 								#seriesNameFormat: "{{device}} - Disk - Usage"
 							},
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            #"rate(node_disk_io_time_seconds_total{device!="",\#(commonFilter)}[$__rate_interval])"#
 								#seriesNameFormat: "{{device}} - Disk - Written"
 							},
 						]
 					},
-					#TSPanel & {
+					lib.#TSPanel & {
 						#name:        "Disk I/O Seconds"
 						#description: "Shows disk I/O duration metrics"
 						#unit:        "seconds"
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            #"rate(node_disk_io_time_seconds_total{device!="",\#(commonFilter)}[$__rate_interval])"#
 								#seriesNameFormat: "{{device}} - Disk - IO Time"
 							},
@@ -293,23 +194,23 @@ dashboardBuilder & {
 				#cols:   2
 				#height: 8
 				#panels: [
-					#TSPanel & {
+					lib.#TSPanel & {
 						#name:        "Network Received"
 						#description: "Shows network received bytes metrics"
 						#unit:        "bytes/sec"
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            #"rate(node_network_receive_bytes_total{device!="lo",\#(commonFilter)}[$__rate_interval])"#
 								#seriesNameFormat: "{{device}} - Network - Received"
 							},
 						]
 					},
-					#TSPanel & {
+					lib.#TSPanel & {
 						#name:        "Network Transmitted"
 						#description: "Shows network transmitted bytes metrics"
 						#unit:        "bytes/sec"
 						#queries: [
-							#PromQuery & {
+							lib.#PromQuery & {
 								#query:            #"rate(node_network_receive_bytes_total{device!="lo",\#(commonFilter)}[$__rate_interval])"#
 								#seriesNameFormat: "{{device}} - Network - Transmitted"
 							},
