@@ -400,5 +400,40 @@
         }
       ];
     }
+    {
+      name = "Restic";
+      rules = [
+        {
+          alert = "ResticCheckFailed";
+          annotations = {
+            description = ''
+              Restic check failed on {{ $labels.instance }}.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Restic check failed (instance {{ $labels.instance }})";
+          };
+          expr = "restic_check_success == 0";
+          for = "5m";
+          labels.severity = "critical";
+        }
+        {
+          alert = "ResticBackupStale";
+          annotations = {
+            description = ''
+              Latest Restic backup on {{ $labels.instance }} is older than 2 weeks.
+                VALUE = {{ $value | humanizeDuration }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Restic backup stale (instance {{ $labels.instance }})";
+          };
+          expr = ''
+            time() - max by (instance) (restic_backup_timestamp) > ${toString (14 * 24 * 60 * 60)}
+          '';
+          for = "1h";
+          labels.severity = "warning";
+        }
+      ];
+    }
   ];
 }
