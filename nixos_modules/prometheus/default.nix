@@ -65,6 +65,31 @@ in
         "node"
         "smartctl"
         "zfs"
+      ]
+      # Restic exporters are defined via my own special option, define scrapes
+      # for those.
+      ++ [
+        {
+          job_name = "restic";
+          static_configs =
+            let
+              # Takes a node's configuration and returns scrape targets for each of
+              # its restic exporters.
+              nodeTargets =
+                nodeConfig:
+                let
+                  hostName = nodeConfig.networking.hostName;
+                in
+                lib.mapAttrsToList (_: instance: {
+                  targets = [ "${hostName}:${toString instance.port}" ];
+                  labels.instance = "${hostName}_${instance.name}";
+                }) nodeConfig.bjackman.restic-exporter.instances;
+              # Not all nodes will import the module so the restic-exporter
+              # option might not exist.
+              nodes = builtins.filter (c: c.bjackman ? restic-exporter) (builtins.attrValues homelabConfigs);
+            in
+            lib.concatMap nodeTargets nodes;
+        }
       ];
 
     ruleFiles = [

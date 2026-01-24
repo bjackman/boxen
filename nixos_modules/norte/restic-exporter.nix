@@ -23,6 +23,7 @@ in
     repositoryPath = "${chrootsDir}/${user.name}/uploads/restic-repo";
     port = config.bjackman.ports.${serviceName user.name}.port;
     passwordFile = "${pkgs.writeText "restic-repo-password.txt" "hunter2"}";
+    listenAddress = "0.0.0.0";
   }) users;
 
   bjackman.ports = lib.mapAttrs' (name: _: lib.nameValuePair (serviceName name) { }) users;
