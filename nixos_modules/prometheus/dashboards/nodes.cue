@@ -18,6 +18,12 @@ import (
 	promQuery "github.com/perses/plugins/prometheus/schemas/prometheus-time-series-query:model"
 )
 
+// Comment spam in here coz I don't expect to still understand this shit next
+// time I read it. However, note that I used a lot of AI help to write this,
+// it's not that I understood it particularly well even at the time. I did read
+// everything and I thought it made sense but this is _not_ a good source of
+// canonical style for defining these dashboards.
+
 // -- Global Filters --
 
 let jobFilter = #"job="node""#
