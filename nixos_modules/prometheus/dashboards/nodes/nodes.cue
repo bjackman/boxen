@@ -9,7 +9,7 @@ import (
 	// Cue SDK for the Prometheus plugin
 	labelValuesVarBuilder "github.com/perses/plugins/prometheus/sdk/cue/variable/labelvalues"
 	promFilterBuilder "github.com/perses/plugins/prometheus/sdk/cue/filter"
-	
+
 	// Local helper library
 	lib "github.com/bjackman/boxen/nixos_modules/prometheus/dashboards/lib"
 )
@@ -177,13 +177,23 @@ dashboardBuilder & {
 						]
 					},
 					lib.#TSPanel & {
-						#name:        "Disk I/O Seconds"
-						#description: "Shows disk I/O duration metrics"
-						#unit:        "seconds"
+						#name: "Disk Space Usage"
+
+						#description: "Used space vs Total capacity (excluding virtual filesystems)"
+						// Not supported for timeseries chart:
+
+						#unit: "percent"
+
+						// #shortValues: true
 						#queries: [
 							lib.#PromQuery & {
-								#query:            #"rate(node_disk_io_time_seconds_total{device!="",\#(commonFilter)}[$__rate_interval])"#
-								#seriesNameFormat: "{{device}} - Disk - IO Time"
+								#query:            """
+								(
+									1 - node_filesystem_avail_bytes{fstype!~"tmpfs|ramfs",\(commonFilter)} 
+									/ node_filesystem_size_bytes{fstype!~"tmpfs|ramfs",\(commonFilter)}
+								) * 100
+								"""
+								#seriesNameFormat: "{{mountpoint}} Used"
 							},
 						]
 					},
