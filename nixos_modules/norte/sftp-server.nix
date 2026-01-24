@@ -13,9 +13,19 @@ in
     ../users.nix
   ];
 
-  options.bjackman.sftpServer.chrootsDir = lib.mkOption {
-    type = lib.types.path;
-    default = "/mnt/nas/sftp-chroots";
+  options.bjackman.sftpServer = {
+    chrootsDir = lib.mkOption {
+      type = lib.types.path;
+      default = "/mnt/nas/sftp-chroots";
+    };
+    extraReaders = lib.mkOption {
+      type = with lib.types; listOf str;
+      default = [ ];
+      description = ''
+        Groups to add to the Posix ACL for read access to the contents of the
+        SFTP chroot dirs.
+      '';
+    };
   };
 
   config = {
@@ -59,8 +69,35 @@ in
           d = {
             user = "${user.name}";
             group = "users";
-            mode = "0700";
+            # AI told me I need to set the execute bit for the Posix ACL thing
+            # to work below. I suspect that was bullshit but I haven't tested
+            # removing it.
+            mode = "0710";
           };
+        };
+      }) (builtins.attrValues sftpUsers)
+    );
+
+    # Grant the extra reader accesses to the contents of the SFTP chroots. This
+    # is done as a separate block that comes "after" the main chroot definitions
+    # because AI told me I should do this while troubleshooting, I suspect this
+    # was bullshit but I haven't tried merging them again.
+    # The real issue was that the target FS (ZFS) didn't have Posix ACLs enabled
+    # - I fixed this on the CLI (it's a property of the ZFS dataset) with
+    # sudo zfs set  acltype=posixacl nas.
+    systemd.tmpfiles.settings."20-sftp-readers" = lib.mkMerge (
+      map (user: {
+        "${cfg.chrootsDir}/${user.name}/uploads" = {
+          # Set up Posix ACLs so that these other groups get access to read the
+          # contents of the directory.
+          "a+".argument = lib.concatStringsSep "," (
+            # This grants access to the directory itself.
+            (map (group: "group:${group}:rx") cfg.extraReaders)
+            ++
+              # This sets up the umask so that files created in the directory are
+              # accessible.
+              (map (group: "default:group:${group}:rx") cfg.extraReaders)
+          );
         };
       }) (builtins.attrValues sftpUsers)
     );

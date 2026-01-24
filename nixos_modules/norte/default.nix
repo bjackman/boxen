@@ -20,6 +20,8 @@ in
     ../transmission.nix
     ../users.nix
     ../node-exporter.nix
+    ../restic-exporter.nix
+    ./restic-exporter.nix
     ./nfs-server.nix
     ./samba-server.nix
     ./sftp-server.nix
