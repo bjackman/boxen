@@ -33,30 +33,40 @@ in
     enable = true;
     # No auth, assume we're behind a reverse proxy.
     listenAddress = "127.0.0.1";
-    scrapeConfigs = builtins.concatMap (
-      nodeConfig:
+    scrapeConfigs =
       let
-        # If we try to be too clever and operate on the whole of
-        # services.prometheus.exporters, things get weird. Just filter out the
-        # ones we know work.
-        exporters = {
-          inherit (nodeConfig.services.prometheus.exporters) node smartctl zfs;
+        # Given the name of an exporter configured via
+        # services.prometheus.exporters.$name, generate a scrape config that
+        # scrapes that exporter from all the hosts in the homelab that enable
+        # the exporter.
+        mkScrapeConfig = exporterName: {
+          job_name = exporterName;
+          static_configs =
+            let
+              exporterEnabled = c: c.services.prometheus.exporters.${exporterName}.enable;
+              nodes = builtins.filter exporterEnabled (builtins.attrValues homelabConfigs);
+            in
+            builtins.map (
+              nodeConfig:
+              let
+                hostName = nodeConfig.networking.hostName;
+                exporter = nodeConfig.services.prometheus.exporters.${exporterName};
+              in
+              {
+                targets = [ "${hostName}:${toString exporter.port}" ];
+                labels.instance = hostName;
+              }
+            ) nodes;
         };
-        enabledExporters = lib.filterAttrs (_: e: e.enable) exporters;
-        hostName = nodeConfig.networking.hostName;
       in
-      lib.mapAttrsToList (name: exporter: {
-        # Note this is coupled with the dashboard/alert definitions. It
-        # becomes the "job" label in Prometheus.
-        job_name = "${name}_${hostName}";
-        static_configs = [
-          {
-            targets = [ "${hostName}:${toString exporter.port}" ];
-            labels.instance = hostName;
-          }
-        ];
-      }) enabledExporters
-    ) (builtins.attrValues homelabConfigs);
+      # This only works for certain exporters, never bothered to look carefully
+      # into why. So we just list the ones that are actually used.
+      map mkScrapeConfig [
+        "node"
+        "smartctl"
+        "zfs"
+      ];
+
     ruleFiles = [
       # I over-engineered this coz I thought I was gonna write some complex
       # rules that depend on other parts of the config. But then I changed my

@@ -20,7 +20,7 @@ import (
 
 // -- Global Filters --
 
-let jobFilter = #"job=~"node_.*""#
+let jobFilter = #"job="node""#
 
 // -- Variables --
 
