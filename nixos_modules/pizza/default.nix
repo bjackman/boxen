@@ -144,6 +144,9 @@
     usev6 = "webv6, webv6=ipify-ipv6";
     usev4 = "webv4, webv4=ipify-ipv4";
   };
+  # I don't think this is correct but it does make the issue go away:
+  # https://discourse.nixos.org/t/seeking-advice-on-how-to-fix-ddclient-service-dependencies/74171
+  systemd.services.ddclient.after = [ "nss-user-lookup.target" ];
 
   system.stateVersion = "25.11";
 }
