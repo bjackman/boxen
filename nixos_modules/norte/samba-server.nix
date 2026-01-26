@@ -38,16 +38,6 @@
                   access to, this identifies the one for thi user.
                 '';
               };
-              shareDevice = lib.mkOption {
-                type = str;
-                readOnly = true;
-                default = "//${fullConfig.networking.hostName}/${config.shareName}";
-                description = ''
-                  Assuming you're on the same LAN as the server, this is what
-                  you put in the `device` field of the fileSystems option to
-                  mount the share on the CIFS client.
-                '';
-              };
             };
           }
         )

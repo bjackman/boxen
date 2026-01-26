@@ -6,7 +6,10 @@
   ...
 }:
 {
-  imports = [ ./iap.nix ];
+  imports = [
+    ./iap.nix
+    ./samba-client.nix
+  ];
 
   # Just delete the overrideAttrs block below.
   warnings = lib.optional (lib.versionAtLeast pkgs.filebrowser.version config.services.filebrowser.package.version) "Nixpkgs has caught up to pinned FileBrowser version";
@@ -106,29 +109,11 @@
     };
   };
 
-  # Wiki says this is required
-  environment.systemPackages = [ pkgs.cifs-utils ];
-  age.secrets.filebrowser-samba-password.file = ../secrets/filebrowser-samba-password.age;
-  age-template.files.samba-creds = {
-    vars.password = config.age.secrets.filebrowser-samba-password.path;
-    content = ''
-      username=${otherConfigs.sambaServer.bjackman.samba.users.filebrowser.name}
-      password=$password
-      domain=${otherConfigs.sambaServer.services.samba.settings.global.workgroup}
-    '';
-  };
-  fileSystems."${config.services.filebrowser.settings.root}" = {
-    device = otherConfigs.sambaServer.bjackman.samba.users.filebrowser.shareDevice;
-    fsType = "cifs";
-    options = [
-      "x-systemd.automount"
-      "noauto"
-      "credentials=${config.age-template.files.samba-creds.path}"
-      "nofail"
-      # Local user that owns the files mounted here
-      "uid=${config.services.filebrowser.user}"
-      "gid=${config.services.filebrowser.group}"
-    ];
+  bjackman.sambaMounts.filebrowser = {
+    passwordFile = ../secrets/filebrowser-samba-password.age;
+    localUser = "filebrowser";
+    localGroup = "filebrowser";
+    mountpoint = config.services.filebrowser.settings.root;
   };
 
   bjackman.iap.services.filebrowser = {
