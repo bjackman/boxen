@@ -15,6 +15,9 @@
       with lib.types;
       attrsOf (
         submodule (
+          let
+            fullConfig = config;
+          in
           { config, ... }:
           {
             options = {
@@ -27,12 +30,34 @@
                 type = path;
                 description = "File containing users Samba password. (Not unix password)";
               };
+              shareName = lib.mkOption {
+                type = str;
+                description = ''
+                  Share for this user. Each user gets its own share that it has
+                  access to, this identifies the one for thi user.
+                '';
+              };
+              shareDevice = lib.mkOption {
+                type = str;
+                readOnly = true;
+                default = "//${fullConfig.networking.hostName}/${config.shareName}";
+                description = ''
+                  Assuming you're on the same LAN as the server, this is what
+                  you put in the `device` field of the fileSystems option to
+                  mount the share on the CIFS client.
+                '';
+              };
             };
           }
         )
       );
     default = {
-      filebrowser.passwordFile = config.age.secrets.filebrowser-samba-password.path;
+      filebrowser = {
+        passwordFile = config.age.secrets.filebrowser-samba-password.path;
+        # Note this user is magic as it can access the "nas" share which means it
+        # can read and write the entire NAS.
+        shareName = "nas";
+      };
     };
   };
 

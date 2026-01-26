@@ -119,7 +119,7 @@
   };
   fileSystems."${config.services.filebrowser.settings.root}" = {
     # "nas" matches the share name in the server config
-    device = with otherConfigs.sambaServer; "//${networking.hostName}.fritz.box/nas";
+    device = otherConfigs.sambaServer.bjackman.samba.users.filebrowser.shareDevice;
     fsType = "cifs";
     options = [
       "x-systemd.automount"
