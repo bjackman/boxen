@@ -32,7 +32,7 @@
               };
               shareName = lib.mkOption {
                 type = str;
-                default = config._module.arg.name;
+                default = config._module.args.name;
                 description = ''
                   Share for this user. Each user gets its own share that it has
                   access to, this identifies the one for thi user.

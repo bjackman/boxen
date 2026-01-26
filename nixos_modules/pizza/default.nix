@@ -99,32 +99,21 @@
   };
   bjackman.impermanence.enable = true;
 
-  boot.supportedFilesystems = [ "nfs" ];
-  # Dunno what this does. Wiki says it's needed.
-  services.rpcbind.enable = true;
-  fileSystems."/mnt/nas-media" = {
-    device =
-      with otherConfigs.nfsServer;
-      "${networking.hostName}.fritz.box:${bjackman.nfsServer.mediaDir}";
-    fsType = "nfs";
-    options = [
-      "ro"
-      "noauto"
-      "noatime"
-      "x-systemd.automount"
-      "x-systemd.mount-timeout=5s"
-      "x-systemd.idle-timeout=600"
-      "nfsvers=4.2"
-      "soft"
-    ];
+  # Group for access to the media mount from Samba.
+  users.groups.nas-media = { };
+  bjackman.sambaMounts.media = {
+    passwordFile = ../../secrets/media-samba-password.age;
+    localGroup = "nas-media";
+    mountpoint = "/mnt/nas-media";
   };
-  # Ensure NFS mountpoint is world-readable.
+
+  # Ensure media mountpoint is world-readable.
   systemd.tmpfiles.settings = {
-    "10-nfs-mountpoint" = {
+    "10-mnt-nas-media" = {
       "/mnt/nas-media" = {
         d = {
           user = "root";
-          group = "root";
+          group = "nas-media";
           mode = "0755";
         };
       };

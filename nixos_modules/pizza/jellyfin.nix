@@ -32,6 +32,7 @@
           };
         }
         {
+          # TODO: Try renaming this?
           name = "NFS Movies";
           collectionType = "movies";
           libraryOptions = {
@@ -41,4 +42,6 @@
       ];
     };
   };
+
+  systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "nas-media" ];
 }
