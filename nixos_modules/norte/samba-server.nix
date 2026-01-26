@@ -71,8 +71,6 @@
             "hosts allow" = "192.168. 100. 127. fe80:: ::1";
             "hosts deny" = "0.0.0.0/0 ::/0";
           };
-          # There's no "valid users" key here which means this is accessible to any
-          # authenticated user.
           "nas" = {
             "path" = "/mnt/nas";
             "browseable" = "yes";
@@ -82,6 +80,7 @@
             "directory mask" = "0755";
             "force user" = "samba";
             "force group" = "samba";
+            "valid users" = cfg.users.filebrowser.name;
           };
         };
       };
