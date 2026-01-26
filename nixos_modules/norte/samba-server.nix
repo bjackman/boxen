@@ -32,6 +32,7 @@
               };
               shareName = lib.mkOption {
                 type = str;
+                default = config._module.arg.name;
                 description = ''
                   Share for this user. Each user gets its own share that it has
                   access to, this identifies the one for thi user.
@@ -58,6 +59,9 @@
         # can read and write the entire NAS.
         shareName = "nas";
       };
+      media = {
+        passwordFile = config.age.secrets.media-samba-password.path;
+      };
     };
   };
 
@@ -66,8 +70,12 @@
       cfg = config.bjackman.samba;
     in
     {
-      age.secrets.filebrowser-samba-password.file = ../../secrets/filebrowser-samba-password.age;
-      systemd.tmpfiles.settings."10-mypackage" = {
+      age.secrets = {
+        filebrowser-samba-password.file = ../../secrets/filebrowser-samba-password.age;
+        media-samba-password.file = ../../secrets/media-samba-password.age;
+      };
+
+      systemd.tmpfiles.settings."10-mnt-nas" = {
         "/mnt/nas" = {
           d = {
             group = "samba";
@@ -79,35 +87,43 @@
       services.samba = {
         enable = true;
         openFirewall = true;
-        settings = {
-          global = {
-            "workgroup" = "WORKGROUP";
-            "security" = "user";
+        settings =
+          let
+            baseShareParams = {
+              "read only" = "no";
+              "guest ok" = "no";
+              "create mask" = "0644";
+              "directory mask" = "0755";
+              "force user" = "samba";
+              "force group" = "samba";
+            };
+          in
+          {
+            global = {
+              "workgroup" = "WORKGROUP";
+              "security" = "user";
 
-            # Use modern I/O
-            "use sendfile" = "yes";
-            "aio read size" = "1";
-            "aio write size" = "1";
+              # Use modern I/O
+              "use sendfile" = "yes";
+              "aio read size" = "1";
+              "aio write size" = "1";
 
-            # Use modern protocol
-            "server min protocol" = "SMB3_11";
+              # Use modern protocol
+              "server min protocol" = "SMB3_11";
 
-            # LAN and localhost access only
-            "hosts allow" = "192.168. 100. 127. fe80:: ::1";
-            "hosts deny" = "0.0.0.0/0 ::/0";
+              # LAN and localhost access only
+              "hosts allow" = "192.168. 100. 127. fe80:: ::1";
+              "hosts deny" = "0.0.0.0/0 ::/0";
+            };
+            "nas" = baseShareParams // {
+              "path" = "/mnt/nas";
+              "valid users" = cfg.users.filebrowser.name;
+            };
+            "media" = baseShareParams // {
+              "path" = "/mnt/nas/media";
+              "valid users" = cfg.users.media.name;
+            };
           };
-          "nas" = {
-            "path" = "/mnt/nas";
-            "browseable" = "yes";
-            "read only" = "no";
-            "guest ok" = "no";
-            "create mask" = "0644";
-            "directory mask" = "0755";
-            "force user" = "samba";
-            "force group" = "samba";
-            "valid users" = cfg.users.filebrowser.name;
-          };
-        };
       };
       users.users =
         # Samba users need to correspond to Unix users, create those. IIUC these
