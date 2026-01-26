@@ -118,7 +118,6 @@
     '';
   };
   fileSystems."${config.services.filebrowser.settings.root}" = {
-    # "nas" matches the share name in the server config
     device = otherConfigs.sambaServer.bjackman.samba.users.filebrowser.shareDevice;
     fsType = "cifs";
     options = [
