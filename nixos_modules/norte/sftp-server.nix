@@ -42,7 +42,12 @@ in
       enable = true;
       extraConfig = ''
         Match Group sftp-only
-          ForceCommand internal-sftp
+          # Hm it's too late for me to try and understand this. AI says:
+          # -u 0022 ensures files are created with at least 644 and dirs 755, 
+          # allowing the Default ACL to apply its 'rx' bits.
+          # Apparently this will allow the recursive default Posix ACL set in
+          # the extraReaders option to take effect.
+          ForceCommand internal-sftp -u 0022
           # Chroot to their specific SFTP directory. OpenSSH requires that the
           # chroot is owned by root so we can't really use the normal users
           # directory here unfortunately.
@@ -69,9 +74,6 @@ in
           d = {
             user = "${user.name}";
             group = "users";
-            # AI told me I need to set the execute bit for the Posix ACL thing
-            # to work below. I suspect that was bullshit but I haven't tested
-            # removing it.
             mode = "0710";
           };
         };
