@@ -93,10 +93,12 @@
           RESTIC_PASSWORD_FILE = instance.passwordFile;
           LISTEN_ADDRESS = instance.listenAddress;
           LISTEN_PORT = toString instance.port;
-          RESTIC_CACHE_DIR = "$CACHE_DIRECTORY";
           REFRESH_INTERVAL = toString instance.refreshIntervalSecs;
         };
-        script = "${pkgs.prometheus-restic-exporter}/bin/restic-exporter.py";
+        script = ''
+          export RESTIC_CACHE_DIR="$CACHE_DIRECTORY"
+          ${pkgs.prometheus-restic-exporter}/bin/restic-exporter.py
+        '';
       };
     in
     lib.mapAttrs' (_: instance: {
