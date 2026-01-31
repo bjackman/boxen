@@ -61,6 +61,15 @@ in
     device = "nas";
     fsType = "zfs";
   };
+  # /mnt/nas directly mounts the root dataset of the pool. In order to avoid
+  # needing to snapshot this directory, the media tree is on a different
+  # dataset. Snapshotting is disabled for that dataset vcia the
+  # com.sun:auto-snapshot property on the dataset itself which I set
+  # imperatively.
+  fileSystems."/mnt/nas/media" = {
+    device = "nas/media";
+    fsType = "zfs";
+  };
 
   services.prometheus.exporters = {
     smartctl.enable = true;
