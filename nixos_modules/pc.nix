@@ -1,17 +1,7 @@
 # Stuff for my user but on computers with screens and a keyboard and shit.
+{ pkgs, ... }:
 {
-  pkgs,
-  config,
-  agenix,
-  agenix-template,
-  ...
-}:
-{
-  imports = [
-    ./impermanence.nix
-    agenix.nixosModules.default
-    agenix-template.nixosModules.default
-  ];
+  imports = [ ./impermanence.nix ];
 
   boot.loader = {
     systemd-boot.enable = true;
@@ -103,17 +93,4 @@
       mode = "0700";
     }
   ];
-
-  # Import secret containing GitHub PAT
-  age.secrets.github-pat.file = ../secrets/github-pat.age;
-  # Template the PAT into a Nix config file that sets the access-tokens
-  # appropriately. Note this isn't Nix code it's the weird nix settiongs format.
-  age-template.files."access-tokens-conf" = {
-    vars.token = config.age.secrets.github-pat.path;
-    content = "access-tokens = github.com=$token";
-  };
-  # Import that runtime-generated Nix file into the Nix config.
-  nix.extraOptions = ''
-    !include ${config.age-template.files."access-tokens-conf".path}
-  '';
 }

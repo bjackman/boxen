@@ -70,8 +70,4 @@ in
   "alertmanager-gmail-password.age".publicKeys = all-personal;
   # nix run nixpkgs#openssl -- rand 32 | agenix -e perses-encryption-key.age
   "perses-encryption-key.age".publicKeys = all-personal;
-  # https://github.com/settings/personal-access-tokens. "Nix" - this is a token
-  # without any particular accesses it's just to auth so I can get higher
-  # ratelimits.
-  "github-pat.age".publicKeys = all-personal;
 }
