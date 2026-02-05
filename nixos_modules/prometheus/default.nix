@@ -3,7 +3,6 @@
   pkgs,
   lib,
   agenix-template,
-  grafana-dashboard-node-exporter-full,
   homelabConfigs,
   ...
 }:
@@ -18,15 +17,6 @@ in
     ../node-exporter.nix
     ./rules.nix
     ./perses.nix
-  ];
-
-  # Couldn't get the stupid RBAC bullshit to work here, possibly it's
-  # hobbled in the open source version.
-  assertions = [
-    {
-      assertion = builtins.length admins <= 1;
-      message = "Multiple Grafana admins defined but only one is supported";
-    }
   ];
 
   services.prometheus = {
@@ -160,73 +150,6 @@ in
       }
     ];
 
-  services.grafana = {
-    enable = true;
-    settings = {
-      server = {
-        http_addr = "127.0.0.1";
-        http_port = 9097;
-        enable_gzip = true;
-      };
-      analytics = {
-        check_for_updates = false;
-        check_for_plugin_updates = false;
-      };
-      # Disable spam features
-      feature_toggles = {
-        featureHighlights = false;
-        dashgpt = false;
-        onPremToCloudMigrations = false;
-      };
-      news.news_feed_enabled = false;
-      # See warning at the top of the module.
-      security.admin_user = if admins != [ ] then builtins.head admins else null;
-      "auth.proxy" = {
-        enabled = true;
-        header_name = "Remote-User";
-      };
-    };
-
-    provision = {
-      enable = true;
-      datasources.settings.datasources = [
-        {
-          name = "Prometheus";
-          type = "prometheus";
-          url = "http://${config.services.prometheus.listenAddress}:${toString config.services.prometheus.port}";
-          isDefault = true;
-          editable = false;
-        }
-      ];
-      dashboards.settings.providers = [
-        {
-          name = "Provisioned Dashboards";
-          # The Wiki example points to /etc/grafana here for some reason, I
-          # think this is for UI mutability. Here we are just going straght to
-          # the Nix store, declarative or die.
-          options.path = pkgs.linkFarm "my-dashboards" [
-            # This one only partly works, but some of the graphs show "No data".
-            # I debugged this with AI and it says the variables/fields/thingies
-            # used by the dashboard definition aren't quite right (something
-            # like "node" and "instance" are mixed up). It suggested remappping
-            # them in Prometheus, which seems dumb. It also suggested
-            # reconfiguring it in the dashboard UI but my brain stopped working.
-            # If I'm really gonna think about this dashboarding shit I think I
-            # probably wanna port it to Perses instead. I think one way to make
-            # that happen would be to find some relatively simple Grafana
-            # dashboards and then use the Perses CLI's `migrate` tool to
-            # automatically convert them to Perses configs. Perhaps another
-            # would be: https://github.com/perses/community-mixins
-            {
-              name = "node-exporter.json";
-              path = grafana-dashboard-node-exporter-full;
-            }
-          ];
-        }
-      ];
-    };
-  };
-
   bjackman.iap.services = {
     prometheus = {
       subdomain = "prom";
@@ -235,10 +158,6 @@ in
     alertmanager = {
       subdomain = "alerts";
       port = config.services.prometheus.alertmanager.port;
-    };
-    grafana = {
-      subdomain = "graf";
-      port = config.services.grafana.settings.server.http_port;
     };
   };
 }
