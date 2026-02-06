@@ -99,6 +99,8 @@
       host = "unix/* vsock/* machine/*";
       proxyCommand = "/usr/lib/systemd/systemd-ssh-proxy %h %p";
       checkHostIP = false;
+      # systemd-ssh-proxy doesn't seem to work with ControlMaster, that's fine.
+      controlMaster = "no";
       extraOptions = {
         "ProxyUseFdpass" = "yes";
         "StrictHostKeyChecking" = "no";
