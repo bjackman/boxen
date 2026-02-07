@@ -85,8 +85,6 @@ in
           )
         );
     };
-    # TODO: Probably instead of a special URL authelia should just be a service
-    # that doesn't have OIDC _or_ forward_auth enabled.
     autheliaUrl = lib.mkOption {
       type = lib.types.str;
       default = "https://auth.home.yawn.io";
@@ -95,8 +93,6 @@ in
   };
 
   config = lib.mkIf cfg.host {
-    # Can connect to this locally over HTTPS if I bypass my browser's complaint
-    # that the CA is unknown.
     services.caddy = {
       enable = true;
       package = pkgs.caddy.withPlugins {
