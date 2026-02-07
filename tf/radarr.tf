@@ -30,7 +30,7 @@ resource "radarr_indexer" "bitmagnet" {
   base_url        = "http://pizza:9000/torznab"
   # Dunno what these mean they were the backend's default.
   categories      = [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]
-  enable_rss      = false
+  enable_rss      = true
   priority        = 25
   protocol        = "torrent"
 }
