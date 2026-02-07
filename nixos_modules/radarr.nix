@@ -24,7 +24,9 @@ in
     settings = {
       server = {
         port = ports.radarr.port;
+        bindaddress = "*";
       };
+      auth.method = "External";
     };
   };
 }
