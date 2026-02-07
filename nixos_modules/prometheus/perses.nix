@@ -183,6 +183,7 @@ in
               [
                 "nodes"
                 "restic"
+                "air"
               ];
           # Apply a fiddly prefix to ensures correct ordering so that resources
           # can safely refer to each other (e.g., 00_GlobalRole...,
