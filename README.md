@@ -164,6 +164,36 @@ That will compile and install the updated firmware and then show you the logs -
 when you're done you can just terminate this process and the firmware will keep
 running.
 
+## Terraform
+
+For stuff that isn't really designed to be configured declaratively, I
+eventually realised that the ideal model is Terraform. So far I've set this up
+for Radarr but it isn't properly integrated into the rest of the config, so you
+need to:
+
+```sh
+nix shell nixpkgs#opentofu
+cd tf/
+export RADARR_URL=http://norte:9000
+export RADARR_API_KEY=<key from /var/lib/radarr/.config/Radarr/config.xml>
+export TF_VAR_transmission_password=<raw unhashed RPC password>
+tofu apply
+```
+
+Note that OpenTofu relies on a statefile to remember the IDs and stuff, so to do
+this cleanly for the moment it will always need to be done from the computer
+with that statefile on it.
+
+TF TODOs:
+
+- Figure out how to integrate values from Nix into the TF configuration
+  (probably this means skipping `.tf` and generating the TF config from Nix
+  code?).
+- Figure out how to run OpenTofu as part of the Nix deployment (maybe run it on
+  Pizza?)
+- Figure out how to have this wait until the relevant APIs are available
+- Put secrets into it
+
 ## Mail
 
 ### How it works
