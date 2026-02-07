@@ -19,6 +19,7 @@
     ../prometheus
     ../bitmagnet.nix
     ../miniflux.nix
+    ../iap.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
@@ -136,6 +137,8 @@
   # I don't think this is correct but it does make the issue go away:
   # https://discourse.nixos.org/t/seeking-advice-on-how-to-fix-ddclient-service-dependencies/74171
   systemd.services.ddclient.after = [ "nss-user-lookup.target" ];
+
+  bjackman.iap.host = true;
 
   system.stateVersion = "25.11";
 }

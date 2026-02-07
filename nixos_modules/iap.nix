@@ -21,6 +21,15 @@ in
   ];
 
   options.bjackman.iap = {
+    host = lib.mkOption {
+      type = lib.types.bool;
+      description = ''
+        Whether this configuration hosts the proxy itself. This should only be
+        set on one node. Other nodes can then import this module and define
+        services without actually running the proxy.
+      '';
+      default = false;
+    };
     services = lib.mkOption {
       type =
         with lib.types;
@@ -85,7 +94,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf cfg.host {
     # Can connect to this locally over HTTPS if I bypass my browser's complaint
     # that the CA is unknown.
     services.caddy = {
