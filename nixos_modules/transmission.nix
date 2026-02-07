@@ -7,8 +7,13 @@
 {
   imports = [
     ./brendan.nix
+    ./ports.nix
     agenix.nixosModules.default
   ];
+
+  bjackman.ports = {
+    transmission = { };
+  };
 
   age.secrets.transmission-rpc-password-json.file = ../secrets/transmission-rpc-password.json.age;
   services.transmission = {
@@ -20,6 +25,7 @@
       rpc-whitelist-enabled = false;
       rpc-authentication-required = true;
       rpc-username = "brendan";
+      rpc-port = config.bjackman.ports.transmission.port;
     };
     # This is a weird roundabout way to set rpc-password in the the settings.
     # The name of the option is bad, it's actually a JSON file that gets merged
