@@ -28,13 +28,16 @@ moved {
 }
 
 resource "radarr_indexer_torznab" "bitmagnet" {
-  name            = "BitMagnet"
-  api_path        = "/api"
-  base_url        = "http://pizza:9000/torznab"
+  name     = "BitMagnet"
+  api_path = "/api"
+  base_url = "http://pizza:9000/torznab"
   # Dunno what these mean they were the backend's default.
-  categories      = [2000, 2030, 2040, 2045, 2060]
-  enable_rss      = true
-  priority        = 25
+  categories = [2000, 2030, 2040, 2045, 2060]
+  enable_rss = true
+  # Dunno what these means but without it the UI complains
+  enable_automatic_search   = true
+  enable_interactive_search = true
+  priority                  = 25
 }
 
 variable "transmission_password" {
