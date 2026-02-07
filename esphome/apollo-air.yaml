@@ -22,3 +22,7 @@ wifi:
 captive_portal:
 
 prometheus:
+
+# NixOS 25.11's Avahi->nsswitch setup fails for IPv4-only devices.
+network:
+  enable_ipv6: true
