@@ -17,14 +17,20 @@ provider "radarr" {
 # https://registry.terraform.io/providers/devopsarr/radarr/latest/docs/resources/indexer
 # I also figured some of this out by creating an indexer in the UI and then doing
 # curl -H "X-Api-Key: $KEY" norte:9000/api/v3/indexer/
-# But I deleted a bunch of fields that were set in the default, so this might be
-# missing something useful.
+# But I deleted a bunch of fields that were set in the default.
+# THEN, I used:
+# tofu state show radarr_indexer.bitmagnet
+# To dump the actual resource defined in the backend so I could copy that back
+# into the code.
 resource "radarr_indexer" "bitmagnet" {
-  name                    = "BitMagnet"
-  implementation          = "Torznab"
-  config_contract         = "TorznabSettings"
-  protocol                = "torrent"
-  enable_automatic_search = true
-  base_url                = "http://pizza:9000/torznab"
-  priority                = 25
+  name            = "BitMagnet"
+  implementation  = "Torznab"
+  config_contract = "TorznabSettings"
+  api_path        = "/api"
+  base_url        = "http://pizza:9000/torznab"
+  # Dunno what these mean they were the backend's default.
+  categories      = [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]
+  enable_rss      = false
+  priority        = 25
+  protocol        = "torrent"
 }
