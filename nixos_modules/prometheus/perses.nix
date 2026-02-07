@@ -207,39 +207,38 @@ in
       };
     };
 
-    # Delete the overlay below.
-    warnings = lib.optional (
-      let
-        pkgsVersion = pkgs.filebrowser.version;
-        myVersion = config.services.filebrowser.package.version;
-      in
-      lib.versionAtLeast pkgsVersion myVersion
-    ) "Nixpkgs has caught up to pinned Perses version";
-
     # Need very latest version to get 76bcf7ca8699 (adds client_secret_file).
     # (This is actually already in the tip of 25.11 but hasn't been released yet).
     nixpkgs.overlays = [
-      (final: prev: {
-        perses = prev.perses.overrideAttrs (old: rec {
-          version = "0.53.0-beta.4";
-
-          src = final.fetchFromGitHub {
-            owner = "perses";
-            repo = "perses";
-            tag = "v${version}";
-            hash = "sha256-YEXecZwnG1PxllEVcE//6BbYhFp/H+8UAYfqh2C+MCM=";
-          };
-
-          vendorHash = "sha256-wW5mejf7TmXd4JmnAkuF6Rbb53Ixrai5M4xvwTZ09z8=";
-
-          npmDeps = final.fetchNpmDeps {
-            inherit (final.perses) src version;
-            pname = "${old.pname}-ui";
-            sourceRoot = "source/${old.npmRoot}";
-            hash = "sha256-Nw7OovFF6mSeHd7mBL17zu9pyf/mlQ257N8j/U0NbYk=";
-          };
-        });
-      })
+      (
+        final: prev:
+        let
+          targetVersion = "0.53.0-beta.4";
+          overriddenPerses = prev.perses.overrideAttrs (old: rec {
+            version = targetVersion;
+            src = final.fetchFromGitHub {
+              owner = "perses";
+              repo = "perses";
+              tag = "v${version}";
+              hash = "sha256-YEXecZwnG1PxllEVcE//6BbYhFp/H+8UAYfqh2C+MCM=";
+            };
+            vendorHash = "sha256-wW5mejf7TmXd4JmnAkuF6Rbb53Ixrai5M4xvwTZ09z8=";
+            npmDeps = final.fetchNpmDeps {
+              inherit (final.perses) src version;
+              pname = "${old.pname}-ui";
+              sourceRoot = "source/${old.npmRoot}";
+              hash = "sha256-Nw7OovFF6mSeHd7mBL17zu9pyf/mlQ257N8j/U0NbYk=";
+            };
+          });
+        in
+        {
+          perses =
+            if lib.versionAtLeast prev.perses.version targetVersion then
+              lib.warn "Upstream Perses version (${prev.perses.version}) is >= your override (${targetVersion}). You can delete the overlay." prev.perses
+            else
+              overriddenPerses;
+        }
+      )
     ];
 
     environment.systemPackages = [ pkgs.perses ];
