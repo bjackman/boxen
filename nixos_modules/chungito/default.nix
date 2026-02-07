@@ -95,5 +95,19 @@
     # Don't enable IPv6 as this breaks the nsswitch setup for IPv4-only devices.
   };
 
+  virtualisation = {
+    containers.enable = true;
+    podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+    };
+  };
+  users.users.brendan = {
+    extraGroups = [
+      "podman"
+    ];
+  };
+
   system.stateVersion = "25.05";
 }
