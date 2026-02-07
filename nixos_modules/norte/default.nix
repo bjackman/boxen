@@ -21,6 +21,7 @@ in
     ../users.nix
     ../node-exporter.nix
     ../restic-exporter.nix
+    ../iap.nix
     ./restic-exporter.nix
     ./nfs-server.nix
     ./samba-server.nix

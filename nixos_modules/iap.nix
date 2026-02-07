@@ -4,6 +4,7 @@
   config,
   agenix,
   agenix-template,
+  homelabConfigs,
   ...
 }:
 let
@@ -50,7 +51,7 @@ in
                 };
                 port = lib.mkOption {
                   type = int;
-                  description = "Port the service exposes on localhost";
+                  description = "Port the service exposes";
                 };
                 oidc = {
                   enable = lib.mkOption {
@@ -84,6 +85,7 @@ in
             }
           )
         );
+      default = { };
     };
     autheliaUrl = lib.mkOption {
       type = lib.types.str;
@@ -93,68 +95,91 @@ in
   };
 
   config = lib.mkIf cfg.host {
-    services.caddy = {
-      enable = true;
-      package = pkgs.caddy.withPlugins {
-        plugins = [ "github.com/caddy-dns/cloudflare@v0.2.2" ];
-        hash = "sha256-dnhEjopeA0UiI+XVYHYpsjcEI6Y1Hacbi28hVKYQURg=";
+    services.caddy =
+      let
+        # Given a node configuration, produce a list of the service definitions
+        # for that node. We also merge in a "host" attribute to each service
+        # definition that identifies the host the service is on.
+        # Note this assumes all of the homelabConfigs import the module so that
+        # the bjackman.iap.services module exists.
+        nodeServices =
+          nodeConfig:
+          lib.mapAttrsToList (
+            name: service:
+            # Hack: see if the hostname is the same as the current
+            # configuration's hostname, if it is then use "localhost". Otherwise
+            # we assume we can directly access the host by its name.
+            let
+              localHost = config.networking.hostName;
+              remoteHost = nodeConfig.networking.hostName;
+              host = if remoteHost == localHost then "localhost" else remoteHost;
+            in
+            service // { inherit host; }
+          ) nodeConfig.bjackman.iap.services;
+        allServices = lib.concatMap nodeServices (builtins.attrValues homelabConfigs);
+      in
+      {
+        enable = true;
+        package = pkgs.caddy.withPlugins {
+          plugins = [ "github.com/caddy-dns/cloudflare@v0.2.2" ];
+          hash = "sha256-dnhEjopeA0UiI+XVYHYpsjcEI6Y1Hacbi28hVKYQURg=";
+        };
+        # This configures Caddy to do the special dance with Cloudflare to get a
+        # Lets Encrypt certificate. Because we want a wildcard certificate we need
+        # to do the DNS-01 challenge, this supports that.
+        globalConfig = ''
+          debug
+          acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
+        '';
+        virtualHosts."*.${domain}, ${domain}".extraConfig = ''
+          tls {
+              dns cloudflare {$CLOUDFLARE_API_TOKEN}
+          }
+
+          # This is the Authelia UI. It doesn't get configured via
+          # bjackman.iap.services since a) it shouldn't have a forward_auth rule
+          # in Caddy and b) it shouldn't have an access control rule in Authelia.
+          @auth host auth.${domain}
+          handle @auth {
+            reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
+          }
+
+          ${lib.concatStringsSep "\n" (
+            builtins.map (service: ''
+              @${service.subdomain} host ${service.subdomain}.${domain}
+              handle @${service.subdomain} {
+                ${lib.optionalString (!service.oidc.enable) ''
+                  # Proxy this service with header-based authentication.  Gemini
+                  # generated the actual config and seems to have been cribbing
+                  # from https://www.authelia.com/integration/proxies/caddy/. As
+                  # per that doc this corresponds to the default configuration of
+                  # Authelia's ForwardAuth Authz implementation.
+                  #
+                  # This makes a query to Authelia to get the auth state. If not
+                  # authenticated it redirects to the Authelia UI. If
+                  # authenticated, it adds the Remote-* headers to the request and
+                  # forward it to the app.
+                  #
+                  # It's important that all the headers that are of security
+                  # relevance are included here, so that if the user sets them in
+                  # their own request, that doesn't get forwarded directly to the
+                  # app (allowing users to spoof stuff).
+                  #
+                  # To be honest, I do now know exactly how the redirection part
+                  # happens, presumably Caddy does not know the URL of the
+                  # Authelia UI, so I guess Authelia must somehow (via the cookie
+                  # config...?) know that URL and inform Caddy about it.
+                  forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
+                      uri /api/authz/forward-auth
+                      copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+                  }
+                ''}
+                reverse_proxy ${service.host}:${builtins.toString service.port}
+              }
+            '') allServices
+          )}
+        '';
       };
-      # This configures Caddy to do the special dance with Cloudflare to get a
-      # Lets Encrypt certificate. Because we want a wildcard certificate we need
-      # to do the DNS-01 challenge, this supports that.
-      globalConfig = ''
-        debug
-        acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
-      '';
-      virtualHosts."*.${domain}, ${domain}".extraConfig = ''
-        tls {
-            dns cloudflare {$CLOUDFLARE_API_TOKEN}
-        }
-
-        # This is the Authelia UI. It doesn't get configured via
-        # bjackman.iap.services since a) it shouldn't have a forward_auth rule
-        # in Caddy and b) it shouldn't have an access control rule in Authelia.
-        @auth host auth.${domain}
-        handle @auth {
-          reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
-        }
-
-        ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (name: service: ''
-            @${service.subdomain} host ${service.subdomain}.${domain}
-            handle @${service.subdomain} {
-              ${lib.optionalString (!service.oidc.enable) ''
-                # Proxy this service with header-based authentication.  Gemini
-                # generated the actual config and seems to have been cribbing
-                # from https://www.authelia.com/integration/proxies/caddy/. As
-                # per that doc this corresponds to the default configuration of
-                # Authelia's ForwardAuth Authz implementation.
-                #
-                # This makes a query to Authelia to get the auth state. If not
-                # authenticated it redirects to the Authelia UI. If
-                # authenticated, it adds the Remote-* headers to the request and
-                # forward it to the app.
-                #
-                # It's important that all the headers that are of security
-                # relevance are included here, so that if the user sets them in
-                # their own request, that doesn't get forwarded directly to the
-                # app (allowing users to spoof stuff).
-                #
-                # To be honest, I do now know exactly how the redirection part
-                # happens, presumably Caddy does not know the URL of the
-                # Authelia UI, so I guess Authelia must somehow (via the cookie
-                # config...?) know that URL and inform Caddy about it.
-                forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
-                    uri /api/authz/forward-auth
-                    copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-                }
-              ''}
-              reverse_proxy 127.0.0.1:${builtins.toString service.port}
-            }
-          '') cfg.services
-        )}
-      '';
-    };
     age-template.files."caddy.env" = {
       vars.token = config.age.secrets.cloudflare-dns-api-token.path;
       content = "CLOUDFLARE_API_TOKEN=$token";
