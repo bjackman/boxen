@@ -20,4 +20,5 @@ wifi:
     ssid: "Air-1-Bedroom Fallback Hotspot"
 
 captive_portal:
-    
+
+prometheus:
