@@ -26,3 +26,33 @@ prometheus:
 # NixOS 25.11's Avahi->nsswitch setup fails for IPv4-only devices.
 network:
   enable_ipv6: true
+
+sensor:
+  - id: !extend scd40
+    co2:
+      on_value:
+        then:
+          - lambda: |-
+              float co2 = x;
+
+              if (co2 < 1000) {
+                // Good, lights off
+                id(rgb_light).turn_off().perform();
+                return;
+              }
+
+              auto call = id(rgb_light).turn_on();
+              call.set_brightness(0.15);
+              call.set_transition_length(2000); // 2s smooth morph between updates
+
+              if (co2 >= 1500) {
+                // Go red for very high level
+                call.set_rgb(1.0, 0.0, 0.0);
+              } else {
+                // Use green channel to create a gradient between yellow
+                // (red+green) at 1000 and red at 1500.
+                float green_level = 1.0 - ((co2 - 1000.0) / 500.0);
+                call.set_rgb(1.0, green_level, 0.0);
+              }
+
+              call.perform();
