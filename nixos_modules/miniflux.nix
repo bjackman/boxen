@@ -3,6 +3,7 @@
   imports = [
     ./ports.nix
     ./iap.nix
+    ./postgres.nix
   ];
 
   bjackman.ports.miniflux = { };

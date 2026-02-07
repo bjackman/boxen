@@ -3,7 +3,7 @@ let
   ports = config.bjackman.ports;
 in
 {
-  imports = [ ./impermanence.nix ];
+  imports = [ ./postgres.nix ];
 
   bjackman.ports = {
     bitmagnet = { };
@@ -22,17 +22,4 @@ in
   };
   # openFirewall only opens the DHT port, also open the web UI port.
   networking.firewall.allowedTCPPorts = [ ports.bitmagnet.port ];
-
-  bjackman.impermanence.extraPersistence.directories =
-    let
-      postgres = config.systemd.services.postgresql.serviceConfig;
-    in
-    [
-      {
-        directory = "/var/lib/postgresql";
-        mode = "0770";
-        user = postgres.User;
-        group = postgres.Group;
-      }
-    ];
 }
