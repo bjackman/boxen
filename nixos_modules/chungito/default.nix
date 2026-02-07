@@ -88,5 +88,12 @@
     builders-use-substitutes = true
   '';
 
+  # For finding ESPHome devices on the LAN.
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    # Don't enable IPv6 as this breaks the nsswitch setup for IPv4-only devices.
+  };
+
   system.stateVersion = "25.05";
 }
