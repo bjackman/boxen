@@ -26,18 +26,3 @@ prometheus:
 # NixOS 25.11's Avahi->nsswitch setup fails for IPv4-only devices.
 network:
   enable_ipv6: true
-
-# The "slow pulse" effect in the upstream definition is way to fast and bright,
-# also add a less intense one. (It's also probably possible to just override the
-# existing effect).
-light:
-  - id: !extend rgb_light
-    effects:
-      - pulse:
-          name: "Really Slow Pulse"
-          transition_length: 2s
-          update_interval: 2s
-          min_brightness: 0%
-          # Also reduce max brightness. This is still quite bright but these
-          # LEDs don't support being much dimmer.
-          max_brightness: 20%
