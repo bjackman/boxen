@@ -54,3 +54,7 @@ resource "radarr_download_client_transmission" "transmission" {
   username = "brendan"
   password = var.transmission_password
 }
+
+resource "radarr_root_folder" "movies" {
+  path = "/mnt/nas/media/radarr"
+}
