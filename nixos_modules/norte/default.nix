@@ -22,6 +22,8 @@ in
     ../node-exporter.nix
     ../restic-exporter.nix
     ../iap.nix
+    # Need to run Radarr locally so it can do hardlinks
+    ../radarr.nix
     ./restic-exporter.nix
     ./nfs-server.nix
     ./samba-server.nix
