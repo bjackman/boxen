@@ -56,9 +56,9 @@ in
         "smartctl"
         "zfs"
       ]
-      # Restic exporters are defined via my own special option, define scrapes
-      # for those.
       ++ [
+        # Restic exporters are defined via my own special option, define scrapes
+        # for those.
         {
           job_name = "restic";
           static_configs =
@@ -79,6 +79,21 @@ in
               nodes = builtins.filter (c: c.bjackman ? restic-exporter) (builtins.attrValues homelabConfigs);
             in
             lib.concatMap nodeTargets nodes;
+        }
+        # Note the whole point of mDNS (Avahi) is supposed to be service
+        # discovery - Prometheus's service discovery mechanism doesn't natively
+        # support it but there are bridges. It isn't really necessary to
+        # hard-code the scrape targets like this, but it's nice and simple.
+        {
+          job_name = "esphome";
+          static_configs = [
+            {
+              # This is assuming nsswitch is configured with Avahi support -
+              # this is done in NixOS via services.avahi.
+              targets = [ "air-1-bedroom-7dd3bc.local" ];
+              labels.instance = "Bedroom Air";
+            }
+          ];
         }
       ];
 
@@ -136,6 +151,16 @@ in
   age-template.files."alertmanager.env" = {
     vars.pass = config.age.secrets.alertmanager-gmail-password.path;
     content = ''ALERTMANAGER_GMAIL_PASSWORD="$pass"'';
+  };
+
+  # For finding ESPHome devices on the LAN. Note this seems to be a bit fragile
+  # wrt dual-stack, at least on NixOS 25.11 - seems like maybe if the ESPHome
+  # devices are IPv4-only, this needs to also be IPv4-only, and if it's dual
+  # stack this needs to be dual stack.
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    nssmdns6 = true;
   };
 
   bjackman.impermanence.extraPersistence.directories =
