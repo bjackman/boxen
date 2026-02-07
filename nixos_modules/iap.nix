@@ -94,31 +94,31 @@ in
     };
   };
 
-  config = lib.mkIf cfg.host {
-    services.caddy =
-      let
-        # Given a node configuration, produce a list of the service definitions
-        # for that node. We also merge in a "host" attribute to each service
-        # definition that identifies the host the service is on.
-        # Note this assumes all of the homelabConfigs import the module so that
-        # the bjackman.iap.services module exists.
-        nodeServices =
-          nodeConfig:
-          lib.mapAttrsToList (
-            name: service:
-            # Hack: see if the hostname is the same as the current
-            # configuration's hostname, if it is then use "localhost". Otherwise
-            # we assume we can directly access the host by its name.
-            let
-              localHost = config.networking.hostName;
-              remoteHost = nodeConfig.networking.hostName;
-              host = if remoteHost == localHost then "localhost" else remoteHost;
-            in
-            service // { inherit host; }
-          ) nodeConfig.bjackman.iap.services;
-        allServices = lib.concatMap nodeServices (builtins.attrValues homelabConfigs);
-      in
-      {
+  config =
+    let
+      # Given a node configuration, produce a list of the service definitions
+      # for that node. We also merge in a "host" attribute to each service
+      # definition that identifies the host the service is on.
+      # Note this assumes all of the homelabConfigs import the module so that
+      # the bjackman.iap.services module exists.
+      nodeServices =
+        nodeConfig:
+        lib.mapAttrsToList (
+          name: service:
+          # Hack: see if the hostname is the same as the current
+          # configuration's hostname, if it is then use "localhost". Otherwise
+          # we assume we can directly access the host by its name.
+          let
+            localHost = config.networking.hostName;
+            remoteHost = nodeConfig.networking.hostName;
+            host = if remoteHost == localHost then "localhost" else remoteHost;
+          in
+          service // { inherit host; }
+        ) nodeConfig.bjackman.iap.services;
+      allServices = lib.concatMap nodeServices (builtins.attrValues homelabConfigs);
+    in
+    lib.mkIf cfg.host {
+      services.caddy = {
         enable = true;
         package = pkgs.caddy.withPlugins {
           plugins = [ "github.com/caddy-dns/cloudflare@v0.2.2" ];
@@ -180,148 +180,148 @@ in
           )}
         '';
       };
-    age-template.files."caddy.env" = {
-      vars.token = config.age.secrets.cloudflare-dns-api-token.path;
-      content = "CLOUDFLARE_API_TOKEN=$token";
-    };
-    systemd.services.caddy.serviceConfig.EnvironmentFile = [
-      config.age-template.files."caddy.env".path
-    ];
-    networking.firewall.allowedTCPPorts = [
-      80
-      443
-    ];
-
-    age.secrets =
-      let
-        mkSecret = name: {
-          file = ../secrets/authelia + "/${name}.age";
-          mode = "440";
-          group = config.services.authelia.instances.main.group;
-        };
-      in
-      {
-        authelia-jwt-secret = mkSecret "jwt-secret";
-        authelia-storage-encryption-key = mkSecret "storage-encryption-key";
-        authelia-session-secret = mkSecret "session-secret";
-        authelia-passwords-json = mkSecret "passwords.json";
-        authelia-hmac-secret = mkSecret "hmac-secret";
-        authelia-oidc-privkey = mkSecret "oidc-priv.pem";
+      age-template.files."caddy.env" = {
+        vars.token = config.age.secrets.cloudflare-dns-api-token.path;
+        content = "CLOUDFLARE_API_TOKEN=$token";
       };
-    bjackman.derived-secrets.files."authelia_users.json" = {
-      script = ''
-        "${lib.getExe pkgs.jq}" -n \
-          --argjson users ${lib.escapeShellArg (builtins.toJSON config.bjackman.homelab.users)} \
-          --argjson passwords "$(cat "${config.age.secrets.authelia-passwords-json.path}")" \
-          '{
-            users: ($users | map({
-              key: .name,
-              value: {
-                password: $passwords[.name],
-                displayname: .displayName,
-                email: .email,
-                # Map the admin boolean to the "admin" group string
-                groups: (if .admin then ["admin"] else [] end)
-              }
-            }) | from_entries)
-          }'
-      '';
-      mode = "440";
-      group = config.services.authelia.instances.main.group;
-    };
-
-    services.authelia.instances.main = with config.age.secrets; {
-      enable = true;
-
-      # These options are higher-level functionality provided by the nixpkgs
-      # packaging, this doesn't directly correspond to the Authelia secrets
-      # system it just populates some other settings values in a nice way.
-      secrets = with config.age.secrets; {
-        jwtSecretFile = authelia-jwt-secret.path;
-        storageEncryptionKeyFile = authelia-storage-encryption-key.path;
-        sessionSecretFile = authelia-session-secret.path;
-        oidcHmacSecretFile = authelia-hmac-secret.path;
-        oidcIssuerPrivateKeyFile = authelia-oidc-privkey.path;
-      };
-
-      settings = {
-        server.address = "tcp://:${builtins.toString autheliaPort}/";
-
-        authentication_backend = {
-          password_reset.disable = true;
-          # Authelia has nice ways to read files/env vars and then do templating
-          # on them. So you'd think we'd be able to define the users in Nix and
-          # then just inject the password hashes as secrets. But, the user
-          # config file is a kinda static resource that doesn't support that.
-          # So we use a more fancy technique where the file is generated at
-          # runtime.
-          file.path = config.bjackman.derived-secrets.files."authelia_users.json".path;
-        };
-
-        storage.local.path = "/var/lib/authelia-main/db.sqlite3";
-
-        access_control = {
-          default_policy = "deny";
-          rules = lib.mapAttrsToList (name: service: {
-            domain = [ "${service.subdomain}.${domain}" ];
-            # If using OIDC, disable the ForwardAuth middleware.
-            policy = if service.oidc.enable then "bypass" else "one_factor";
-          }) cfg.services;
-        };
-
-        session = {
-          name = "session";
-          cookies = [
-            {
-              domain = "${domain}";
-              authelia_url = "https://auth.${domain}";
-            }
-          ];
-        };
-
-        identity_providers.oidc.clients = lib.concatMap (
-          s: lib.optional s.oidc.enable s.oidc.autheliaConfig
-        ) (builtins.attrValues cfg.services);
-
-        # This is a dummy for sending email notifications. It's required for the
-        # configuration to validate. I think for the way I've set this up (e.g. no
-        # password reset flow), this is unused.
-        notifier.filesystem.filename = "/var/lib/authelia-main/notification.txt";
-      };
-    };
-
-    systemd.services."authelia-main" = {
-      # Reload the service when the secret changes - since its path is fixed
-      # (/run/agenix/authelia-passwords-json) changes to this won't actually change
-      # the content of the Authelia config itself so we need to be explicit here.
-      restartTriggers = [
-        config.age.secrets.authelia-passwords-json.file
+      systemd.services.caddy.serviceConfig.EnvironmentFile = [
+        config.age-template.files."caddy.env".path
       ];
-      # https://www.authelia.com/configuration/methods/files/#file-filters
-      environment.X_AUTHELIA_CONFIG_FILTERS = "template";
-    };
+      networking.firewall.allowedTCPPorts = [
+        80
+        443
+      ];
 
-    bjackman.impermanence.extraPersistence.directories = [
-      # Actually only need to persist db.sqlite3 but having symlinks to individual
-      # files like that is awkward with systemd sandboxing. So just persist the
-      # whole directory.
-      {
-        directory = "/var/lib/authelia-main";
-        mode = "0700";
-        user = "authelia-main";
-        group = "authelia-main";
-      }
-      # Persist certificates so we don't get rate-limited by Let's Encrypt.
-      (
+      age.secrets =
         let
-          service = config.systemd.services.caddy.serviceConfig;
+          mkSecret = name: {
+            file = ../secrets/authelia + "/${name}.age";
+            mode = "440";
+            group = config.services.authelia.instances.main.group;
+          };
         in
         {
-          directory = "/var/lib/caddy";
+          authelia-jwt-secret = mkSecret "jwt-secret";
+          authelia-storage-encryption-key = mkSecret "storage-encryption-key";
+          authelia-session-secret = mkSecret "session-secret";
+          authelia-passwords-json = mkSecret "passwords.json";
+          authelia-hmac-secret = mkSecret "hmac-secret";
+          authelia-oidc-privkey = mkSecret "oidc-priv.pem";
+        };
+      bjackman.derived-secrets.files."authelia_users.json" = {
+        script = ''
+          "${lib.getExe pkgs.jq}" -n \
+            --argjson users ${lib.escapeShellArg (builtins.toJSON config.bjackman.homelab.users)} \
+            --argjson passwords "$(cat "${config.age.secrets.authelia-passwords-json.path}")" \
+            '{
+              users: ($users | map({
+                key: .name,
+                value: {
+                  password: $passwords[.name],
+                  displayname: .displayName,
+                  email: .email,
+                  # Map the admin boolean to the "admin" group string
+                  groups: (if .admin then ["admin"] else [] end)
+                }
+              }) | from_entries)
+            }'
+        '';
+        mode = "440";
+        group = config.services.authelia.instances.main.group;
+      };
+
+      services.authelia.instances.main = with config.age.secrets; {
+        enable = true;
+
+        # These options are higher-level functionality provided by the nixpkgs
+        # packaging, this doesn't directly correspond to the Authelia secrets
+        # system it just populates some other settings values in a nice way.
+        secrets = with config.age.secrets; {
+          jwtSecretFile = authelia-jwt-secret.path;
+          storageEncryptionKeyFile = authelia-storage-encryption-key.path;
+          sessionSecretFile = authelia-session-secret.path;
+          oidcHmacSecretFile = authelia-hmac-secret.path;
+          oidcIssuerPrivateKeyFile = authelia-oidc-privkey.path;
+        };
+
+        settings = {
+          server.address = "tcp://:${builtins.toString autheliaPort}/";
+
+          authentication_backend = {
+            password_reset.disable = true;
+            # Authelia has nice ways to read files/env vars and then do templating
+            # on them. So you'd think we'd be able to define the users in Nix and
+            # then just inject the password hashes as secrets. But, the user
+            # config file is a kinda static resource that doesn't support that.
+            # So we use a more fancy technique where the file is generated at
+            # runtime.
+            file.path = config.bjackman.derived-secrets.files."authelia_users.json".path;
+          };
+
+          storage.local.path = "/var/lib/authelia-main/db.sqlite3";
+
+          access_control = {
+            default_policy = "deny";
+            rules = lib.mapAttrsToList (name: service: {
+              domain = [ "${service.subdomain}.${domain}" ];
+              # If using OIDC, disable the ForwardAuth middleware.
+              policy = if service.oidc.enable then "bypass" else "one_factor";
+            }) cfg.services;
+          };
+
+          session = {
+            name = "session";
+            cookies = [
+              {
+                domain = "${domain}";
+                authelia_url = "https://auth.${domain}";
+              }
+            ];
+          };
+
+          identity_providers.oidc.clients = lib.concatMap (
+            s: lib.optional s.oidc.enable s.oidc.autheliaConfig
+          ) (builtins.attrValues cfg.services);
+
+          # This is a dummy for sending email notifications. It's required for the
+          # configuration to validate. I think for the way I've set this up (e.g. no
+          # password reset flow), this is unused.
+          notifier.filesystem.filename = "/var/lib/authelia-main/notification.txt";
+        };
+      };
+
+      systemd.services."authelia-main" = {
+        # Reload the service when the secret changes - since its path is fixed
+        # (/run/agenix/authelia-passwords-json) changes to this won't actually change
+        # the content of the Authelia config itself so we need to be explicit here.
+        restartTriggers = [
+          config.age.secrets.authelia-passwords-json.file
+        ];
+        # https://www.authelia.com/configuration/methods/files/#file-filters
+        environment.X_AUTHELIA_CONFIG_FILTERS = "template";
+      };
+
+      bjackman.impermanence.extraPersistence.directories = [
+        # Actually only need to persist db.sqlite3 but having symlinks to individual
+        # files like that is awkward with systemd sandboxing. So just persist the
+        # whole directory.
+        {
+          directory = "/var/lib/authelia-main";
           mode = "0700";
-          user = service.User;
+          user = "authelia-main";
+          group = "authelia-main";
         }
-      )
-    ];
-  };
+        # Persist certificates so we don't get rate-limited by Let's Encrypt.
+        (
+          let
+            service = config.systemd.services.caddy.serviceConfig;
+          in
+          {
+            directory = "/var/lib/caddy";
+            mode = "0700";
+            user = service.User;
+          }
+        )
+      ];
+    };
 }
