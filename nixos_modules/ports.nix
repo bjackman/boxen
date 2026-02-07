@@ -2,6 +2,8 @@
 # You can just set bjackman.ports.foo = {} and then access
 # config.bjackman.ports.foo.port and get a unique port among everything else
 # using this option in the config.
+# It might not really make sense that this is completely separate from iap.nix,
+# not sure.
 { lib, config, ... }:
 let
   cfg = config.bjackman.ports;
