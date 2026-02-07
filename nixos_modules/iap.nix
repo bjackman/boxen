@@ -262,11 +262,11 @@ in
 
           access_control = {
             default_policy = "deny";
-            rules = lib.mapAttrsToList (name: service: {
+            rules = builtins.map (service: {
               domain = [ "${service.subdomain}.${domain}" ];
               # If using OIDC, disable the ForwardAuth middleware.
               policy = if service.oidc.enable then "bypass" else "one_factor";
-            }) cfg.services;
+            }) allServices;
           };
 
           session = {
@@ -281,7 +281,7 @@ in
 
           identity_providers.oidc.clients = lib.concatMap (
             s: lib.optional s.oidc.enable s.oidc.autheliaConfig
-          ) (builtins.attrValues cfg.services);
+          ) allServices;
 
           # This is a dummy for sending email notifications. It's required for the
           # configuration to validate. I think for the way I've set this up (e.g. no
