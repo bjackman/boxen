@@ -142,6 +142,28 @@ home-manager build
 NIX_REMOTE= nix-diff result result.old
 ```
 
+## ESPHome
+
+I have an Apollo Air 1 on my LAN. It comes pre-flashed and I configured it via
+its captive portal hotspot to connect to my WiFi. However I wanted to add
+Prometheus metric support so I have a customized build that imports the upstream
+config from the supplier.
+
+First you need to populate `esphome/secrets.yaml` with the `wifi_ssid` and
+`wifi_password` properties.
+
+The NixOS ESPHome packaging seems to be broken. Instead set up Podman with
+Docker compat mode (https://wiki.nixos.org/wiki/Podman) then do this from the
+`esphome` dir:
+
+```sh
+podman  run --rm -v "$PWD":/config -it ghcr.io/esphome/esphome  run apollo-air.yaml --device 192.168.178.109
+```
+
+That will compile and install the updated firmware and then show you the logs -
+when you're done you can just terminate this process and the firmware will keep
+running.
+
 ## Mail
 
 ### How it works
