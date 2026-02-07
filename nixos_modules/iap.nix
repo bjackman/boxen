@@ -20,67 +20,69 @@ in
     ./users.nix
   ];
 
-  options.bjackman.iap.services = lib.mkOption {
-    type =
-      with lib.types;
-      attrsOf (
-        submodule (
-          { config, ... }:
-          {
-            options = {
-              name = lib.mkOption {
-                type = str;
-                default = config._module.args.name;
-                description = "Name of the service";
-              };
-              subdomain = lib.mkOption {
-                type = str;
-                default = config._module.args.name;
-                description = "Subdomain to proxy the service under";
-              };
-              port = lib.mkOption {
-                type = int;
-                description = "Port the service exposes on localhost";
-              };
-              oidc = {
-                enable = lib.mkOption {
-                  type = bool;
-                  description = ''
-                    Use OIDC instead of forward_auth.
-
-                    Service is directly reverse-proxied by Caddy. Hopefully it
-                    isn't trivially pwnable via its login page. It will then need
-                    to be configured to do SSO via Authelia.
-                  '';
-                  default = false;
+  options.bjackman.iap = {
+    services = lib.mkOption {
+      type =
+        with lib.types;
+        attrsOf (
+          submodule (
+            { config, ... }:
+            {
+              options = {
+                name = lib.mkOption {
+                  type = str;
+                  default = config._module.args.name;
+                  description = "Name of the service";
                 };
-                autheliaConfig = lib.mkOption {
-                  type = attrs;
-                  description = ''
-                    Client configuration to add to Athelia's client list for
-                    this service.
+                subdomain = lib.mkOption {
+                  type = str;
+                  default = config._module.args.name;
+                  description = "Subdomain to proxy the service under";
+                };
+                port = lib.mkOption {
+                  type = int;
+                  description = "Port the service exposes on localhost";
+                };
+                oidc = {
+                  enable = lib.mkOption {
+                    type = bool;
+                    description = ''
+                      Use OIDC instead of forward_auth.
 
-                    https://www.authelia.com/configuration/identity-providers/openid-connect/clients/
-                  '';
+                      Service is directly reverse-proxied by Caddy. Hopefully it
+                      isn't trivially pwnable via its login page. It will then need
+                      to be configured to do SSO via Authelia.
+                    '';
+                    default = false;
+                  };
+                  autheliaConfig = lib.mkOption {
+                    type = attrs;
+                    description = ''
+                      Client configuration to add to Athelia's client list for
+                      this service.
+
+                      https://www.authelia.com/configuration/identity-providers/openid-connect/clients/
+                    '';
+                  };
+                };
+                url = lib.mkOption {
+                  type = str;
+                  readOnly = true;
+                  description = "URL where the service is available via the proxy";
+                  default = "https://${config.subdomain}.${domain}";
                 };
               };
-              url = lib.mkOption {
-                type = str;
-                readOnly = true;
-                description = "URL where the service is available via the proxy";
-                default = "https://${config.subdomain}.${domain}";
-              };
-            };
-          }
-        )
-      );
-  };
-  # TODO: Probably instead of a special URL authelia should just be a service
-  # that doesn't have OIDC _or_ forward_auth enabled.
-  options.bjackman.iap.autheliaUrl = lib.mkOption {
-    type = lib.types.str;
-    default = "https://auth.home.yawn.io";
-    readOnly = true;
+            }
+          )
+        );
+    };
+    # TODO: Probably instead of a special URL authelia should just be a service
+    # that doesn't have OIDC _or_ forward_auth enabled.
+    autheliaUrl = lib.mkOption {
+      type = lib.types.str;
+      default = "https://auth.home.yawn.io";
+      readOnly = true;
+    };
   };
 
   config = {
