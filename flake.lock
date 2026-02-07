@@ -413,7 +413,6 @@
       },
       "original": {
         "owner": "nvmd",
-        "ref": "develop",
         "repo": "nixos-raspberrypi",
         "type": "github"
       }

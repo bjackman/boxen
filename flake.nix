@@ -35,8 +35,7 @@
     # nixos-hardware has support for raspberry-pi but unclear how to actually
     # use it.
     nixos-raspberrypi = {
-      # Using the 'develop' branch since that's synced to 25.11
-      url = "github:nvmd/nixos-raspberrypi/develop";
+      url = "github:nvmd/nixos-raspberrypi";
       # Don't set input.nixpkgs.follows because this nixos-raspberrypi thing is
       # pretty fucked up and overrides its nixpkgs in weird ways.
     };
