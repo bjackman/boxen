@@ -1,5 +1,16 @@
 esphome:
   name: air-1-bedroom
+  # Set the "default" brightness of the LEDs. I'm not too sure why this can only
+  # be done statefully like this but whatever.
+  # This leads to the lights being switched on on boot, they stay in that state
+  # until the first CO2 sensor reading updates it. This seems kinda useful
+  # anyway to show that the thing is booting up.
+  on_boot:
+    priority: -10
+    then:
+      - light.turn_on:
+          id: rgb_light
+          brightness: 20%
 ota:
   - platform: esphome
 packages:
@@ -73,9 +84,6 @@ sensor:
                       debug_mode ? "DEBUG" : "SENSOR", co2, linear_green, green_ch);
 
               auto call = id(rgb_light).turn_on();
-
-              float max_bright = 0.2;
-              call.set_brightness(max_bright);
 
               call.set_transition_length(debug_mode ? 0 : 2000);
               call.set_rgb(1.0, green_ch, 0.0);
