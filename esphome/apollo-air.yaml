@@ -1,32 +1,24 @@
 esphome:
   name: air-1-bedroom
-
 ota:
   - platform: esphome
-
 packages:
   remote_package:
     url: https://github.com/ApolloAutomation/AIR-1
     ref: main
     files: [Integrations/ESPHome/AIR-1.yaml]
     refresh: 0s
-
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Air-1-Bedroom Fallback Hotspot"
-
 captive_portal:
-
 prometheus:
-
 # NixOS 25.11's Avahi->nsswitch setup fails for IPv4-only devices.
 network:
   enable_ipv6: true
-
 sensor:
   - id: !extend scd40
     co2:

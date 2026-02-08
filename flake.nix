@@ -130,6 +130,7 @@
         projectRootFile = "flake.nix";
         programs.nixfmt.enable = true;
         programs.mdformat.enable = true;
+        programs.yamlfmt.enable = true;
       };
     in
     {
