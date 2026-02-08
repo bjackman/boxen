@@ -25,18 +25,10 @@
     library = {
       virtualFolders = [
         {
-          name = "Transmission Movies";
+          name = "Radarr Movies";
           collectionType = "movies";
           libraryOptions = {
-            pathInfos = [ { path = "/var/lib/transmission"; } ];
-          };
-        }
-        {
-          # TODO: Try renaming this?
-          name = "NFS Movies";
-          collectionType = "movies";
-          libraryOptions = {
-            pathInfos = [ { path = "/mnt/nas-media"; } ];
+            pathInfos = [ { path = "/mnt/nas-media/radarr"; } ];
           };
         }
       ];
