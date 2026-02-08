@@ -19,13 +19,36 @@ prometheus:
 # NixOS 25.11's Avahi->nsswitch setup fails for IPv4-only devices.
 network:
   enable_ipv6: true
+number:
+  - platform: template
+    name: "Debug (fake) CO2 Level"
+    id: debug_co2_slider
+    min_value: 400
+    max_value: 2000
+    step: 10
+    initial_value: 1000
+    optimistic: true
+    on_value:
+      then:
+        - component.update: scd40
+switch:
+  - platform: template
+    name: "Debug (fake) CO2 Level enabled"
+    id: led_debug_mode
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - component.update: scd40
+    on_turn_off:
+      - component.update: scd40
 sensor:
   - id: !extend scd40
     co2:
       on_value:
         then:
           - lambda: |-
-              float co2 = x;
+              // Use either fake or real CO2 state depending on user setting.
+              float co2 = (id(led_debug_mode).state) ? id(debug_co2_slider).state : x;
 
               if (co2 < 1000) {
                 // Good, lights off
