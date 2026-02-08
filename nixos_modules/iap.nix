@@ -15,7 +15,6 @@ in
 {
   imports = [
     agenix.nixosModules.default
-    agenix-template.nixosModules.default
     ./derived-secrets.nix
     ./impermanence.nix
     ./users.nix
@@ -180,12 +179,11 @@ in
           )}
         '';
       };
-      age-template.files."caddy.env" = {
-        vars.token = config.age.secrets.cloudflare-dns-api-token.path;
-        content = "CLOUDFLARE_API_TOKEN=$token";
+      bjackman.derived-secrets.envFiles.caddy.vars = {
+        CLOUDFLARE_API_TOKEN = config.age.secrets.cloudflare-dns-api-token.path;
       };
       systemd.services.caddy.serviceConfig.EnvironmentFile = [
-        config.age-template.files."caddy.env".path
+        config.bjackman.derived-secrets.envFiles.caddy.path
       ];
       networking.firewall.allowedTCPPorts = [
         80

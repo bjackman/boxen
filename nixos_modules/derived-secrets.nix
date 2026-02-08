@@ -10,12 +10,15 @@
   config,
   pkgs,
   lib,
+  agenix-template,
   ...
 }:
 let
   cfg = config.bjackman.derived-secrets;
 in
 {
+  imports = [ agenix-template.nixosModules.default ];
+
   options.bjackman.derived-secrets = {
     directory = lib.mkOption {
       type = lib.types.path;
@@ -73,6 +76,39 @@ in
       description = "Derived secret files to generate";
       default = { };
     };
+
+    envFiles = lib.mkOption {
+      type =
+        with lib.types;
+        attrsOf (
+          submodule (
+            { name, ... }:
+            {
+              options = {
+                vars = lib.mkOption {
+                  type = attrsOf path;
+                  description = ''
+                    Attrset mapping environment variable names to secret files that
+                    will contain the desired value in the generated .env file.
+                  '';
+                };
+                path = lib.mkOption {
+                  type = path;
+                  readOnly = true;
+                  description = ''
+                    Path of the generated .env file
+                  '';
+                  default = config.age-template.files."${name}.env".path;
+                };
+              };
+            }
+          )
+        );
+      default = { };
+      description = ''
+        Convenience option for generating .env files via agenix-template.
+      '';
+    };
   };
 
   config = {
@@ -99,5 +135,15 @@ in
         '';
       };
     }) cfg.files;
+
+    age-template.files = lib.mapAttrs' (
+      name: cfg:
+      lib.nameValuePair "${name}.env" {
+        inherit (cfg) vars;
+        content = lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (varName: _: "${varName}=\$${varName}") cfg.vars
+        );
+      }
+    ) cfg.envFiles;
   };
 }
