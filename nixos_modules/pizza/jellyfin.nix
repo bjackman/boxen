@@ -5,6 +5,12 @@
   ];
 
   hardware.graphics.enable = true;
+  # Tried this to fix an issue, it didn't fix the issue, but these groups do own
+  # interesting looking files so whatever maybe it makes sense.
+  users.users.jellyfin.extraGroups = [
+    "video"
+    "render"
+  ];
 
   services.jellarr.config = {
     encoding = {
