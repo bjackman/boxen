@@ -47,27 +47,36 @@ sensor:
       on_value:
         then:
           - lambda: |-
-              // Use either fake or real CO2 state depending on user setting.
-              float co2 = (id(led_debug_mode).state) ? id(debug_co2_slider).state : x;
+              // Select source (real/debug) of CO2 reading
+              bool debug_mode = id(led_debug_mode).state;
+              float co2 = debug_mode ? id(debug_co2_slider).state : x;
 
               if (co2 < 1000) {
-                // Good, lights off
                 id(rgb_light).turn_off().perform();
                 return;
               }
 
+              // Use the green channel for a gradient between yellow (a.k.a
+              // red+green) and red. Seems to work best if nonlinear.
+              // This is still imperfect though. I think the issue is that the
+              // system lacks granularity at low brightnesses so the green
+              // channel effectively jumps to zero and the thing goes full red
+              // too early. Whatever.
+              float linear_green = 1.0 - ((co2 - 1000.0) / 1000.0);
+              if (co2 >= 2000) linear_green = 0.0;
+              if (linear_green < 0) linear_green = 0.0;
+              if (linear_green > 1.0) linear_green = 1.0;
+
+              float green_ch = sqrt(linear_green);
+
+              ESP_LOGD("LED_CALC", "Mode: %s | CO2: %.1f | Linear G: %.3f | Sqrt G: %.3f",
+                      debug_mode ? "DEBUG" : "SENSOR", co2, linear_green, green_ch);
+
               auto call = id(rgb_light).turn_on();
-              call.set_brightness(0.15);
-              call.set_transition_length(2000); // 2s smooth morph between updates
 
-              if (co2 >= 1500) {
-                // Go red for very high level
-                call.set_rgb(1.0, 0.0, 0.0);
-              } else {
-                // Use green channel to create a gradient between yellow
-                // (red+green) at 1000 and red at 1500.
-                float green_level = 1.0 - ((co2 - 1000.0) / 500.0);
-                call.set_rgb(1.0, green_level, 0.0);
-              }
+              float max_bright = 0.2;
+              call.set_brightness(max_bright);
 
+              call.set_transition_length(debug_mode ? 0 : 2000);
+              call.set_rgb(1.0, green_ch, 0.0);
               call.perform();
