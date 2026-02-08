@@ -8,6 +8,7 @@ in
     ./ports.nix
     ./iap.nix
     ./postgres.nix
+    ./derived-secrets.nix
   ];
 
   bjackman.ports = {
@@ -16,6 +17,11 @@ in
 
   bjackman.iap.services = {
     inherit (ports) radarr;
+  };
+
+  age.secrets.radarr-api-key.file = ../secrets/radarr-api-key.age;
+  bjackman.derived-secrets.envFiles.radarr.vars = {
+    RADARR__AUTH__APIKEY = config.age.secrets.radarr-api-key.path;
   };
 
   services.radarr = {
@@ -28,5 +34,6 @@ in
       };
       auth.method = "External";
     };
+    environmentFiles = [ config.bjackman.derived-secrets.envFiles.radarr.path ];
   };
 }
