@@ -1,8 +1,10 @@
-{ ... }:
+{ pkgs, ... }:
 {
   imports = [
     ../jellyfin.nix
   ];
+
+  hardware.graphics.enable = true;
 
   services.jellarr.config = {
     encoding = {
