@@ -55,11 +55,6 @@
 
   # So that GDM and Gnome and stuff have a persistent monitors setup.
   environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
-  # TODO: This doesn't work, I think coz gnome does fancy stuff with atomic file
-  # updates that are incompatible with the symlink model or something?
-  bjackman.impermanence.extraPersistence.users.brendan.files = [
-    ".config/gnome-initial-setup-done"
-  ];
 
   programs.steam.enable = true;
 
