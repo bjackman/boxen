@@ -16,7 +16,7 @@
     encoding = {
       enableHardwareEncoding = true;
       # Intel graphics.
-      hardwareAccelerationType = "qsv";
+      hardwareAccelerationType = "vaapi";
       # This stuff all comes from Gemini, it could definitely be wrong.
       hardwareDecodingCodecs = [
         "h264"
@@ -27,6 +27,8 @@
         "vp9"
       ];
       enableDecodingColorDepth10Hevc = true;
+      # AI suggested I enable this when switching to VAAPI, I dunno whatever.
+      enableDecodingColorDepth10Vp9 = true;
       allowHevcEncoding = true;
       allowAv1Encoding = false; # UHD 620 cannot encode or decode AV1 (says Gemini)
     };
