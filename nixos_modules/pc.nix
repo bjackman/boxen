@@ -59,6 +59,8 @@
   # networkmanager also being enabled. Disable it explicitly.
   networking.wireless.enable = false;
 
+  hardware.bluetooth.enable = true;
+
   services.tailscale.enable = true;
 
   bjackman.impermanence.extraPersistence.users.brendan.directories = [
