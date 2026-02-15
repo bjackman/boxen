@@ -58,5 +58,7 @@
 	"trailing-spaces.trimOnSave": true,
 	"trailing-spaces.deleteModifiedLinesOnly": true,
 	"vim.useSystemClipboard": true,
-	"remote.SSH.useExecServer": false,
+	// https://github.com/microsoft/vscode-remote-release/issues/2509
+	"remote.SSH.useLocalServer": false,
+	"remote.SSH.remotePlatform": { "chungito.bonito-coho.ts.net": "linux" }
 }
