@@ -38,6 +38,8 @@
       url = "github:nvmd/nixos-raspberrypi";
       # Don't set input.nixpkgs.follows because this nixos-raspberrypi thing is
       # pretty fucked up and overrides its nixpkgs in weird ways.
+      # (Hopefully fixed when https://github.com/nvmd/nixos-raspberrypi/pull/131
+      # is merged)
     };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
