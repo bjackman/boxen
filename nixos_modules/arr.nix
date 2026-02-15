@@ -13,20 +13,21 @@ in
 
   bjackman.ports = {
     radarr = { };
+    sonarr = { };
   };
 
   bjackman.iap.services = {
-    inherit (ports) radarr;
+    inherit (ports) radarr sonarr;
   };
 
-  users.groups.radarr-api = { };
-  age.secrets.radarr-api-key = {
-    file = ../secrets/radarr-api-key.age;
+  users.groups.arr-api = { };
+  age.secrets.arr-api-key = {
+    file = ../secrets/arr-api-key.age;
     mode = "0740";
-    group = "radarr-api";
+    group = "arr-api";
   };
-  bjackman.derived-secrets.envFiles.radarr.vars = {
-    RADARR__AUTH__APIKEY = config.age.secrets.radarr-api-key.path;
+  bjackman.derived-secrets.envFiles.arr.vars = {
+    RADARR__AUTH__APIKEY = config.age.secrets.arr-api-key.path;
   };
 
   services.radarr = {
@@ -39,7 +40,20 @@ in
       };
       auth.method = "External";
     };
-    environmentFiles = [ config.bjackman.derived-secrets.envFiles.radarr.path ];
+    environmentFiles = [ config.bjackman.derived-secrets.envFiles.arr.path ];
+  };
+
+  services.sonarr = {
+    enable = true;
+    openFirewall = true;
+    settings = {
+      server = {
+        port = ports.sonarr.port;
+        bindaddress = "*";
+      };
+      auth.method = "External";
+    };
+    environmentFiles = [ config.bjackman.derived-secrets.envFiles.arr.path ];
   };
 
   # This is a bit ridiculous lol. Recyclarr is a tool that pulls down
@@ -69,12 +83,12 @@ in
   # reasonable encodings available.
   services.recyclarr = {
     enable = true;
-    group = "radarr-api";
+    group = "arr-api";
     # I got this by running `recyclarr config create --template uhd-bluray-web`
     # and then translating the generated YAMl file into Nix.
     configuration.radarr.uhd-bluray-web = {
       base_url = "http://localhost:${toString ports.radarr.port}";
-      api_key._secret = config.age.secrets.radarr-api-key.path;
+      api_key._secret = config.age.secrets.arr-api-key.path;
       # I think that the Thing Recyclarr Actually Does is primarily about
       # providing the templates that we instantiate here.
       include = [
