@@ -20,4 +20,7 @@
     source = "${pkgs.zed-editor.remote_server}/bin";
     recursive = true;
   };
+
+  # Needed so I can run the Terraform deploy script
+  age.secrets.arr-api-key.file = ../secrets/arr-api-key.age;
 }

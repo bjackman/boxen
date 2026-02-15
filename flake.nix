@@ -164,6 +164,7 @@
         # package and we can have Limmat build it.
         format = treefmtCfg.config.build.check self;
         add-user = pkgs.callPackage ./packages/add-user.nix { };
+        deploy-tf = pkgs.callPackage ./tf/deploy.nix { };
       };
 
       # This defines the configurations for machines using standalone
