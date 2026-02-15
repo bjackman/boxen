@@ -13,4 +13,10 @@
     # have to compile the cross-rustc lol.
     "github:bjackman/boxen/master#deploy.nodes.norte.profiles.system.path"
   ];
+
+  # https://wiki.nixos.org/wiki/Zed#Remote_server
+  home.file.".zed_server" = {
+    source = "${pkgs.zed-editor.remote_server}/bin";
+    recursive = true;
+  };
 }
