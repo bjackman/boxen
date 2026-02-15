@@ -1,3 +1,4 @@
+{ pkgs, ... }:
 {
   bjackman.nix-warmups = [
     {
