@@ -22,10 +22,6 @@ provider "radarr" {
 # tofu state show radarr_indexer.bitmagnet
 # To dump the actual resource defined in the backend so I could copy that back
 # into the code.
-moved {
-  from = radarr_indexer.bitmagnet
-  to   = radarr_indexer_torznab.bitmagnet
-}
 
 resource "radarr_indexer_torznab" "bitmagnet" {
   name     = "BitMagnet"
