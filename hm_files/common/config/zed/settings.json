@@ -1,4 +1,17 @@
 {
+  "ssh_connections": [
+    {
+      "host": "chungito.bonito-coho.ts.net",
+      "args": [],
+      "projects": [
+        {
+          "paths": [
+            "/home/brendan/src/boxen"
+          ]
+        }
+      ]
+    }
+  ],
   "theme": "One Dark",
   "project_panel": {
     "hide_gitignore": true
