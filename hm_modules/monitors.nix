@@ -116,8 +116,8 @@
             {
               # This should match both my personal and my work laptop.
               criteria = "eDP-1";
-              # Below the massive one
-              position = "0,2160";
+              # Below the massive one. Position is scaled to logical pixels.
+              position = "0,1728";
             }
           ];
         };
