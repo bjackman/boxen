@@ -104,6 +104,26 @@
       }
       {
         profile = {
+          name = "corp-at-hotdesk";
+          outputs = [
+            {
+              # 32inch but lower res
+              criteria = "Dell Inc. DELL P3223QE 7W80N04";
+              mode = "3840x2160";
+              position = "0,0";
+              scale = 1.25;
+            }
+            {
+              # This should match both my personal and my work laptop.
+              criteria = "eDP-1";
+              # Below the massive one
+              position = "0,2160";
+            }
+          ];
+        };
+      }
+      {
+        profile = {
           name = "corp-jp-hotdesk";
           outputs = [
             {
