@@ -49,6 +49,10 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    microvm = {
+      url = "github:microvm-nix/microvm.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -161,6 +165,10 @@
           spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
           spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
           slopclone = final.callPackage ./packages/slopclone { };
+          slopbox = final.callPackage ./packages/slopbox {
+            inherit inputs;
+            username = "brendan";
+          };
         };
       };
 
