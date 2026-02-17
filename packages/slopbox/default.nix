@@ -4,6 +4,7 @@
   pkgs,
   inputs,
   username,
+  slopSrc,
   ...
 }:
 let
@@ -31,6 +32,12 @@ let
                 tag = "ro-store";
                 source = "/nix/store";
                 mountPoint = "/nix/.ro-store";
+              }
+              {
+                tag = "src";
+                source = slopSrc;
+                mountPoint = "/src";
+                securityModel = "mapped";
               }
             ];
             interfaces = [

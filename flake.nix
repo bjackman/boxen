@@ -168,6 +168,8 @@
           slopbox = final.callPackage ./packages/slopbox {
             inherit inputs;
             username = "brendan";
+            # TODO: Configurate
+            slopSrc = "/usr/local/google/home/jackmanb/src/slop";
           };
         };
       };
