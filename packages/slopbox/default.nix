@@ -1,4 +1,7 @@
-# NixOS module for the claudebox microvm guest
+# Started hacking this together to have a VM a bit like stapelberg's to run LLM
+# coding agents. Goal was to have something that worked in Google corp. But, I
+# forgot that you aren't supposed to run VMs in Google corp. Authing with corp
+# credentials on a non-Corp device (VM) is not supported. Gave up.
 {
   lib,
   pkgs,
