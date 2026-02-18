@@ -152,6 +152,7 @@
           notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute { };
           spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
           spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
+          slopclone = final.callPackage ./packages/slopclone { };
         };
       };
 
