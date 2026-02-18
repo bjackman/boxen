@@ -54,6 +54,10 @@ let
                 size = 2048;
               }
             ];
+            qemu.extraArgs = [
+              "-device"
+              "vhost-vsock-pci,guest-cid=101"
+            ];
           };
 
           users.users.${username} = {
@@ -64,6 +68,12 @@ let
           };
           security.sudo.wheelNeedsPassword = false;
           services.getty.autologinUser = username;
+
+          services.openssh = {
+            enable = true;
+            settings.PermitEmptyPasswords = "yes";
+          };
+          security.pam.services.sshd.allowNullPassword = true;
 
           environment.systemPackages = with pkgs; [
             coreutils
