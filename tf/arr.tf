@@ -29,19 +29,6 @@ variable "bitmagnet_torznab_url" {
   type      = string
 }
 
-resource "radarr_indexer_torznab" "bitmagnet" {
-  name     = "BitMagnet"
-  api_path = "/api"
-  base_url = var.bitmagnet_torznab_url
-  # Dunno what these mean they were the backend's default.
-  categories = [2000, 2030, 2040, 2045, 2060]
-  enable_rss = true
-  # Dunno what these means but without it the UI complains
-  enable_automatic_search   = true
-  enable_interactive_search = true
-  priority                  = 25
-}
-
 variable "transmission_password" {
   type      = string
   sensitive = true
@@ -57,6 +44,19 @@ variable "transmission_port" {
   sensitive = true
 }
 
+resource "radarr_indexer_torznab" "bitmagnet" {
+  name     = "BitMagnet"
+  api_path = "/api"
+  base_url = var.bitmagnet_torznab_url
+  # Dunno what these mean they were the backend's default.
+  categories = [2000, 2030, 2040, 2045, 2060]
+  enable_rss = true
+  # Dunno what these means but without it the UI complains
+  enable_automatic_search   = true
+  enable_interactive_search = true
+  priority                  = 25
+}
+
 resource "radarr_download_client_transmission" "transmission" {
   name     = "Transmission"
   host     = "localhost"
@@ -69,4 +69,29 @@ resource "radarr_download_client_transmission" "transmission" {
 
 resource "radarr_root_folder" "movies" {
   path = "/mnt/nas/media/radarr"
+}
+
+resource "sonarr_indexer_torznab" "bitmagnet" {
+  name     = "BitMagnet"
+  api_path = "/api"
+  base_url = var.bitmagnet_torznab_url
+  enable_rss = true
+  # Dunno what these means but without it the UI complains
+  enable_automatic_search   = true
+  enable_interactive_search = true
+  priority                  = 25
+}
+
+resource "sonarr_download_client_transmission" "transmission" {
+  name     = "Transmission"
+  host     = "localhost"
+  port     = var.transmission_port
+  priority = 25
+  enable   = true
+  username = var.transmission_username
+  password = var.transmission_password
+}
+
+resource "sonarr_root_folder" "movies" {
+  path = "/mnt/nas/media/sonarr"
 }
