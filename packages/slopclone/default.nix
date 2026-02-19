@@ -1,2 +1,1 @@
-{ pkgs, ... }:
-pkgs.writeShellScriptBin "slopclone" (builtins.readFile ./slopclone.sh)
+{ pkgs, ... }: pkgs.writeShellScriptBin "slopclone" (builtins.readFile ./slopclone.sh)
