@@ -89,21 +89,56 @@ in
     group = "arr-api";
     # I got this by running `recyclarr config create --template uhd-bluray-web`
     # and then translating the generated YAMl file into Nix.
-    configuration.radarr.uhd-bluray-web = {
-      base_url = "http://localhost:${toString ports.radarr.port}";
-      api_key._secret = config.age.secrets.arr-api-key.path;
-      # I think that the Thing Recyclarr Actually Does is primarily about
-      # providing the templates that we instantiate here.
-      include = [
-        { template = "radarr-quality-definition-movie"; }
-        { template = "radarr-quality-profile-uhd-bluray-web"; }
-        { template = "radarr-custom-formats-uhd-bluray-web"; }
-      ];
-      custom_formats = [
-        # IIUC this is about avoiding downloads of files that only contain Dolby
-        # Video encoding. I don't understand how it does that.
-        { trash_ids = [ "9c38ebb7384dada637be8899efa68e6f" ]; }
-      ];
+    configuration = {
+      radarr.uhd-bluray-web = {
+        base_url = "http://localhost:${toString ports.radarr.port}";
+        api_key._secret = config.age.secrets.arr-api-key.path;
+        # I think that the Thing Recyclarr Actually Does is primarily about
+        # providing the templates that we instantiate here.
+        include = [
+          { template = "radarr-quality-definition-movie"; }
+          { template = "radarr-quality-profile-uhd-bluray-web"; }
+          { template = "radarr-custom-formats-uhd-bluray-web"; }
+        ];
+        custom_formats = [
+          # IIUC this is about avoiding downloads of files that only contain Dolby
+          # Video encoding. I don't understand how it does that.
+          { trash_ids = [ "9c38ebb7384dada637be8899efa68e6f" ]; }
+        ];
+      };
+      # Hm, this defines a "Web-1080p" profile that is probably way higher
+      # quality than what I want. Leaving it in here coz it does seem to work
+      # but it behaves pretty similar to the Radarr one above, i.e. downloads
+      # very large files. Maybe I want
+      # https://github.com/Dictionarry-Hub/profilarr not sure.
+      sonarr.web-1080p-v4 = {
+        base_url = "http://localhost:${toString ports.sonarr.port}";
+        api_key._secret = config.age.secrets.arr-api-key.path;
+        include = [
+          { template = "sonarr-quality-definition-series"; }
+          { template = "sonarr-v4-quality-profile-web-1080p"; }
+          { template = "sonarr-v4-custom-formats-web-1080p"; }
+        ];
+        # IIUC these are about allowing certain extra-compressed formats - this
+        # comes from the template (recyclarr config create --template
+        # web-1080p-v4)
+        custom_formats = [
+          {
+            trash_ids = [
+              "47435ece6b99a0b477caf360e79ba0bb" # x265 (HD)
+              "9b64dff695c2115facf1b6ea59c9bd07" # x265 (no HDR/DV)
+            ];
+            assign_scores_to = [
+              {
+                name = "WEB-1080p";
+                # AI suggested increasing the score here to get more
+                # space-efficient files. The template sets this differently.
+                score = 100;
+              }
+            ];
+          }
+        ];
+      };
     };
   };
 }
