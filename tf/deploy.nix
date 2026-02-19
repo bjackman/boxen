@@ -17,21 +17,5 @@
 pkgs.writeShellApplication {
   name = "deploy-tf";
   runtimeInputs = with pkgs; [ opentofu ];
-  text = ''
-    # TODO: Get this from the NixOS configuration
-    export RADARR_URL=http://norte:9000
-
-    api_key_file="$XDG_RUNTIME_DIR/agenix/arr-api-key"
-    if [ ! -f "$api_key_file" ]; then
-      echo "$api_key_file not found, you probably need to set up age.secrets.arr-api-key in your Home Manager config"
-      exit 1
-    fi
-    RADARR_API_KEY=$(cat "$api_key_file")
-    export RADARR_API_KEY
-
-    # TODO: Get the password from an Agenix secret
-
-    cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf"
-    tofu apply
-  '';
+  text = builtins.readFile ./deploy.sh;
 }

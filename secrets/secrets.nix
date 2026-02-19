@@ -40,6 +40,9 @@ in
   # the hash, I wrote it into the settings.json manually and then restarted the
   # service. The transmission edits the settings file lol.
   "transmission-rpc-password.json.age".publicKeys = all-personal;
+  # This is the raw hash for my user in transmission. I believe this was the
+  # value I wrote into the JSON file in the step described above.
+  "transmission-password.age".publicKeys = all-personal;
   # This is a weak password so encrypt it instead of just checking in the salted
   # hash. Ideally I'd prefer to limit this to only being available to
   # chungito-host. However unfortunately agenix just has a single rekey

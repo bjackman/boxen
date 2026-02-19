@@ -22,5 +22,8 @@
   };
 
   # Needed so I can run the Terraform deploy script
-  age.secrets.arr-api-key.file = ../secrets/arr-api-key.age;
+  age.secrets = {
+    arr-api-key.file = ../secrets/arr-api-key.age;
+    transmission-password.file = ../secrets/transmission-password.age;
+  };
 }
