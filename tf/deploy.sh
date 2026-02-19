@@ -1,5 +1,6 @@
-# TODO: Get this from the NixOS configuration
+# TODO: Get these from the NixOS configuration
 export RADARR_URL=http://norte:9000
+export TF_VAR_bitmagnet_torznab_url=http://pizza:9000/torznab
 
 read_secret() {
     local name="$1"
