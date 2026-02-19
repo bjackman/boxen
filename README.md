@@ -68,21 +68,25 @@ can rekey secrets to allow it to access them.
 
 ## TODOs
 
-- [ ] Fix borked machines
+- [x] Fix borked machines
 - [x] Unbrick deadlocked Norte
 - [x] Unbrick remote pizza access
-- [ ] Figure out where ZFS media went on norte
+- [x] Figure out where ZFS media went on norte
 - [ ] Get watchdogs working (test with `ls /mnt/nas/.zfs/snapshots/*/media`)
-- [ ] Investigate if `sops-nix` is better than `agenix`. Main goal is we need to
+- [x] Investigate if `sops-nix` is better than `agenix`. Main goal is we need to
   be able to generate stuff like configs containing secrets, on the host.
-- [ ] Get Authelia running
-- [ ] Get FileBrowser running
-- [ ] Get FileBrowser accepting auth from Athelia
-- [ ] Make creating Authelia users more practical
-- [ ] Make creating FileBrowser users more practical
-- [ ] Make FileBrowser able to access NAS data (read/write)
-- [ ] Set up some monitoring. In particular it would be nice to know about
+  (Conclusion: agenix-template and also my own custom stuff, see
+  `derived-secrets.nix`)
+- [x] Get Authelia running
+- [x] Get FileBrowser running
+- [x] Get FileBrowser accepting auth from Athelia
+- [x] Make creating Authelia users more practical
+- [x] Make creating FileBrowser users more practical
+- [x] Make FileBrowser able to access NAS data (read/write)
+- [x] Set up some monitoring. In particular it would be nice to know about
   watchdog resets.
+- [ ] See "TF TODOs" and TODO comments throughout tf/ dir
+- [ ] Delete NFS server code, pretty sure I'm a Samba guy now.
 
 ## Inspecting the config
 
