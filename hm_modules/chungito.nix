@@ -1,5 +1,7 @@
 { pkgs, ... }:
 {
+  imports = [ ./homelab-ctrl.nix ];
+
   bjackman.nix-warmups = [
     {
       flakeRef = "github:bjackman/boxen/master#nixosConfigurations.norte.config.system.build.toplevel";
@@ -19,11 +21,5 @@
   home.file.".zed_server" = {
     source = "${pkgs.zed-editor.remote_server}/bin";
     recursive = true;
-  };
-
-  # Needed so I can run the Terraform deploy script
-  age.secrets = {
-    arr-api-key.file = ../secrets/arr-api-key.age;
-    transmission-password.file = ../secrets/transmission-password.age;
   };
 }

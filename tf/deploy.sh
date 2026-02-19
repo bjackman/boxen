@@ -7,7 +7,7 @@ read_secret() {
 
     file="$XDG_RUNTIME_DIR/agenix/$name"
     if [ ! -f "$file" ]; then
-        echo "$file not found, you probably need to set up age.secrets.$name in your Home Manager config"
+        echo "$file not found, you probably need to import the homelab-ctrl Home Manager module."
         exit 1
     fi
     export "$var=$(cat "$file")"
