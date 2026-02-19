@@ -26,10 +26,10 @@ in
     mode = "0740";
     group = "arr-api";
   };
-  bjackman.derived-secrets.envFiles.arr.vars = {
+
+  bjackman.derived-secrets.envFiles.radarr.vars = {
     RADARR__AUTH__APIKEY = config.age.secrets.arr-api-key.path;
   };
-
   services.radarr = {
     enable = true;
     openFirewall = true;
@@ -40,9 +40,12 @@ in
       };
       auth.method = "External";
     };
-    environmentFiles = [ config.bjackman.derived-secrets.envFiles.arr.path ];
+    environmentFiles = [ config.bjackman.derived-secrets.envFiles.radarr.path ];
   };
 
+  bjackman.derived-secrets.envFiles.sonarr.vars = {
+    SONARR__AUTH__APIKEY = config.age.secrets.arr-api-key.path;
+  };
   services.sonarr = {
     enable = true;
     openFirewall = true;
@@ -53,7 +56,7 @@ in
       };
       auth.method = "External";
     };
-    environmentFiles = [ config.bjackman.derived-secrets.envFiles.arr.path ];
+    environmentFiles = [ config.bjackman.derived-secrets.envFiles.sonarr.path ];
   };
 
   # This is a bit ridiculous lol. Recyclarr is a tool that pulls down
