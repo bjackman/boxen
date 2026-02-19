@@ -4,14 +4,16 @@ terraform {
       source  = "devopsarr/radarr"
       version = "2.3.5"
     }
+    sonarr = {
+      source  = "devopsarr/sonarr"
+      version = "3.4.2"
+    }
   }
 }
 
-# Leave these empty, use env
-provider "radarr" {
-  # url     = ENV: RADARR_URL
-  # api_key = ENV: RADARR_API_KEY
-}
+# These are configured via the environment, see the deploy wrapper.
+provider "radarr" {}
+provider "sonarr" {}
 
 # Docs for the TF provider:
 # https://registry.terraform.io/providers/devopsarr/radarr/latest/docs/resources/indexer

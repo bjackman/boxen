@@ -1,5 +1,6 @@
 # TODO: Get these from the NixOS configuration
 export RADARR_URL=http://norte:9000
+export SONARR_URL=http://norte:9003
 export TF_VAR_bitmagnet_torznab_url=http://pizza:9000/torznab
 
 read_secret() {
@@ -15,6 +16,7 @@ read_secret() {
 }
 
 read_secret "arr-api-key" RADARR_API_KEY
+read_secret "arr-api-key" SONARR_API_KEY
 
 # TODO: Get the password from an Agenix secret
 
