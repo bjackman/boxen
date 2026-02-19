@@ -47,13 +47,23 @@ variable "transmission_password" {
   sensitive = true
 }
 
+variable "transmission_username" {
+  type      = string
+  sensitive = true
+}
+
+variable "transmission_port" {
+  type      = number
+  sensitive = true
+}
+
 resource "radarr_download_client_transmission" "transmission" {
   name     = "Transmission"
   host     = "localhost"
-  port     = 9003
+  port     = var.transmission_port
   priority = 25
   enable   = true
-  username = "brendan"
+  username = var.transmission_username
   password = var.transmission_password
 }
 
