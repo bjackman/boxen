@@ -26,7 +26,7 @@ provider "sonarr" {}
 # into the code.
 
 variable "bitmagnet_torznab_url" {
-  type      = string
+  type = string
 }
 
 variable "transmission_password" {
@@ -72,9 +72,9 @@ resource "radarr_root_folder" "movies" {
 }
 
 resource "sonarr_indexer_torznab" "bitmagnet" {
-  name     = "BitMagnet"
-  api_path = "/api"
-  base_url = var.bitmagnet_torznab_url
+  name       = "BitMagnet"
+  api_path   = "/api"
+  base_url   = var.bitmagnet_torznab_url
   enable_rss = true
   # Dunno what these means but without it the UI complains
   enable_automatic_search   = true
