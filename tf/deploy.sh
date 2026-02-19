@@ -16,5 +16,7 @@ read_secret() {
 
 read_secret "arr-api-key" RADARR_API_KEY
 
+# TODO: Get the password from an Agenix secret
+
 cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf"
 tofu apply
