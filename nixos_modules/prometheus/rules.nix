@@ -30,23 +30,6 @@
       name = "host";
       rules = [
         {
-          alert = "HostOutOfMemory";
-          annotations = {
-            description = ''
-              Node memory is filling up (< 10% left)
-                VALUE = {{ $value }}
-                LABELS = {{ $labels }}
-            '';
-            summary = "Host out of memory (instance {{ $labels.instance }})";
-          };
-          expr = ''
-            (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10)
-            * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
-          '';
-          for = "2m";
-          labels.severity = "warning";
-        }
-        {
           alert = "HostMemoryUnderMemoryPressure";
           annotations = {
             description = ''
