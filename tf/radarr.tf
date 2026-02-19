@@ -36,19 +36,12 @@ resource "radarr_indexer_torznab" "bitmagnet" {
   priority                  = 25
 }
 
-variable "transmission_password" {
-  type      = string
-  sensitive = true
-}
-
 resource "radarr_download_client_transmission" "transmission" {
   name     = "Transmission"
   host     = "localhost"
   port     = 9003
   priority = 25
   enable   = true
-  username = "brendan"
-  password = var.transmission_password
 }
 
 resource "radarr_root_folder" "movies" {
