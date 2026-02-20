@@ -35,10 +35,17 @@
     library = {
       virtualFolders = [
         {
-          name = "Radarr Movies";
+          name = "Movies";
           collectionType = "movies";
           libraryOptions = {
             pathInfos = [ { path = "/mnt/nas-media/radarr"; } ];
+          };
+        }
+        {
+          name = "TV Shows";
+          collectionType = "tvshows";
+          libraryOptions = {
+            pathInfos = [ { path = "/mnt/nas-media/sonarr"; } ];
           };
         }
       ];
