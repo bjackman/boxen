@@ -3,6 +3,7 @@
   pkgs,
   lib,
   nixpkgs-unstable, # from specialArgs
+  nix-index-database,
   ...
 }:
 {
@@ -14,6 +15,7 @@
     ./zed.nix
     ./scripts.nix
     ./nix-warmup.nix
+    nix-index-database.homeModules.default
   ];
 
   options = {
@@ -94,6 +96,7 @@
       btop
       jq
       iw
+      comma
     ];
     programs.bash.enable = true;
 

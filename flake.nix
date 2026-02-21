@@ -45,6 +45,10 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -71,6 +75,7 @@
       nixos-hardware,
       nixos-raspberrypi,
       treefmt-nix,
+      nix-index-database,
       ...
     }:
     let
@@ -127,6 +132,7 @@
         inherit agenix;
         inherit nixpkgs;
         inherit nixpkgs-unstable;
+        inherit nix-index-database;
       };
       treefmtCfg = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
