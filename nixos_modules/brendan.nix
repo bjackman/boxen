@@ -7,6 +7,7 @@
     description = "Brendan Jackman";
     extraGroups = [
       "wheel"
+      "kvm"
     ];
     shell = pkgs.fish;
     openssh.authorizedKeys.keys = [
