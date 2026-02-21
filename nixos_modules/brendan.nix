@@ -1,7 +1,5 @@
 { pkgs, ... }:
 {
-  imports = [ ./impermanence.nix ];
-
   users.users.brendan = {
     isNormalUser = true;
     description = "Brendan Jackman";

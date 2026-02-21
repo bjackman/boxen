@@ -14,7 +14,7 @@
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix
-    ../incus.nix
+    ../microvm-host.nix
   ];
 
   networking.hostName = "chungito";

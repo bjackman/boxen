@@ -49,6 +49,10 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    microvm = {
+      url = "github:microvm-nix/microvm.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -279,7 +283,7 @@
             modules = [ ./nixos_modules/norte ];
             inherit specialArgs;
           };
-          slopbox = nixos-raspberrypi.lib.nixosSystem {
+          slopbox = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             modules = [ ./nixos_modules/slopbox.nix ];
             inherit specialArgs;

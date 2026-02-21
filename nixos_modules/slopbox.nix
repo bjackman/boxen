@@ -1,10 +1,9 @@
-{ modulesPath, ... }:
+{ config, microvm, ... }:
 {
   imports = [
-    "${modulesPath}/virtualisation/incus-virtual-machine.nix"
-    "${modulesPath}/profiles/minimal.nix"
     ./brendan.nix
     ./common.nix
+    microvm.nixosModules.microvm
   ];
 
   services.openssh = {
@@ -12,4 +11,25 @@
     settings.PasswordAuthentication = false;
   };
   security.sudo.wheelNeedsPassword = false;
+
+  networking.hostName = "slopbox";
+
+  microvm = {
+    hypervisor = "cloud-hypervisor";
+    shares = [
+      {
+        tag = "ro-store";
+        source = "/nix/store";
+        mountPoint = "/nix/.ro-store";
+        proto = "virtiofs";
+      }
+    ];
+    volumes = [
+      {
+        image = "nix-store-overlay.img";
+        mountPoint = config.microvm.writableStoreOverlay;
+        size = 2048;
+      }
+    ];
+  };
 }
