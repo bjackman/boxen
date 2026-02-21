@@ -30,7 +30,7 @@
     lib.mkIf isArm [ "aarch64-linux" ];
 
   # Run a regular service to optimize the Nix store.
-  nix.optimise.automatic = true;
+  nix.optimise.automatic = lib.mkDefault true;
 
   # Stuff that's useful when poking around in a root shell
   environment.systemPackages = with pkgs; [
