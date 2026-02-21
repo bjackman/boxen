@@ -85,13 +85,16 @@ can rekey secrets to allow it to access them.
 - [x] Make FileBrowser able to access NAS data (read/write)
 - [x] Set up some monitoring. In particular it would be nice to know about
   watchdog resets.
-- [ ] See "TF TODOs" and TODO comments throughout tf/ dir
+- [x] Figure out how to integrate values from Nix into the TF configuration
+- [ ] Figure out how to run OpenTofu as part of the Nix deployment (maybe run it
+  on Pizza?)
 - [ ] Delete NFS server code, pretty sure I'm a Samba guy now.
 - [ ] Clean up `specialArgs` (for both NixOS and Home Manager). I think I probably
   just want to pass `inputs` into the modules.
 - [ ] See if it's possible to virtualise these systems so that I can vibe-code
   in this repo.
 - [ ] Run Woodpecker CI (or similar) in homelab.
+- [ ] Set up cloud archive backups
 
 ## Inspecting the config
 
@@ -192,13 +195,6 @@ tofu apply
 Note that OpenTofu relies on a statefile to remember the IDs and stuff, so to do
 this cleanly for the moment it will always need to be done from the computer
 with that statefile on it.
-
-TF TODOs:
-
-- Figure out how to run OpenTofu as part of the Nix deployment (maybe run it on
-  Pizza?)
-- Figure out how to have this wait until the relevant APIs are available
-- Put secrets into it
 
 ## Mail
 
