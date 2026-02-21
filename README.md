@@ -87,6 +87,11 @@ can rekey secrets to allow it to access them.
   watchdog resets.
 - [ ] See "TF TODOs" and TODO comments throughout tf/ dir
 - [ ] Delete NFS server code, pretty sure I'm a Samba guy now.
+- [ ] Clean up `specialArgs` (for both NixOS and Home Manager). I think I probably
+  just want to pass `inputs` into the modules.
+- [ ] See if it's possible to virtualise these systems so that I can vibe-code
+  in this repo.
+- [ ] Run Woodpecker CI (or similar) in homelab.
 
 ## Inspecting the config
 
