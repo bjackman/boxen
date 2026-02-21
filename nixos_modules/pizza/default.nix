@@ -5,7 +5,6 @@
   agenix,
   nixos-hardware,
   lib,
-  otherConfigs,
   ...
 }:
 {

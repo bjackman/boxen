@@ -4,7 +4,7 @@
   config,
   agenix,
   agenix-template,
-  otherConfigs,
+  homelab,
   ...
 }:
 {
@@ -31,7 +31,7 @@
                   let
                     name = config._module.args.name;
                   in
-                  otherConfigs.sambaServer.bjackman.samba.users.${name};
+                  homelab.servers.samba.bjackman.samba.users.${name};
                 description = ''
                   Reference to the server's definition of the user in the
                   bjackman.samba.users option.
@@ -76,7 +76,7 @@
           content = ''
             username=${mountCfg.sambaUser.name}
             password=$password
-            domain=${otherConfigs.sambaServer.services.samba.settings.global.workgroup}
+            domain=${homelab.servers.samba.services.samba.settings.global.workgroup}
           '';
         }
       ) cfg;
@@ -84,7 +84,7 @@
       fileSystems = lib.mapAttrs' (
         name: mountCfg:
         lib.nameValuePair mountCfg.mountpoint {
-          device = "//${otherConfigs.sambaServer.networking.hostName}/${mountCfg.sambaUser.shareName}";
+          device = "//${homelab.servers.samba.networking.hostName}/${mountCfg.sambaUser.shareName}";
           fsType = "cifs";
           options = [
             "x-systemd.automount"

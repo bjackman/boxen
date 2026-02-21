@@ -229,18 +229,22 @@
           # that depends on them. For example this means you can import the
           # impermanence module near the code that set up impermanence settings.
           specialArgs = inputs // {
-            # Also allow different nodes' configs to refer to each other in
-            # cases where they are coupled.
-            otherConfigs = {
-              nfsServer = self.nixosConfigurations.norte.config;
-              sambaServer = self.nixosConfigurations.norte.config;
-              jellyfinServer = self.nixosConfigurations.pizza.config;
-            };
-            # Similar thing for the nodes in the homelab for stuff that cares
-            # about that, like Prometheus.
-            homelabConfigs = {
-              pizza = self.nixosConfigurations.pizza.config;
-              norte = self.nixosConfigurations.norte.config;
+            # Allow different nodes' configs to refer to each other in cases
+            # where they are coupled.
+            homelab = rec {
+              # For cases where we actually care about the nodes themselves, use
+              # this:
+              nodes = {
+                pizza = self.nixosConfigurations.pizza.config;
+                norte = self.nixosConfigurations.norte.config;
+              };
+              # And this is for cases where we just want "the machine running
+              # the X server".
+              servers = {
+                nfs = nodes.norte;
+                samba = nodes.norte;
+                jellyfin = nodes.pizza;
+              };
             };
           };
         in

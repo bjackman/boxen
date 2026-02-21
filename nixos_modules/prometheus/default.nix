@@ -3,7 +3,7 @@
   pkgs,
   lib,
   agenix-template,
-  homelabConfigs,
+  homelab,
   ...
 }:
 let
@@ -34,7 +34,7 @@ in
           static_configs =
             let
               exporterEnabled = c: c.services.prometheus.exporters.${exporterName}.enable;
-              nodes = builtins.filter exporterEnabled (builtins.attrValues homelabConfigs);
+              nodes = builtins.filter exporterEnabled (builtins.attrValues homelab.nodes);
             in
             builtins.map (
               nodeConfig:
@@ -76,7 +76,7 @@ in
                 }) nodeConfig.bjackman.restic-exporter.instances;
               # Not all nodes will import the module so the restic-exporter
               # option might not exist.
-              nodes = builtins.filter (c: c.bjackman ? restic-exporter) (builtins.attrValues homelabConfigs);
+              nodes = builtins.filter (c: c.bjackman ? restic-exporter) (builtins.attrValues homelab.nodes);
             in
             lib.concatMap nodeTargets nodes;
         }

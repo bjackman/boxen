@@ -4,7 +4,7 @@
   config,
   agenix,
   agenix-template,
-  homelabConfigs,
+  homelab,
   ...
 }:
 let
@@ -98,7 +98,7 @@ in
       # Given a node configuration, produce a list of the service definitions
       # for that node. We also merge in a "host" attribute to each service
       # definition that identifies the host the service is on.
-      # Note this assumes all of the homelabConfigs import the module so that
+      # Note this assumes all of the homelab.nodes import the module so that
       # the bjackman.iap.services module exists.
       nodeServices =
         nodeConfig:
@@ -114,7 +114,7 @@ in
           in
           service // { inherit host; }
         ) nodeConfig.bjackman.iap.services;
-      allServices = lib.concatMap nodeServices (builtins.attrValues homelabConfigs);
+      allServices = lib.concatMap nodeServices (builtins.attrValues homelab.nodes);
     in
     lib.mkIf cfg.host {
       services.caddy = {

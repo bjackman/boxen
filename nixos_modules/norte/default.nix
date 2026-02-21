@@ -3,7 +3,7 @@
   config,
   modulesPath,
   nixos-raspberrypi,
-  otherConfigs,
+  homelab,
   ...
 }:
 let
@@ -121,7 +121,7 @@ in
       ExecStart =
         let
           jellyfinUrl =
-            with otherConfigs.jellyfinServer;
+            with homelab.servers.jellyfin;
             "http://${networking.hostName}.fritz.box:${builtins.toString bjackman.jellyfin.httpPort}";
           # watchexec prints the command it's running, which is useful, but it
           # risks leaking the API key into the journal. So put the actual key
