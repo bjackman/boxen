@@ -13,9 +13,29 @@
 # store secrets in the state file - so we'd actually only need to inject
 # variables once. But then if the value changed we'd need to remember to update
 # the state. So we just set up the environment completely every time.
-{ pkgs }:
+{ pkgs, homelab }:
 pkgs.writeShellApplication {
   name = "deploy-tf";
   runtimeInputs = with pkgs; [ opentofu ];
   text = builtins.readFile ./deploy.sh;
+  runtimeEnv =
+    let
+      getService = service: rec {
+        server = homelab.servers.${service};
+        port = server.bjackman.ports.${service}.port;
+      };
+      mkUrl =
+        name:
+        let
+          service = getService name;
+        in
+        "http://${service.server.networking.hostName}:${toString service.port}";
+    in
+    {
+      RADARR_URL = mkUrl "radarr";
+      SONARR_URL = mkUrl "sonarr";
+      TF_VAR_bitmagnet_torznab_url = "${mkUrl "bitmagnet"}/torznab";
+      TF_VAR_transmission_username = "brendan";
+      TF_VAR_transmission_port = toString (getService "transmission").port;
+    };
 }

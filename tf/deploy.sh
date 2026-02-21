@@ -1,10 +1,3 @@
-# TODO: Get these from the NixOS configuration
-export RADARR_URL=http://norte:9000
-export SONARR_URL=http://norte:9003
-export TF_VAR_bitmagnet_torznab_url=http://pizza:9000/torznab
-export TF_VAR_transmission_username=brendan
-export TF_VAR_transmission_port=9004
-
 read_secret() {
     local name="$1"
     local var="$2"

@@ -144,6 +144,27 @@
         programs.mdformat.enable = true;
         programs.yamlfmt.enable = true;
       };
+      # Allow different nodes' configs to refer to each other in cases
+      # where they are coupled.
+      homelab = rec {
+        # For cases where we actually care about the nodes themselves, use
+        # this:
+        nodes = {
+          pizza = self.nixosConfigurations.pizza.config;
+          norte = self.nixosConfigurations.norte.config;
+        };
+        # And this is for cases where we just want "the machine running
+        # the X server".
+        servers = {
+          nfs = nodes.norte;
+          samba = nodes.norte;
+          jellyfin = nodes.pizza;
+          bitmagnet = nodes.pizza;
+          radarr = nodes.norte;
+          sonarr = nodes.norte;
+          transmission = nodes.norte;
+        };
+      };
     in
     {
       formatter."${system}" = treefmtCfg.config.build.wrapper;
@@ -174,7 +195,7 @@
         # package and we can have Limmat build it.
         format = treefmtCfg.config.build.check self;
         add-user = pkgs.callPackage ./packages/add-user.nix { };
-        deploy-tf = pkgs.callPackage ./tf/deploy.nix { };
+        deploy-tf = pkgs.callPackage ./tf/deploy.nix { inherit homelab; };
       };
 
       # This defines the configurations for machines using standalone
@@ -229,23 +250,7 @@
           # that depends on them. For example this means you can import the
           # impermanence module near the code that set up impermanence settings.
           specialArgs = inputs // {
-            # Allow different nodes' configs to refer to each other in cases
-            # where they are coupled.
-            homelab = rec {
-              # For cases where we actually care about the nodes themselves, use
-              # this:
-              nodes = {
-                pizza = self.nixosConfigurations.pizza.config;
-                norte = self.nixosConfigurations.norte.config;
-              };
-              # And this is for cases where we just want "the machine running
-              # the X server".
-              servers = {
-                nfs = nodes.norte;
-                samba = nodes.norte;
-                jellyfin = nodes.pizza;
-              };
-            };
+            inherit homelab;
           };
         in
         {

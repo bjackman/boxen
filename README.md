@@ -195,9 +195,6 @@ with that statefile on it.
 
 TF TODOs:
 
-- Figure out how to integrate values from Nix into the TF configuration
-  (probably this means skipping `.tf` and generating the TF config from Nix
-  code?).
 - Figure out how to run OpenTofu as part of the Nix deployment (maybe run it on
   Pizza?)
 - Figure out how to have this wait until the relevant APIs are available
