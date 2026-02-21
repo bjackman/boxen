@@ -14,6 +14,7 @@
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix
+    ../incus.nix
   ];
 
   networking.hostName = "chungito";
