@@ -279,10 +279,9 @@
             modules = [ ./nixos_modules/norte ];
             inherit specialArgs;
           };
-          # This is for building a VM image intended to run (imperatively) via Incus.
-          incvm = nixos-raspberrypi.lib.nixosSystem {
+          slopbox = nixos-raspberrypi.lib.nixosSystem {
             system = "x86_64-linux";
-            modules = [ ./nixos_modules/incvm.nix ];
+            modules = [ ./nixos_modules/slopbox.nix ];
             inherit specialArgs;
           };
         };
