@@ -22,6 +22,9 @@ You have internet access, you are behind a NAT on my personal computer. Because
 of this NAT, it is usually safe to run services that listen on 0.0.0.0 since I
 will not expose incoming traffic to the internet.
 
+The VM is quite small - if you hit disk or memory limits, ask me. It's likely
+that I can fix the issue for you.
+
 ## Using Git
 
 ### Normal mode
