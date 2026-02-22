@@ -145,12 +145,7 @@ in
 
           @home host ${domain}
           handle @home {
-            root * ${
-              pkgs.runCommand "homepage" { nativeBuildInputs = [ pkgs.lowdown ]; } ''
-                mkdir $out
-                lowdown -s ${../www/index.md} -o $out/index.html
-              ''
-            }
+            root * ${pkgs.bjackman.homepage}
             file_server
           }
 

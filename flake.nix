@@ -181,6 +181,7 @@
         # Put all the packages defined this way under the "bjackman" key so it's
         # obvious at the usage site that they come from an overlay.
         bjackman = {
+          homepage = final.callPackage ./packages/homepage { src = ./packages/homepage; };
           notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute { };
           spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
           spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
@@ -189,6 +190,7 @@
       };
 
       packages."${system}" = pkgs.bjackman // {
+        homepage = pkgs.bjackman.homepage;
         # This is really a "check" but having it in there is super fucking
         # annoying because it causes deploy-rs to fail. So, just put it as a
         # package and we can have Limmat build it.
@@ -365,17 +367,25 @@
         ))
         // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations);
 
-      devShells."${system}".default = pkgs.mkShell {
-        packages = [
-          home-manager.packages."${system}".default
-          limmat.packages."${system}".default
-          pkgs.agenix
-          pkgs.nix-diff
-          pkgs.nixos-rebuild
-          deploy-rs.packages.x86_64-linux.default
-          pkgs.perses # For percli
-          pkgs.cue
-        ];
+      devShells."${system}" = {
+        default = pkgs.mkShell {
+          packages = [
+            home-manager.packages."${system}".default
+            limmat.packages."${system}".default
+            pkgs.agenix
+            pkgs.nix-diff
+            pkgs.nixos-rebuild
+            deploy-rs.packages.x86_64-linux.default
+            pkgs.perses # For percli
+            pkgs.cue
+          ];
+        };
+        homepage = pkgs.mkShell {
+          packages = [
+            pkgs.pandoc
+            pkgs.python3 # For python3 -m http.server
+          ];
+        };
       };
     };
 

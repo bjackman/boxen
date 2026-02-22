@@ -180,6 +180,40 @@ That will compile and install the updated firmware and then show you the logs -
 when you're done you can just terminate this process and the firmware will keep
 running.
 
+## Developing the Homepage
+
+The homepage at `https://home.yawn.io` is a simple static site built with `pandoc` from Markdown.
+
+### Building
+
+To build the homepage package:
+
+```sh
+nix build .#homepage
+```
+
+The output will be in `./result`.
+
+### Local Development
+
+To work on the homepage locally with a dev shell:
+
+```sh
+nix develop .#homepage
+```
+
+Inside the shell, you can preview changes:
+
+```sh
+# Build the HTML
+pandoc packages/homepage/index.md --standalone --css packages/homepage/style.css -o index.html
+
+# Start a local server
+python3 -m http.server
+```
+
+Then open `http://localhost:8000` in your browser.
+
 ## Terraform
 
 For stuff that isn't really designed to be configured declaratively, I

@@ -10,6 +10,8 @@
     agenix.nixosModules.default
   ];
 
+  nixpkgs.overlays = [ self.outputs.overlays.default ];
+
   # Set up the default soft ulimit for open
   # file descriptors. Without this I've run into "too many open files" during
   # Nix builds.
