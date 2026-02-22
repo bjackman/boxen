@@ -98,6 +98,7 @@ can rekey secrets to allow it to access them.
   in this repo.
 - [ ] Run Woodpecker CI (or similar) in homelab.
 - [ ] Set up cloud archive backups
+- [ ] Set up SeaweedFS (or similar) in homelab.
 
 ## Inspecting the config
 
@@ -182,22 +183,11 @@ running.
 ## Terraform
 
 For stuff that isn't really designed to be configured declaratively, I
-eventually realised that the ideal model is Terraform. So far I've set this up
-for Radarr but it isn't properly integrated into the rest of the config, so you
-need to:
+eventually realised that the ideal model is Terraform. This is integrated into
+the rest of the config but it doesn't get deployed by deploy-rs.
 
-```sh
-nix shell nixpkgs#opentofu
-cd tf/
-export RADARR_URL=http://norte:9000
-export RADARR_API_KEY=<key from /var/lib/radarr/.config/Radarr/config.xml>
-export TF_VAR_transmission_password=<raw unhashed RPC password>
-tofu apply
-```
-
-Note that OpenTofu relies on a statefile to remember the IDs and stuff, so to do
-this cleanly for the moment it will always need to be done from the computer
-with that statefile on it.
+Just run `nix run .#deploy-tf` to deploy it. Note Terraform relies on a
+statefile which I haven't backed up anywhere right now.
 
 ## Mail
 
