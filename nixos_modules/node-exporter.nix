@@ -10,7 +10,6 @@
       "hwmon"
       "loadavg"
       "meminfo"
-      "nfs"
       "nvme"
       "os"
       "pcidevice"

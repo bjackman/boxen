@@ -6,9 +6,6 @@
   homelab,
   ...
 }:
-let
-  nfsCfg = config.bjackman.nfsServer;
-in
 {
   # This was figured out with great pain and anguish, not by reading docs.
   imports = [
@@ -25,7 +22,6 @@ in
     # Need to run {Rad,Son}arr locally so they can do hardlinks
     ../arr.nix
     ./restic-exporter.nix
-    ./nfs-server.nix
     ./samba-server.nix
     ./sftp-server.nix
     ./zfs.nix
@@ -82,7 +78,7 @@ in
   users.groups.media-writers = { };
   systemd.services.transmission.serviceConfig = {
     SupplementaryGroups = [ "media-writers" ];
-    ReadWritePaths = [ nfsCfg.mediaDir ];
+    ReadWritePaths = [ "/mnt/nas/media" ];
   };
   services.transmission.settings = {
     download-dir = "/mnt/nas/media/transmission/downloads";
@@ -102,7 +98,21 @@ in
       "${config.services.transmission.settings.download-dir}".d = def;
     };
 
-  # NFS/CIFS doesn't support file notifications so the Jellyfin watcher doesn't
+  users.groups.media-writers = { };
+  systemd.tmpfiles.settings = {
+    "10-mnt-nas-media" = {
+      "/mnt/nas/media" = {
+        d = {
+
+          group = "media-writers";
+          mode = "0775";
+          user = "root";
+        };
+      };
+    };
+  };
+
+  # CIFS doesn't support file notifications so the Jellyfin watcher doesn't
   # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
   # via the API :)
   age.secrets.jellarr-api-key.file = ../../secrets/jellarr-api-key.age;
@@ -134,7 +144,7 @@ in
         in
         # --shell=none stops watchexec from trying to use a shell from $PATH,
         # since there isn't one in the service environment.
-        "${pkgs.watchexec}/bin/watchexec --debounce 3s --watch ${nfsCfg.mediaDir} --shell=none -- ${refreshScript}";
+        "${pkgs.watchexec}/bin/watchexec --debounce 3s --watch /mnt/nas/media --shell=none -- ${refreshScript}";
       Restart = "always";
     };
   };

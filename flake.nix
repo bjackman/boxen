@@ -156,7 +156,6 @@
         # And this is for cases where we just want "the machine running
         # the X server".
         servers = {
-          nfs = nodes.norte;
           samba = nodes.norte;
           jellyfin = nodes.pizza;
           bitmagnet = nodes.pizza;

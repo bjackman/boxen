@@ -88,7 +88,7 @@ can rekey secrets to allow it to access them.
 - [x] Figure out how to integrate values from Nix into the TF configuration
 - [ ] Figure out how to run OpenTofu as part of the Nix deployment (maybe run it
   on Pizza?)
-- [ ] Delete NFS server code, pretty sure I'm a Samba guy now.
+- [x] Delete NFS server code, pretty sure I'm a Samba guy now.
 - [ ] Clean up `specialArgs` (for both NixOS and Home Manager). I think I probably
   just want to pass `inputs` into the modules.
 - [ ] See if it's possible to virtualise these systems so that I can vibe-code
