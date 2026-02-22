@@ -143,6 +143,12 @@ in
             reverse_proxy 127.0.0.1:${builtins.toString autheliaPort}
           }
 
+          @home host ${domain}
+          handle @home {
+            root * ${../www}
+            file_server
+          }
+
           ${lib.concatStringsSep "\n" (
             builtins.map (service: ''
               @${service.subdomain} host ${service.subdomain}.${domain}
