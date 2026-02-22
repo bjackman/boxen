@@ -145,7 +145,12 @@ in
 
           @home host ${domain}
           handle @home {
-            root * ${../www}
+            root * ${
+              pkgs.runCommand "homepage" { nativeBuildInputs = [ pkgs.lowdown ]; } ''
+                mkdir $out
+                lowdown -s ${../www/index.md} -o $out/index.html
+              ''
+            }
             file_server
           }
 
