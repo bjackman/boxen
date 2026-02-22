@@ -115,6 +115,33 @@ in
           service // { inherit host; }
         ) nodeConfig.bjackman.iap.services;
       allServices = lib.concatMap nodeServices (builtins.attrValues homelab.nodes);
+
+      # Proxy this service with header-based authentication.  Gemini
+      # generated the actual config and seems to have been cribbing
+      # from https://www.authelia.com/integration/proxies/caddy/. As
+      # per that doc this corresponds to the default configuration of
+      # Authelia's ForwardAuth Authz implementation.
+      #
+      # This makes a query to Authelia to get the auth state. If not
+      # authenticated it redirects to the Authelia UI. If
+      # authenticated, it adds the Remote-* headers to the request and
+      # forward it to the app.
+      #
+      # It's important that all the headers that are of security
+      # relevance are included here, so that if the user sets them in
+      # their own request, that doesn't get forwarded directly to the
+      # app (allowing users to spoof stuff).
+      #
+      # To be honest, I do now know exactly how the redirection part
+      # happens, presumably Caddy does not know the URL of the
+      # Authelia UI, so I guess Authelia must somehow (via the cookie
+      # config...?) know that URL and inform Caddy about it.
+      forwardAuth = ''
+        forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
+            uri /api/authz/forward-auth
+            copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+        }
+      '';
     in
     lib.mkIf cfg.host {
       services.caddy = {
@@ -145,6 +172,7 @@ in
 
           @home host ${domain}
           handle @home {
+            ${forwardAuth}
             root * ${pkgs.bjackman.homepage}
             file_server
           }
@@ -153,32 +181,7 @@ in
             builtins.map (service: ''
               @${service.subdomain} host ${service.subdomain}.${domain}
               handle @${service.subdomain} {
-                ${lib.optionalString (!service.oidc.enable) ''
-                  # Proxy this service with header-based authentication.  Gemini
-                  # generated the actual config and seems to have been cribbing
-                  # from https://www.authelia.com/integration/proxies/caddy/. As
-                  # per that doc this corresponds to the default configuration of
-                  # Authelia's ForwardAuth Authz implementation.
-                  #
-                  # This makes a query to Authelia to get the auth state. If not
-                  # authenticated it redirects to the Authelia UI. If
-                  # authenticated, it adds the Remote-* headers to the request and
-                  # forward it to the app.
-                  #
-                  # It's important that all the headers that are of security
-                  # relevance are included here, so that if the user sets them in
-                  # their own request, that doesn't get forwarded directly to the
-                  # app (allowing users to spoof stuff).
-                  #
-                  # To be honest, I do now know exactly how the redirection part
-                  # happens, presumably Caddy does not know the URL of the
-                  # Authelia UI, so I guess Authelia must somehow (via the cookie
-                  # config...?) know that URL and inform Caddy about it.
-                  forward_auth 127.0.0.1:${builtins.toString autheliaPort} {
-                      uri /api/authz/forward-auth
-                      copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-                  }
-                ''}
+                ${lib.optionalString (!service.oidc.enable) forwardAuth}
                 reverse_proxy ${service.host}:${builtins.toString service.port}
               }
             '') allServices
@@ -265,7 +268,13 @@ in
 
           access_control = {
             default_policy = "deny";
-            rules = builtins.map (service: {
+            rules = [
+              {
+                domain = [ "${domain}" ];
+                policy = "one_factor";
+              }
+            ]
+            ++ builtins.map (service: {
               domain = [ "${service.subdomain}.${domain}" ];
               # If using OIDC, disable the ForwardAuth middleware.
               policy = if service.oidc.enable then "bypass" else "one_factor";
