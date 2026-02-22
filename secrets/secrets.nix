@@ -66,6 +66,8 @@ in
   # echo -n '<HASH>' | agenix -e authelia/perses-client-secret-hash.age
   "authelia/perses-client-secret.age".publicKeys = all-personal;
   "authelia/perses-client-secret-hash.age".publicKeys = all-personal;
+  "authelia/jellyfin-client-secret.age".publicKeys = all-personal;
+  "authelia/jellyfin-client-secret-hash.age".publicKeys = all-personal;
   "cloudflare-ddns-api-token.age".publicKeys = all-personal;
   # nix run nixpkgs#openssl -- rand -base64 12 | agenix -e filebrowser-samba-password.age
   "filebrowser-samba-password.age".publicKeys = all-personal;

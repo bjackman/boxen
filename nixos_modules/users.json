@@ -3,7 +3,9 @@
     "email": "bhenryj0117@gmail.com",
     "groups": ["admin"]
   },
-  "ben": {},
+  "ben": {
+    "groups": ["jellyfin-users"]
+  },
   "alex": {},
   "will": {},
   "niamh": {
@@ -15,5 +17,7 @@
     "publicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHBLYhca50FT6353jP+FjEipbMY5sgiwW1KeEfakWpxh romybinswanger@Mac.fritz.box"
   },
   "timmy": {},
-  "lara": {}
+  "lara": {
+    "groups": ["jellyfin-users"]
+  }
 }
