@@ -32,7 +32,17 @@ that I can fix the issue for you.
 If _not_ in slopbox mode, do not modify the Git repository unless prompted, I
 will usually prefer to do the Git operations myself.
 
+Also, you are unlikely to be permitted to make nontrivial changes to the system
+
+- if there are tools you need that aren't already provided in your environment
+  or in this repository (via a package or a devShell), you'l need to ask the human
+  user for assistance.
+
 ### Slopbox mode
+
+If you've been prompted that you're in slopbox mode, read the rest of this
+section to understand what that means - then, ask the user for the task you
+should work on.
 
 In slopbox mode, you should make enthusiastic use of Git: try to write minimal
 commits with quality commit messages. If, while trying to solve a problem, you
@@ -58,5 +68,4 @@ the part of the codebase that is being modified; this does _not_ follow the
 "conventional commits" style. "Areas" are often nested with a slash, like
 "nixos/pizza". The biggest "areas" are `nixos` usually meaning the code under
 `nixos_modules/` or the related code in `flake.nix`, and `hm` (stands for Home
-Manager), similar but for `hm_modules/`. Check the commit history to see if
-there's a precedent for the area you're editing.
+Manager), similar but for `hm_modules/`.
