@@ -18,12 +18,9 @@ h1 {
     white-space: nowrap;
 }
 
-/* Retro Marquee Effect */
 .marquee-container {
     width: 100%;
     overflow: hidden;
-    background-color: #000080; /* Windows 95 blue */
-    border: 2px inset #FFFFFF;
     margin-bottom: 20px;
 }
 
@@ -33,7 +30,6 @@ h1 {
     white-space: nowrap;
     animation: marquee 15s linear infinite;
     font-weight: bold;
-    color: #FFFFFF;
     font-size: 2em;
 }
 
