@@ -38,8 +38,8 @@
           u:
           let
             userArgs = lib.concatStringsSep " " [
-              "--perm.admin=${lib.boolToString u.admin}"
-              "--scope=${if u.admin then "." else "users/${u.name}"}"
+              "--perm.admin=${lib.boolToString u.isAdmin}"
+              "--scope=${if u.isAdmin then "." else "users/${u.name}"}"
               # FileBrowser password shouldn't matter anyway but to avoid confusion
               "--lockPassword"
             ];

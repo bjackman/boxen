@@ -7,7 +7,7 @@
   ...
 }:
 let
-  admins = builtins.attrNames (lib.filterAttrs (_: u: u.admin) config.bjackman.homelab.users);
+  admins = builtins.attrNames (lib.filterAttrs (_: u: u.isAdmin) config.bjackman.homelab.users);
 in
 {
   imports = [

@@ -30,10 +30,16 @@
                 type = str;
                 default = "";
               };
-              admin = lib.mkOption {
-                type = bool;
-                default = false;
-                description = "Whether the user has administrative rights.";
+              groups = lib.mkOption {
+                type = with lib.types; listOf str;
+                default = [ ];
+                description = "Groups the user belongs to.";
+              };
+              isAdmin = lib.mkOption {
+                type = lib.types.bool;
+                default = lib.elem "admin" config.groups;
+                readOnly = true;
+                description = "Whether the user is an administrator (calculated from groups).";
               };
               enableSftp = lib.mkOption {
                 type = bool;
