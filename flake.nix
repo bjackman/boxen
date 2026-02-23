@@ -131,12 +131,8 @@
       # the flake inputs via specialArgs, I just listed them explicitly where I
       # instantiate the config. For the pkgsUnstable thing, an alternative would
       # just be to inject the pacakges into pkgs, via an overlay.
-      hmSpecialArgs = {
+      hmSpecialArgs = inputs // {
         inherit pkgsUnstable;
-        inherit agenix;
-        inherit nixpkgs;
-        inherit nixpkgs-unstable;
-        inherit nix-index-database;
       };
       treefmtCfg = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
