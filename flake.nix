@@ -53,6 +53,10 @@
       url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    llm-agents = {
+      url = "github:numtide/llm-agents.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -80,6 +84,7 @@
       nixos-raspberrypi,
       treefmt-nix,
       nix-index-database,
+      llm-agents,
       ...
     }:
     let
@@ -90,6 +95,7 @@
           self.overlays.default
           deploy-rs.overlays.default
           agenix.overlays.default
+          llm-agents.overlays.default
         ];
         config.allowUnfree = true;
       };

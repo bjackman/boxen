@@ -7,7 +7,7 @@
     username = "brendan";
     homeDirectory = "/home/brendan";
     packages = [
-      pkgsUnstable.gemini-cli
+      pkgs.llm-agents.gemini-cli
     ];
   };
   programs.git.settings.user.email = "bhenryj0117@gmail.com";
