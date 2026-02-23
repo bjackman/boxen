@@ -42,8 +42,6 @@
     pulse.enable = true;
   };
 
-  nixpkgs.config.allowUnfree = true;
-
   users.users.brendan.extraGroups = [
     "networkmanager"
     # Required for waybar etc to be able to query capslock status.

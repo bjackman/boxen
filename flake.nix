@@ -91,19 +91,10 @@
           deploy-rs.overlays.default
           agenix.overlays.default
         ];
-        config.allowUnfreePredicate =
-          pkg:
-          builtins.elem (pkgs.lib.getName pkg) [
-            "spotify"
-          ];
+        config.allowUnfree = true;
       };
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
-        config.allowUnfreePredicate =
-          pkg:
-          builtins.elem (pkgs.lib.getName pkg) [
-            "claude-code"
-          ];
       };
       # This is a rather bananas dance to create a cross-compiled deploy-rs.
       # There is a binary in there that needs to be build for the target
@@ -225,7 +216,7 @@
         let
           brendanHome = {
             imports = [ home-manager.nixosModules.home-manager ];
-            nixpkgs.overlays = [ self.outputs.overlays.default ];
+            nixpkgs = { inherit pkgs; };
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
