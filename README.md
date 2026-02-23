@@ -89,9 +89,11 @@ can rekey secrets to allow it to access them.
 - [ ] Figure out how to run OpenTofu as part of the Nix deployment (maybe run it
   on Pizza?)
 - [x] Delete NFS server code, pretty sure I'm a Samba guy now.
-- [ ] Currently I believe Jellyfin auth is only working because I have set up
+- [x] Currently I believe Jellyfin auth is only working because I have set up
   "known proxies" and "published web URLs" via the UI. Check if that's true and,
-  if so, fix it.
+  if so, fix it. (It was only the known proxies)
+- [ ] Jellyfin KnownProxies is configured via my forked Jellyfin with an AI slop
+  patch to add networking configuration.
 - [ ] Clean up `specialArgs` (for both NixOS and Home Manager). I think I probably
   just want to pass `inputs` into the modules.
 - [ ] See if it's possible to virtualise these systems so that I can vibe-code

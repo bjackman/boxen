@@ -50,6 +50,9 @@
         }
       ];
     };
+    network = {
+      knownProxies = [ "127.0.0.1" ];
+    };
   };
 
   systemd.services.jellyfin.serviceConfig.SupplementaryGroups = [ "nas-media" ];

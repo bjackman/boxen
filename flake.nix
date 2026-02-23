@@ -19,7 +19,7 @@
     agenix-template.url = "github:jhillyerd/agenix-template";
     impermanence.url = "github:nix-community/impermanence";
     jellarr = {
-      url = "github:venkyr77/jellarr";
+      url = "github:bjackman/jellarr/network-settings";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     disko = {
