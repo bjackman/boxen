@@ -115,6 +115,8 @@
   # CIFS doesn't support file notifications so the Jellyfin watcher doesn't
   # notice new files. Crazy hack to fix it: Watch locally and trigger rescans
   # via the API :)
+  # TODO: this is coupled with arr.nix, probably there should be an option to
+  # report the directories to watch.
   age.secrets.jellarr-api-key.file = ../../secrets/jellarr-api-key.age;
   systemd.services.jellyfin-notifier = {
     description = "Watchexec Jellyfin API notifier";
@@ -144,7 +146,9 @@
         in
         # --shell=none stops watchexec from trying to use a shell from $PATH,
         # since there isn't one in the service environment.
-        "${pkgs.watchexec}/bin/watchexec --debounce 3s --watch /mnt/nas/media --shell=none -- ${refreshScript}";
+        "${pkgs.watchexec}/bin/watchexec --debounce 3s "
+        + "--watch /mnt/nas/media/radarr --watch /mnt/nas/media/radarr "
+        + "--shell=none -- ${refreshScript}";
       Restart = "always";
     };
   };
