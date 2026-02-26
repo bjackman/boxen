@@ -25,6 +25,7 @@
       # the X-Forwarded-For header. I'm like 90% sure setting this is safe since
       # I have restricted the LISTEN_ADDR to localhost...
       TRUSTED_REVERSE_PROXY_NETWORKS = "0.0.0.0/0,::/0";
+      DISABLE_LOCAL_AUTH = 1;
 
       BASE_URL = config.bjackman.iap.services.miniflux.url;
     };
