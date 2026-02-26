@@ -10,7 +10,11 @@
       "jellyfin-users"
     ]
   },
-  "alex": {},
+  "alex": {
+    "groups": [
+      "jellyfin-users"
+    ]
+  },
   "will": {},
   "niamh": {
     "enableSftp": true,
