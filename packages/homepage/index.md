@@ -56,11 +56,11 @@ There is also an SFTP server that you can use for more automated backups. This
 won't be enabled for your account unless you request it though - just let me
 know if that's useful to you.
 
-# RSS Reader
+# Miniflux RSS Reader
 
-There is an RSS reader at https://miniflux.home.yawn.io. An RSS reader lets you
-subscribe to blogs and stuff without needing an account on whatever website they
-are hosted on.
+[Miniflux](https://miniflux.home.yawn.io) is an RSS reader. An RSS reader lets
+you subscribe to blogs and stuff without needing an account on whatever website
+they are hosted on.
 
 Click the `+` icon next to "Feeds" in the homepage, then paste in the URL of a
 blog you want to subscribe to and hit "find a feed" to subscribe to it.
