@@ -206,13 +206,14 @@ To work on the homepage locally with a dev shell:
 
 ```sh
 nix develop .#homepage
+cd packages/homepage
 ```
 
 Inside the shell, you can preview changes:
 
 ```sh
 # Build the HTML
-pandoc packages/homepage/index.md --standalone --css packages/homepage/style.css -o index.html
+pandoc index.md --standalone --css assets/style.css -o index.html
 
 # Start a local server
 python3 -m http.server

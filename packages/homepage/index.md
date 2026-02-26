@@ -2,6 +2,12 @@
   <h1 class="marquee-content">Welcome to my web site!!!</h1>
 </div>
 
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <img src="assets/skeleton-trumpet.gif" style="width: 100px;" />
+  <img src="assets/skeleton-trumpet.gif" style="width: 100px;" />
+  <img src="assets/skeleton-trumpet.gif" style="width: 100px;" />
+</div>
+
 This is all running on Raspberry Pi and an old laptop that I removed the
 batteries from and stuffed behind my cupboard.
 

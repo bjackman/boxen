@@ -2,9 +2,9 @@
 
 pkgs.runCommand "homepage" { nativeBuildInputs = [ pkgs.pandoc ]; } ''
   mkdir $out
-  cp ${src}/style.css $out/
+  cp -R ${src}/assets/ $out/
   pandoc ${src}/index.md \
     --standalone \
-    --css style.css \
+    --css assets/style.css \
     -o $out/index.html
 ''
