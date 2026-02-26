@@ -52,6 +52,18 @@ know if that's useful to you.
 
 # RSS Reader
 
-There is an RSS reader service running on the homelab, but I've just noticed
-it's broken for other users than mine. Let me know if you'd like to use it and
-I'll fix it.
+There is an RSS reader at https://miniflux.home.yawn.io. An RSS reader lets you
+subscribe to blogs and stuff without needing an account on whatever website they
+are hosted on.
+
+Click the `+` icon next to "Feeds" in the homepage, then paste in the URL of a
+blog you want to subscribe to and hit "find a feed" to subscribe to it.
+
+For Substack blogs, you need to paste the URL that looks like
+https://blah.substack.com, not the one that looks like
+https://substack.com/@blah.
+
+You can do a bunch of other stuff with RSS too, but this is all I've ever used
+it for. [Here's a Reddit comment with some examples, that I found just now by
+Googling "stuff you can do with
+RSS"](https://www.reddit.com/r/rss/comments/1fb4j4u/comment/lly8ofv/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button).
