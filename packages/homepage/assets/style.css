@@ -15,7 +15,8 @@ h1 {
     text-shadow: 2px 2px #0000FF;
     text-align: center;
     overflow: hidden;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .marquee-container {
