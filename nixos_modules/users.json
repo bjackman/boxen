@@ -25,5 +25,10 @@
     "groups": [
       "jellyfin-users"
     ]
+  },
+  "clement": {
+    "groups": [
+      "jellyfin-users"
+    ]
   }
 }
