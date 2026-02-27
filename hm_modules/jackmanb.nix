@@ -92,20 +92,7 @@
       controlPath = "~/.ssh/master-%r@%n:%p";
       forwardAgent = true; # For gnubby
     };
-    # The gLinux system config for SSH has some CanonicalizeHostname magic that
-    # breaks the systemd-ssh-proxy setup. Override it here by just reproducing
-    # the upstream config.
-    matchBlocks."systemd-proxy" = {
-      host = "unix/* vsock/* machine/*";
-      proxyCommand = "/usr/lib/systemd/systemd-ssh-proxy %h %p";
-      checkHostIP = false;
-      # systemd-ssh-proxy doesn't seem to work with ControlMaster, that's fine.
-      controlMaster = "no";
-      extraOptions = {
-        "ProxyUseFdpass" = "yes";
-        "StrictHostKeyChecking" = "no";
-      };
-    };
+    matchBlocks."systemd-proxy".controlMaster = "no";
     # To pre-empt deprecation of default values:
     enableDefaultConfig = false;
   };
