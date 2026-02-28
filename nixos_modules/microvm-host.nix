@@ -1,4 +1,9 @@
-{ microvm, self, ... }:
+{
+  config,
+  microvm,
+  self,
+  ...
+}:
 {
   imports = [ microvm.nixosModules.host ];
 
@@ -30,6 +35,8 @@
         networkConfig.Bridge = "microbr";
       };
     };
+
+    wait-online.enable = !config.networking.networkmanager.enable;
   };
 
   networking.nat = {
