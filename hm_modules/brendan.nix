@@ -6,8 +6,10 @@
   home = {
     username = "brendan";
     homeDirectory = "/home/brendan";
-    packages = [
-      pkgs.llm-agents.gemini-cli
+    packages = with pkgs; [
+      llm-agents.gemini-cli
+      vlc
+      nautilus
     ];
   };
   programs.git.settings.user.email = "bhenryj0117@gmail.com";
