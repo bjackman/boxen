@@ -41,7 +41,7 @@
   ];
 
   nix.gc = {
-    automatic = true;
+    # automatic = true;
     options = "--delete-older-than 30d";
   };
   nix.settings.experimental-features = [
