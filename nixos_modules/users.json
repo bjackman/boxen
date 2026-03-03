@@ -22,7 +22,10 @@
   },
   "romy": {
     "enableSftp": true,
-    "publicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHBLYhca50FT6353jP+FjEipbMY5sgiwW1KeEfakWpxh romybinswanger@Mac.fritz.box"
+    "publicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHBLYhca50FT6353jP+FjEipbMY5sgiwW1KeEfakWpxh romybinswanger@Mac.fritz.box",
+    "groups": [
+      "jellyfin-users"
+    ]
   },
   "timmy": {},
   "lara": {
