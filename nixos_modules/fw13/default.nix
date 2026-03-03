@@ -13,7 +13,6 @@
     ../brendan.nix
     ../pc.nix
     ../sway.nix
-    ../ssh-server.nix
     ./hardware-configuration.nix
     nixos-hardware.nixosModules.framework-amd-ai-300-series
   ];
