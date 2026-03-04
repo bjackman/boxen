@@ -101,6 +101,7 @@
       };
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
+        config.allowUnfree = true;
       };
       # This is a rather bananas dance to create a cross-compiled deploy-rs.
       # There is a binary in there that needs to be build for the target
@@ -242,7 +243,7 @@
           # that depends on them. For example this means you can import the
           # impermanence module near the code that set up impermanence settings.
           specialArgs = inputs // {
-            inherit homelab;
+            inherit homelab pkgsUnstable;
           };
         in
         {

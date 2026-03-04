@@ -1,6 +1,8 @@
 {
   config,
   pkgs,
+  lib,
+  pkgsUnstable,
   ...
 }:
 
@@ -104,6 +106,22 @@
       "podman"
     ];
   };
+
+  services.ollama = {
+    enable = true;
+    package = pkgsUnstable.ollama-cuda;
+    # DynamicUser means that systemd directories are symlinks which doesn't play
+    # nicely with impermanence :(
+    user = "ollama";
+  };
+  systemd.services.ollama.serviceConfig.DynamicUser = lib.mkForce false;
+  bjackman.impermanence.extraPersistence.directories = [
+    {
+      directory = config.services.ollama.models;
+      mode = "0776";
+      group = config.services.ollama.group;
+    }
+  ];
 
   system.stateVersion = "25.05";
 }
