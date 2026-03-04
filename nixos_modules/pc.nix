@@ -79,6 +79,7 @@
     ".config/Code"
     ".vscode"
     ".gemini" # yuck
+    ".ollama" # yuck
     {
       directory = ".mozilla/firefox";
       mode = "0700";
