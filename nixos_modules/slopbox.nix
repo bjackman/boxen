@@ -4,6 +4,7 @@
     ./brendan.nix
     ./common.nix
     ./server.nix
+    ./impermanence.nix
     microvm.nixosModules.microvm
   ];
 
@@ -93,4 +94,7 @@
       }
     ];
   };
+
+  # This contains the volume backing files, just persiste the whole directory.
+  bjackman.impermanence.extraPersistence.directories = [ "/var/lib/microvm" ];
 }
