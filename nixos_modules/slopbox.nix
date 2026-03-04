@@ -97,4 +97,9 @@
 
   # This contains the volume backing files, just persiste the whole directory.
   bjackman.impermanence.extraPersistence.directories = [ "/var/lib/microvm" ];
+
+  # I dunno what this does but without it I get an error when trying to use Home
+  # Manager.
+  # https://discourse.nixos.org/t/error-gdbus-error-org-freedesktop-dbus-error-serviceunknown-the-name-ca-desrt-dconf-was-not-provided-by-any-service-files/29111
+  programs.dconf.enable = true;
 }
