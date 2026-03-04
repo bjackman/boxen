@@ -1,6 +1,9 @@
 { pkgs, ... }:
 {
-  imports = [ ./homelab-ctrl.nix ];
+  imports = [
+    ./homelab-ctrl.nix
+    ./pc.nix
+  ];
 
   bjackman.nix-warmups = [
     {
