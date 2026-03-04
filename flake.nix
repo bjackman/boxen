@@ -287,7 +287,10 @@
           };
           slopbox = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            modules = [ ./nixos_modules/slopbox.nix ];
+            modules = [
+              ./nixos_modules/slopbox.nix
+              brendanHome
+            ];
             inherit specialArgs;
           };
         };
