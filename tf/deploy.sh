@@ -14,5 +14,5 @@ read_secret "arr-api-key" RADARR_API_KEY
 read_secret "arr-api-key" SONARR_API_KEY
 read_secret "transmission-password" TF_VAR_transmission_password
 
-cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf"
+cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf/arr"
 tofu apply
