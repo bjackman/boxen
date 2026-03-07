@@ -1,3 +1,9 @@
+let
+  dhcpPorts = [
+    53
+    67
+  ];
+in
 {
   # Incus only supports nftables on NixOS.
   networking.nftables.enable = true;
@@ -43,6 +49,11 @@
         }
       ];
     };
+  };
+
+  networking.firewall.interfaces.incusbr0 = {
+    allowedTCPPorts = dhcpPorts;
+    allowedUDPPorts = dhcpPorts;
   };
 
   users.users.brendan.extraGroups = [ "incus-admin" ];
