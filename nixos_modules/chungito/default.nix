@@ -16,7 +16,6 @@
     ../sway.nix
     ../impermanence.nix
     ../transmission.nix
-    ../microvm-host.nix
     ../incus.nix
   ];
 

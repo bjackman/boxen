@@ -5,6 +5,8 @@ let
   ];
 in
 {
+  imports = [ ./impermanence.nix ];
+
   # Incus only supports nftables on NixOS.
   networking.nftables.enable = true;
 
@@ -50,6 +52,8 @@ in
       ];
     };
   };
+
+  bjackman.impermanence.extraPersistence.directories = [ "/var/lib/incus" ];
 
   networking.firewall.interfaces.incusbr0 = {
     allowedTCPPorts = dhcpPorts;
