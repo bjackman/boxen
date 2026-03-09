@@ -92,7 +92,10 @@
       controlPath = "~/.ssh/master-%r@%n:%p";
       forwardAgent = true; # For gnubby
     };
-    matchBlocks."systemd-proxy".controlMaster = "no";
+    # systemd-ssh-proxy doesn't seem to play nice with ControlMaster, but also
+    # it isn't useful there anyway.
+    matchBlocks."unix/* unix%* vsock/* vsock%* vsock-mux/* vsock-mux%* machine/* machine%*".controlMaster =
+      "no";
     # To pre-empt deprecation of default values:
     enableDefaultConfig = false;
   };
