@@ -186,7 +186,8 @@
         # package and we can have Limmat build it.
         format = treefmtCfg.config.build.check self;
         add-user = pkgs.callPackage ./packages/add-user.nix { };
-        deploy-tf = pkgs.callPackage ./tf/deploy.nix { inherit homelab; };
+        deploy-tf-arr = pkgs.callPackage ./tf/arr/deploy.nix { inherit homelab; };
+        deploy-tf-slopbox = pkgs.callPackage ./tf/slopbox/deploy.nix { inherit self; };
       };
 
       # This defines the configurations for machines using standalone

@@ -227,7 +227,7 @@ For stuff that isn't really designed to be configured declaratively, I
 eventually realised that the ideal model is Terraform. This is integrated into
 the rest of the config but it doesn't get deployed by deploy-rs.
 
-Just run `nix run .#deploy-tf` to deploy it. Note Terraform relies on a
+Just run `nix run .#deploy-tf-*` to deploy it. Note Terraform relies on a
 statefile which I haven't backed up anywhere right now.
 
 ## Mail

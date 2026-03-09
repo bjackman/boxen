@@ -13,7 +13,7 @@
 # store secrets in the state file - so we'd actually only need to inject
 # variables once. But then if the value changed we'd need to remember to update
 # the state. So we just set up the environment completely every time.
-{ pkgs, homelab }:
+{ pkgs, homelab, ... }:
 pkgs.writeShellApplication {
   name = "deploy-arr-tf";
   runtimeInputs = with pkgs; [ opentofu ];
