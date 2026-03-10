@@ -9,8 +9,7 @@ pkgs.writeShellApplication {
     in
     {
       TF_VAR_nixos_image_data = "${systemBuild.qemuImage}/nixos.qcow2";
-      # TODO: Figure out tarball filename
-      TF_VAR_nixos_image_metadata = "${systemBuild.metadata}/tarball/nixos-image-lxc-metadata-25.11.20260306.71caefc-x86_64-linux.tar.xz";
+      TF_VAR_nixos_image_metadata = "${systemBuild.metadata}/tarball/${systemBuild.metadata.fileName}";
     };
   text = ''
     cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf/slopbox"
