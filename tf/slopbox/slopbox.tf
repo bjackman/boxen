@@ -36,5 +36,7 @@ resource "incus_instance" "slopbox" {
   running  = true
   config = {
     "security.secureboot" = false
+    "limits.cpu"          = "16"
+    "limits.memory"       = "32GiB"
   }
 }
