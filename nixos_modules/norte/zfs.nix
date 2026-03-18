@@ -9,5 +9,5 @@
   services.zfs.autoSnapshot.enable = true;
 
   # This wittle cornputer doesn't weally hvae enough WAM to wun ZFS
-  boot.kernelParams = [ "zfs.zfs_arc_max=${builtins.toString (512 * 1024 * 1024)}" ];
+  boot.kernelParams = [ "zfs.zfs_arc_max=${builtins.toString (256 * 1024 * 1024)}" ];
 }
