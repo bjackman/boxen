@@ -154,18 +154,25 @@ dashboardBuilder & {
 						]
 					},
 					lib.#TSPanel & {
-						#name:        "Swap & Zswap Capacity"
-						#description: "Compares virtual swap usage against physical zswap pool size"
+						#name:        "Swap"
 						#unit:        "bytes"
 						#shortValues: true
 						#queries: [
 							lib.#PromQuery & {
-								#query:            "node_memory_SwapTotal_bytes{\(commonFilter)} - node_memory_SwapFree_bytes{\(commonFilter)}"
-								#seriesNameFormat: "Swap Used (Virtual)"
+								#query:            "node_swap_size_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Total Limit ({{device}})"
 							},
 							lib.#PromQuery & {
-								#query:            "node_memory_Zswap_bytes{\(commonFilter)}"
-								#seriesNameFormat: "Zswap Pool (Physical RAM Consumed)"
+								#query:            "node_swap_used_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Used ({{device}})"
+							},
+							lib.#PromQuery & {
+								#query:            "node_memory_SwapCached_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Swap Cached (Global)"
+							},
+							lib.#PromQuery & {
+								#query:            "node_memory_SwapTotal_bytes{\(commonFilter)} - node_memory_SwapFree_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Virtual Swap Used (Global)"
 							},
 						]
 					},
