@@ -14,6 +14,7 @@
       "os"
       "pcidevice"
       "systemd"
+      "swap"
       "watchdog"
     ];
   };
