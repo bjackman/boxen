@@ -123,7 +123,18 @@ dashboardBuilder & {
 						#description: "Shows memory utilization metrics"
 						#unit:        "bytes"
 						#shortValues: true
+						#stack:       "all"
 						#queries: [
+							lib.#PromQuery & {
+								#query:            """
+									node_memory_MemTotal_bytes{\(commonFilter)} 
+										- node_memory_MemFree_bytes{\(commonFilter)} 
+										- node_memory_Buffers_bytes{\(commonFilter)} 
+										- node_memory_Cached_bytes{\(commonFilter)} 
+										- node_memory_Slab_bytes{\(commonFilter)}
+								"""
+								#seriesNameFormat: "Memory - Used"
+							},
 							lib.#PromQuery & {
 								#query:            "node_memory_MemFree_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Free"

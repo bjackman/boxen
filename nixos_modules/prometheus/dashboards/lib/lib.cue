@@ -33,7 +33,11 @@ import (
 	#queries: [...]
 	#unit?:       string
 	#shortValues: bool | *false
-	kind:         "Panel"
+
+	// You probably want "all" or "percent" unless the upstream schema has
+	// updated.
+	#stack?: string
+	kind:    "Panel"
 	spec: {
 		display: {
 			name:        #name
@@ -46,6 +50,12 @@ import (
 					mode:     "table"
 					position: "bottom"
 					values: ["last"]
+				}
+				if #stack != _|_ {
+					visual: {
+						stack:       #stack
+						areaOpacity: 0.5
+					}
 				}
 				if #unit != _|_ {
 					yAxis: {
