@@ -153,19 +153,23 @@ dashboardBuilder & {
 							},
 						]
 					},
-					lib.#GaugePanel & {
-						#name:        "Memory Usage"
-						#description: "Shows memory utilization across nodes"
+					lib.#TSPanel & {
+						#name:        "Swap & Zswap Capacity"
+						#description: "Compares virtual swap usage against physical zswap pool size"
+						#unit:        "bytes"
+						#shortValues: true
 						#queries: [
 							lib.#PromQuery & {
-								#query:            """
-									100 - avg(node_memory_MemAvailable_bytes{\(commonFilter)})
-									/ avg(node_memory_MemTotal_bytes{\(commonFilter)}) * 100
-									"""
-								#seriesNameFormat: "Memory - Usage"
+								#query:            "node_memory_SwapTotal_bytes{\(commonFilter)} - node_memory_SwapFree_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Swap Used (Virtual)"
+							},
+							lib.#PromQuery & {
+								#query:            "node_memory_Zswap_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Zswap Pool (Physical RAM Consumed)"
 							},
 						]
-					}]
+					},
+				]
 			},
 			panelGroupBuilder & {
 				#title:  "Disk"
