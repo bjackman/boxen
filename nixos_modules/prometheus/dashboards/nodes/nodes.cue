@@ -136,10 +136,6 @@ dashboardBuilder & {
 								#seriesNameFormat: "Memory - Used"
 							},
 							lib.#PromQuery & {
-								#query:            "node_memory_MemFree_bytes{\(commonFilter)}"
-								#seriesNameFormat: "Memory - Free"
-							},
-							lib.#PromQuery & {
 								#query:            "node_memory_Buffers_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Buffers"
 							},
@@ -150,6 +146,10 @@ dashboardBuilder & {
 							lib.#PromQuery & {
 								#query:            "node_memory_Slab_bytes{\(commonFilter)}"
 								#seriesNameFormat: "Memory - Slab"
+							},
+							lib.#PromQuery & {
+								#query:            "node_memory_MemFree_bytes{\(commonFilter)}"
+								#seriesNameFormat: "Memory - Free"
 							},
 						]
 					},
