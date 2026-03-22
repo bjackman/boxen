@@ -25,5 +25,9 @@
       # This is probably really bad for performance.
       "zfs.zfs_dirty_data_max=${mb 64}"
       "zfs.zfs_vdev_async_write_max_active=1"
+      "zfs.zfs_vdev_sync_write_max_active=1"
+      "zfs.zfs_vdev_async_read_max_active=1"
+      "zfs.zfs_vdev_sync_read_max_active=1"
+      "zfs.zfs_arc_sys_free=${mb 512}"
     ];
 }
