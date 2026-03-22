@@ -38,5 +38,9 @@
   # https://discourse.nixos.org/t/error-gdbus-error-org-freedesktop-dbus-error-serviceunknown-the-name-ca-desrt-dconf-was-not-provided-by-any-service-files/29111
   programs.dconf.enable = true;
 
+  # We're gonna be building a disk image for this and it's really annoying to
+  # invalidate that hash so don't include the config reviison.
+  system.configurationRevision = null;
+
   system.stateVersion = "25.11";
 }

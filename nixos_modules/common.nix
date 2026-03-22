@@ -52,7 +52,7 @@
   # This broke stuff for me before on Pizza, enable it everywhere.
   hardware.enableRedistributableFirmware = true;
 
-  system.configurationRevision = self.shortRev or self.dirtyRev or "dirty";
+  system.configurationRevision = lib.mkDefault self.shortRev or self.dirtyRev or "dirty";
 
   age.identityPaths = lib.mkDefault [
     "/etc/ssh/ssh_host_ed25519_key"
