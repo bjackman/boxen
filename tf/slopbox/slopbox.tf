@@ -39,4 +39,13 @@ resource "incus_instance" "slopbox" {
     "limits.cpu"          = "16"
     "limits.memory"       = "32GiB"
   }
+
+  device {
+    name = "shared_src"
+    type = "disk"
+    properties = {
+      source = "/home/brendan/src/slop"
+      path   = "/mnt/src"
+    }
+  }
 }
