@@ -15,6 +15,7 @@
     ./zed.nix
     ./scripts.nix
     ./nix-warmup.nix
+    ./sashiko.nix
     nix-index-database.homeModules.default
   ];
 

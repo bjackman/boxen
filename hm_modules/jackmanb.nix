@@ -4,6 +4,7 @@
     ./common.nix
     ./non-nixos.nix
     ./wezterm.nix
+    ./sashiko.nix
   ];
 
   home = {
@@ -112,4 +113,6 @@
       },
     };
   '';
+
+  bjackman.sashiko.enable = true;
 }

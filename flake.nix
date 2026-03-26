@@ -53,6 +53,10 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sashiko = {
+      url = "github:bjackman/sashiko?ref=nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -81,6 +85,7 @@
       treefmt-nix,
       nix-index-database,
       llm-agents,
+      sashiko,
       ...
     }:
     let
@@ -92,6 +97,9 @@
           deploy-rs.overlays.default
           agenix.overlays.default
           llm-agents.overlays.default
+          (final: prev: {
+            sashiko = sashiko.packages.${system}.default;
+          })
         ];
         config.allowUnfree = true;
       };
