@@ -18,6 +18,7 @@
     ../prometheus
     ../bitmagnet.nix
     ../miniflux.nix
+    ../silverbullet.nix
     ../iap.nix
     ../tailscale-exit-node.nix
     ./disko.nix
