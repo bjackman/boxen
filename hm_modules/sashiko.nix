@@ -82,7 +82,12 @@ in
             ProtectSystem = false;
             ReadOnlyPaths = [ ];
 
-            PassEnvironment = [ "PATH" "HOME" "USER" "XDG_RUNTIME_DIR" ];
+            PassEnvironment = [
+              "PATH"
+              "HOME"
+              "USER"
+              "XDG_RUNTIME_DIR"
+            ];
           };
           Install.WantedBy = [ "default.target" ];
         };
