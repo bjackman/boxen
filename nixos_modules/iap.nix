@@ -74,6 +74,16 @@ in
                     '';
                   };
                 };
+                allowedUsers = lib.mkOption {
+                  type = with lib.types; nullOr (listOf str);
+                  default = null;
+                  description = ''
+                    List of users allowed to access this service.
+
+                    If null, all authenticated users can access it. Must be null
+                    if oidc.enable.
+                  '';
+                };
                 url = lib.mkOption {
                   type = str;
                   readOnly = true;
@@ -144,6 +154,14 @@ in
       '';
     in
     lib.mkIf cfg.host {
+      assertions = lib.mapAttrsToList (name: service: {
+        assertion = !(service.oidc.enable && service.allowedUsers != null);
+        message = ''
+          IAP Service '${name}' cannot have both `oidc.enable` and `allowedUsers` set.
+          Configure user restrictions via oidc.autheliaConfig instead (I dunno how).
+        '';
+      }) cfg.services;
+
       services.caddy = {
         enable = true;
         package = pkgs.caddy.withPlugins {
@@ -280,6 +298,10 @@ in
               domain = [ "${service.subdomain}.${domain}" ];
               # If using OIDC, disable the ForwardAuth middleware.
               policy = if service.oidc.enable then "bypass" else "one_factor";
+              # If allowedUsers is set then apply this rule only to those users;
+              # other users will fall back to the default_policy and be blocked.
+              # Note OIDC and allowedUsers can't coexist, see the assertion.
+              subject = if service.allowedUsers != null then map (u: "user:${u}") service.allowedUsers else null;
             }) allServices;
           };
 

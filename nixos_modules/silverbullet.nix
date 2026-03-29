@@ -9,6 +9,7 @@
 
   bjackman.iap.services.silverbullet = {
     port = config.bjackman.ports.silverbullet.port;
+    allowedUsers = [ "brendan" ];
   };
 
   services.silverbullet = {
