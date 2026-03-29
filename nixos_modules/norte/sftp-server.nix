@@ -10,7 +10,13 @@ let
     # Users with enableSftp in the user DB get a local user in the sftp-only
     # group, I don't want that for the "brendan" user so add a special SFTP user
     # for that purpose.
-    ++ "brendan-sftp";
+    // {
+      brendan-sftp = {
+        name = "brendan-sftp";
+        displayName = "Brendan (SFTP user)";
+        publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICUckZ8cEPBp8RKXQfwglJMNoMIkYLnorV0CCYEXfIpb silverbullet-backup@pizza";
+      };
+    };
   cfg = config.bjackman.sftpServer;
 in
 {

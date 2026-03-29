@@ -79,4 +79,5 @@ in
   #  /var/lib/radarr/.config/Radarr/config.xml
   "arr-api-key.age".publicKeys = all-personal;
   "gemini-api-key.age".publicKeys = all-personal;
+  "brendan-sftp-privkey.age".publicKeys = all-personal;
 }
