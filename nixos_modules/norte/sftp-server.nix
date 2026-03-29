@@ -5,7 +5,12 @@
   ...
 }:
 let
-  sftpUsers = lib.filterAttrs (n: u: u.enableSftp) config.bjackman.homelab.users;
+  sftpUsers =
+    (lib.filterAttrs (n: u: u.enableSftp) config.bjackman.homelab.users)
+    # Users with enableSftp in the user DB get a local user in the sftp-only
+    # group, I don't want that for the "brendan" user so add a special SFTP user
+    # for that purpose.
+    ++ "brendan-sftp";
   cfg = config.bjackman.sftpServer;
 in
 {

@@ -41,6 +41,7 @@
                 readOnly = true;
                 description = "Whether the user is an administrator (calculated from groups).";
               };
+              # Note for brendan, there is a special brendan-sftp user.
               enableSftp = lib.mkOption {
                 type = bool;
                 default = false;
