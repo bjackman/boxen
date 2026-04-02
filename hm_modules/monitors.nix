@@ -27,6 +27,7 @@
           outputs = [
             {
               criteria = "LG Electronics LG ULTRAFINE 508NTGYKX551";
+              mode = "3840x2160";
               position = "0,0";
               scale = 1.5;
             }
