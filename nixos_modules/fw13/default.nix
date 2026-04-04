@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  pkgsUnstable,
   lib,
   modulesPath,
   nixos-hardware,
@@ -30,8 +31,13 @@
   services.geoclue2.enableDemoAgent = true;
 
   programs.steam.enable = true;
-  
+
   environment.systemPackages = [ pkgs.btop-rocm ];
+
+  services.ollama = {
+    enable = true;
+    package = pkgsUnstable.ollama-rocm;
+  };
 
   system.stateVersion = "25.05";
 }
