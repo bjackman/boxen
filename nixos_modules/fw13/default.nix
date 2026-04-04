@@ -30,6 +30,8 @@
   services.geoclue2.enableDemoAgent = true;
 
   programs.steam.enable = true;
+  
+  environment.systemPackages = [ pkgs.btop-rocm ];
 
   system.stateVersion = "25.05";
 }
