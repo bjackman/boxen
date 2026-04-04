@@ -94,7 +94,6 @@
       pstree
       pciutils
       lshw
-      btop
       jq
       iw
       comma
