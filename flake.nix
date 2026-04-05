@@ -49,9 +49,10 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Don't override nixpkgs for llm-agents, that flake is inherently interested
-    # in being bleeding edge so it may not build with the stable nixpkgs.
-    llm-agents.url = "github:numtide/llm-agents.nix";
+    llm-agents = {
+      url = "github:numtide/llm-agents.nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     sashiko = {
       url = "github:bjackman/sashiko?ref=nix";
       inputs.nixpkgs.follows = "nixpkgs";
