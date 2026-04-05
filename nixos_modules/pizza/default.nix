@@ -19,6 +19,7 @@
     ../bitmagnet.nix
     ../miniflux.nix
     ../iap.nix
+    ../tailscale-exit-node.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
