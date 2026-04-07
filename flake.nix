@@ -266,7 +266,7 @@
             modules = [
               ./nixos_modules/fw13
               brendanHome
-              { home-manager.users.brendan.imports = [ ./hm_modules/pc.nix ]; }
+              { home-manager.users.brendan.imports = [ ./hm_modules/fw13.nix ]; }
             ];
             inherit specialArgs;
           };
