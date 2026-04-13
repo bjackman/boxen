@@ -1,7 +1,3 @@
-# TODO: This is coupled with configuration in accounts.email.accounts.
-# Probably the solution to that is to drop the usage of high-level aerc and
-# notmuch configuration, and instead configure them directly via home.files in
-# here.
 {
   config,
   pkgs,
@@ -20,20 +16,22 @@
       # :).
       default = "${config.home.homeDirectory}/lkml";
     };
+    # TODO: This is a bit crazy. Probably the solution to that is to drop the
+    # usage of high-level aerc and notmuch configuration, and instead configure
+    # them directly via home.files in here.
+    accountRef = lib.mkOption {
+      type = lib.types.str;
+      description = ''
+        Name of the account in accounts.email.accounts that LKML should be set
+        up for. Note this will set up additional configuration for that account
+        since it has program configurations that are coupled with it.
+      '';
+    };
   };
   config = lib.mkIf config.lkml.enable (
-    # TODO: can't be bothered to figure out multiple addresses, assert
-    # there is only one.
     let
       cfg = config.lkml;
-      account =
-        let
-          accounts = lib.attrValues config.accounts.email.accounts;
-        in
-        (
-          assert (builtins.length accounts == 1);
-          (lib.head accounts)
-        );
+      account = config.accounts.email.accounts.${cfg.accountRef};
     in
     {
       programs.notmuch = {
@@ -106,6 +104,34 @@
           # Unsure why but if I don't set this explicitly opening messages does
           # nothing.
           viewer.pager = "less -Rc";
+        };
+      };
+
+      # Note we'd prefer this to be two separate stanzas with the notmuch stuff
+      # next to the programs.notmuch config and the aerc stuff next to
+      # programs.aerc, but it seems the Nix language desn't support that for
+      # "dynamic attributes" like this.
+      accounts.email.accounts.${cfg.accountRef} = {
+        notmuch.enable = true;
+
+        aerc = {
+          enable = true;
+          extraAccounts =
+            # This configures the "folders", i.e. the things in the side bar, by
+            # mapping them to notmuch queries.
+            let
+              queryMap = pkgs.writeText "query-map.conf" ''
+                Inbox=not tag:archived and not tag:thread-muted
+                All=true
+              '';
+            in
+            {
+              source = "notmuch://${config.lkml.maildirBasePath}";
+              # Needed for postponing messages:
+              #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
+              maildir-store = "${config.lkml.maildirBasePath}";
+              query-map = "${queryMap}";
+            };
         };
       };
 
