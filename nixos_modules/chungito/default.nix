@@ -108,7 +108,7 @@
   };
 
   services.ollama = {
-    enable = true;
+    # enable = true;
     package = pkgsUnstable.ollama-cuda;
     # DynamicUser means that systemd directories are symlinks which doesn't play
     # nicely with impermanence :(

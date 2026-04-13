@@ -35,7 +35,7 @@
   environment.systemPackages = [ pkgs.btop-rocm ];
 
   services.ollama = {
-    enable = true;
+    # enable = true;
     package = pkgsUnstable.ollama-rocm;
   };
 
