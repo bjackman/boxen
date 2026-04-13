@@ -60,5 +60,8 @@
 	"vim.useSystemClipboard": true,
 	// https://github.com/microsoft/vscode-remote-release/issues/2509
 	"remote.SSH.useLocalServer": false,
-	"remote.SSH.remotePlatform": { "chungito.bonito-coho.ts.net": "linux" }
+	"remote.SSH.remotePlatform": {
+		"chungito.bonito-coho.ts.net": "linux",
+		"bj": "linux"
+	}
 }
