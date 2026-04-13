@@ -9,11 +9,11 @@
   ...
 }:
 {
-  options = {
-    lkml.enable = lib.mkEnableOption "lkml";
+  options.lkml = {
+    enable = lib.mkEnableOption "lkml";
     # Home Manager also has accounts.email.maildirBasePath but since this setup
     # is kinda special, define a separate one specifically for LKML.
-    lkml.maildirBasePath = lib.mkOption {
+    maildirBasePath = lib.mkOption {
       type = lib.types.path;
       # Note in my old dotifles repo I was unable to set this due to notmuch not
       # expanding ~ or $HOME. But in Nix I can can set it as an absolute path
