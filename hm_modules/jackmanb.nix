@@ -28,32 +28,17 @@
     fish = [ ../hm_files/jackmanb/config/fish ];
   };
 
-  accounts.email.accounts.work = {
-    address = "jackmanb@google.com";
-    realName = "Brendan Jackman";
-    primary = true;
-    aerc.extraAccounts.outgoing = "/usr/bin/sendgmr -i";
-  };
-  lkml = {
-    enable = true;
-    accountRef = "work";
-  };
-
-  programs.git.settings =
-    let
-      emailAccount = config.accounts.email.accounts.work;
-    in
-    {
-      user = {
-        email = emailAccount.address;
-        name = emailAccount.realName;
-      };
-      # To be honest I'm not 100% sure exactly what this does.
-      url."sso://user".insteadOf = "https://user.git.corp.google.com";
-      # Use the gLinux SSH since the Nix one doesn't know about Google
-      # weirdness.
-      core.sshCommand = "/usr/bin/ssh";
+  programs.git.settings = {
+    user = {
+      email = "jackmanb@google.com";
+      name = "Brendan Jackman";
     };
+    # To be honest I'm not 100% sure exactly what this does.
+    url."sso://user".insteadOf = "https://user.git.corp.google.com";
+    # Use the gLinux SSH since the Nix one doesn't know about Google
+    # weirdness.
+    core.sshCommand = "/usr/bin/ssh";
+  };
 
   # There is some confusing mess with different versions of tmux doing different
   # things in different environments (login vs non login shell). Part of this
