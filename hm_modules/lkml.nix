@@ -25,6 +25,7 @@
     # TODO: can't be bothered to figure out multiple addresses, assert
     # there is only one.
     let
+      cfg = config.lkml;
       account =
         let
           accounts = lib.attrValues config.accounts.email.accounts;
@@ -40,7 +41,7 @@
         # No option to directly override the default which is
         # config.accounts.email.maildirBasePath.
         extraConfig = {
-          database.path = config.lkml.maildirBasePath;
+          database.path = cfg.maildirBasePath;
         };
       };
 
@@ -126,7 +127,7 @@
             # Don't want errexit/pipefail as we'll be hiding the SIGABRT below.
             bashOptions = [ "nounset" ];
             text = ''
-              notmuch-propagate-mute --email ${account.address} --db-path ${config.lkml.maildirBasePath} "$@"
+              notmuch-propagate-mute --email ${account.address} --db-path ${cfg.maildirBasePath} "$@"
               # Due to garbage Python bindings, the script always gets SIGABRT.
               # Hide that from this script's exit code since this will
               # eventually be used in a systemd service and it's annoying if
@@ -152,7 +153,7 @@
             # arguments. It also munges the date filter in a weird way that I
             # don't understand and which is buggy.
             text = ''
-              lei q -I https://lore.kernel.org/all/ -o ${config.lkml.maildirBasePath} \
+              lei q -I https://lore.kernel.org/all/ -o ${cfg.maildirBasePath} \
                 --threads --dedupe=mid --augment \
                 'a:${account.address}' 'AND' 'dt:20250204132159..'
               notmuch new
