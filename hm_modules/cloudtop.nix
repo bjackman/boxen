@@ -12,6 +12,7 @@
     primary = true;
     aerc.extraAccounts.outgoing = "/usr/bin/sendgmr -i";
   };
+  accounts.email.accounts.linuxdev.primary = false;
   lkml = {
     enable = true;
     accountRef = "corp";

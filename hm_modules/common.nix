@@ -4,6 +4,7 @@
   lib,
   nixpkgs-unstable, # from specialArgs
   nix-index-database,
+  agenix,
   ...
 }:
 {
@@ -16,6 +17,7 @@
     ./scripts.nix
     ./nix-warmup.nix
     nix-index-database.homeModules.default
+    agenix.homeManagerModules.default
   ];
 
   options = {
@@ -157,5 +159,25 @@
       "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
       "github:bjackman/boxen/master#devShells.${pkgs.stdenv.hostPlatform.system}.default"
     ];
+
+    age.secrets.migadu-linuxdev-password.file = ../secrets/migadu-linuxdev-password.age;
+    accounts.email.accounts.linuxdev = {
+      address = "brendan.jackman@linux.dev";
+      realName = "Brendan Jackman";
+      primary = lib.mkDefault true;
+      aerc.extraAccounts = {
+        outgoing = "smtps://brendan.jackman%40linux.dev@smtp.migadu.com:465";
+        outgoing-cred-cmd = "cat ${config.age.secrets.migadu-linuxdev-password.path}";
+      };
+    };
+    # TODO: This doesn't configure any way to fetch mail from the @linux.dev
+    # account which means I won't see mail sent to me directly.
+    # https://gemini.google.com/share/b583ccdd6571 - AI suggests just adding
+    # an IMAP fetch via mbsync to the same maildir as lei, apparently notmuch
+    # should be able to handle this with a bit of tweaking.
+    lkml = {
+      enable = true;
+      accountRef = lib.mkDefault "linuxdev";
+    };
   };
 }

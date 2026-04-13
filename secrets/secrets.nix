@@ -80,4 +80,7 @@ in
   "arr-api-key.age".publicKeys = all-personal;
   "gemini-api-key.age".publicKeys = all-personal;
   "brendan-sftp-privkey.age".publicKeys = all-personal;
+  # Password for brendan.jackman@linux.dev on https://webmail.migadu.com/. This
+  # is also the IMAP and SMTP password.
+  "migadu-linuxdev-password.age".publicKeys = all;
 }
