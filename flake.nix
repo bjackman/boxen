@@ -207,7 +207,7 @@
           modules = [ ./hm_modules/brendan.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
-        "jackmanb01@bj" = home-manager.lib.homeManagerConfiguration {
+        "jackmanb@bj" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./hm_modules/cloudtop.nix ];
           extraSpecialArgs = hmSpecialArgs;
