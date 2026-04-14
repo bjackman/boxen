@@ -53,6 +53,7 @@
     enable = true;
     package = null; # Don't install (this is the default, but make sure)
     matchBlocks."bj".hostname = "bj.c.googlers.com";
+    matchBlocks."aethelred".hostname = "aethelred.zrh.corp.google.com";
     matchBlocks."*" = {
       controlMaster = "auto";
       controlPersist = "8h";
