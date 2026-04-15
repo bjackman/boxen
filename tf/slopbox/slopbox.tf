@@ -20,6 +20,11 @@ variable "nixos_image_metadata" {
   description = "Path to the built metadata tarball"
 }
 
+variable "host_src_share_path" {
+  type        = string
+  description = "Path on host to share into the guest at /mnt/src"
+}
+
 resource "incus_image" "slopbox" {
   source_file = {
     data_path     = var.nixos_image_data
@@ -44,7 +49,7 @@ resource "incus_instance" "slopbox" {
     name = "shared_src"
     type = "disk"
     properties = {
-      source = "/home/brendan/src/slop"
+      source = var.host_src_share_path
       path   = "/mnt/src"
     }
   }
