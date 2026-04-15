@@ -42,5 +42,7 @@
   # invalidate that hash so don't include the config reviison.
   system.configurationRevision = null;
 
+  boot.loader.timeout = 0;
+
   system.stateVersion = "25.11";
 }
