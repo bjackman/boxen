@@ -25,6 +25,11 @@ variable "host_src_share_path" {
   description = "Path on host to share into the guest at /mnt/src"
 }
 
+variable "nproc" {
+  type        = string
+  description = "Number of CPUs"
+}
+
 resource "incus_image" "slopbox" {
   source_file = {
     data_path     = var.nixos_image_data
@@ -41,7 +46,7 @@ resource "incus_instance" "slopbox" {
   running  = true
   config = {
     "security.secureboot" = false
-    "limits.cpu"          = "16"
+    "limits.cpu"          = var.nproc
     "limits.memory"       = "32GiB"
   }
 
