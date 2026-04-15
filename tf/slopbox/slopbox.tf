@@ -58,4 +58,17 @@ resource "incus_instance" "slopbox" {
       path   = "/mnt/src"
     }
   }
+
+  # Override the root disk with a fixed size. I assume it's possible to override
+  # the size in the NixOS config instead but doing it this way lets us avoid
+  # rebuilding the rootfs when we change it.
+  device {
+    name = "root"
+    type = "disk"
+    properties = {
+      path = "/"
+      pool = "default"
+      size = "128GiB"
+    }
+  }
 }
