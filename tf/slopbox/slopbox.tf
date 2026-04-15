@@ -30,6 +30,11 @@ variable "nproc" {
   description = "Number of CPUs"
 }
 
+variable "idmap" {
+  type        = string
+  description = "Mysterious incantation to set up UID/GID mapping in virtiofs"
+}
+
 resource "incus_image" "slopbox" {
   source_file = {
     data_path     = var.nixos_image_data
@@ -48,6 +53,7 @@ resource "incus_instance" "slopbox" {
     "security.secureboot" = false
     "limits.cpu"          = var.nproc
     "limits.memory"       = "32GiB"
+    "raw.idmap"           = var.idmap
   }
 
   device {

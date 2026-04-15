@@ -15,8 +15,15 @@ pkgs.writeShellApplication {
     cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf/slopbox"
     # Stupid hack to make this work on gLinux where $HOME isn't in /home
     export TF_VAR_host_src_share_path=$HOME/src/slop
+
     TF_VAR_nproc="$(nproc)"
     export TF_VAR_nproc
+
+    # Hack to map host UIDs into the guest, assuming we can hardcode guest UIDs
+    # and that host UIDs are at least stable.
+    TF_VAR_idmap="$(printf "uid %d 1000\ngid %d 100" "$(id -u)" "$(id -g)")"
+    export TF_VAR_idmap
+
     tofu apply
   '';
 }
