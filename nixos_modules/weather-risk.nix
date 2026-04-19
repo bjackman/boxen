@@ -8,13 +8,46 @@
 # be in the root user's database).
 { config, ... }:
 {
+
+  virtualisation = {
+    containers.enable = true;
+    podman = {
+      enable = true;
+      dockerCompat = true;
+    };
+  };
+
+  # THIS IS GARBAGE I DON'T FUCKING KNOW JUST DOING WHATEVER SLOP MAKES IT WORK
+  bjackman.impermanence.extraPersistence.directories = [
+    {
+      directory = "/var/lib/containers/storage/volumes";
+      mode = "0711";
+    }
+    {
+      directory = "/var/lib/containers/storage/overlay";
+      mode = "0711";
+    }
+  ];
+  systemd.network.networks."00-unmanaged-containers" = {
+    matchConfig.Name = "veth* podman*";
+    linkConfig.Unmanaged = "yes";
+  };
+  systemd.network.links."10-veth-mac" = {
+    matchConfig.OriginalName = "veth*";
+    linkConfig.MACAddressPolicy = "none";
+  };
+
   bjackman.ports.weather-risk = { };
+  networking.firewall.allowedTCPPorts = [ config.bjackman.ports.weather-risk.port ];
   # Ensure it only uses local images to avoid accidentally falling back to
   # random services on remote registries.
   virtualisation.containers.registries.search = [ ];
   virtualisation.oci-containers.containers."weather-risk" = {
     image = "localhost/weather-risk:latest";
     pull = "never";
-    ports = [ "${toString config.bjackman.ports.weather-risk.port}:80" ];
+    ports = [ "0.0.0.0:${toString config.bjackman.ports.weather-risk.port}:80" ];
   };
+  networking.firewall.trustedInterfaces = [ "podman+" ];
+
+  bjackman.iap.services.weather-risk.port = config.bjackman.ports.weather-risk.port;
 }
