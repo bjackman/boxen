@@ -21,6 +21,7 @@
     ../silverbullet.nix
     ../iap.nix
     ../tailscale-exit-node.nix
+    ../weather-risk.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
