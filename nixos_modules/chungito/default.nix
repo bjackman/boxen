@@ -62,7 +62,7 @@
   programs.steam.enable = true;
 
   # https://wiki.nixos.org/wiki/Maintainers:Fastly#Cache_v2_plans
-  nix.settings.substituters = [ "https://aseipp-nix-cache.global.ssl.fastly.net" ];
+  nix.binaryCaches = [ "https://aseipp-nix-cache.global.ssl.fastly.net" ];
 
   # Try to build Darwin stuff on Romy's MacBook...
   nix.buildMachines = [
