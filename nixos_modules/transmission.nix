@@ -8,11 +8,17 @@
   imports = [
     ./brendan.nix
     ./ports.nix
+    ./iap.nix
     agenix.nixosModules.default
   ];
 
   bjackman.ports = {
     transmission = { };
+  };
+
+  bjackman.iap.services.transmission = {
+    port = config.bjackman.ports.transmission.port;
+    allowedUsers = [ "brendan" ];
   };
 
   age.secrets.transmission-rpc-password-json.file = ../secrets/transmission-rpc-password.json.age;
