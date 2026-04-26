@@ -82,8 +82,8 @@
             baseShareParams = {
               "read only" = "no";
               "guest ok" = "no";
-              "create mask" = "0644";
-              "directory mask" = "0755";
+              "create mask" = "0664";
+              "directory mask" = "0775";
               "force user" = "samba";
               "force group" = "samba";
             };
@@ -132,6 +132,7 @@
           samba = {
             isSystemUser = true;
             group = "samba";
+            extraGroups = [ "media-writers" ];
             description = "Samba filesystem access user";
           };
         };

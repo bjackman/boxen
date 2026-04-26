@@ -80,8 +80,14 @@
   systemd.tmpfiles.settings = {
     "10-mnt-nas-media" = {
       "/mnt/nas/media" = {
-        d = {
-
+        z = {
+          group = "media-writers";
+          mode = "0775";
+          user = "root";
+        };
+      };
+      "/mnt/nas/media/transmission" = {
+        Z = {
           group = "media-writers";
           mode = "0775";
           user = "root";

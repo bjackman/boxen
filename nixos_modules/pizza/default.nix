@@ -107,6 +107,8 @@
   bjackman.sambaMounts.media = {
     passwordFile = ../../secrets/media-samba-password.age;
     localGroup = "nas-media";
+    fileMode = "0664";
+    dirMode = "0775";
     mountpoint = "/mnt/nas-media";
   };
 

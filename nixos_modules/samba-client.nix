@@ -47,6 +47,16 @@
                 default = "root";
                 description = "Local Unix group that will own the files in the mount.";
               };
+              fileMode = lib.mkOption {
+                type = str;
+                default = "0644";
+                description = "Mode for files in the mount.";
+              };
+              dirMode = lib.mkOption {
+                type = str;
+                default = "0755";
+                description = "Mode for directories in the mount.";
+              };
               mountpoint = lib.mkOption {
                 type = str;
                 description = "Local path to mount the share";
@@ -94,6 +104,8 @@
             # Local user that owns the files mounted here
             "uid=${mountCfg.localUser}"
             "gid=${mountCfg.localGroup}"
+            "file_mode=${mountCfg.fileMode}"
+            "dir_mode=${mountCfg.dirMode}"
           ];
         }
       ) cfg;
