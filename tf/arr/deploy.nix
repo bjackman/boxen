@@ -35,6 +35,7 @@ pkgs.writeShellApplication {
       RADARR_URL = mkUrl "radarr";
       SONARR_URL = mkUrl "sonarr";
       TF_VAR_bitmagnet_torznab_url = "${mkUrl "bitmagnet"}/torznab";
+      TF_VAR_transmission_host = (getService "transmission").server.networking.hostName;
       TF_VAR_transmission_username = "brendan";
       TF_VAR_transmission_port = toString (getService "transmission").port;
     };

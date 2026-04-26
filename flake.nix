@@ -159,7 +159,7 @@
           bitmagnet = nodes.pizza;
           radarr = nodes.norte;
           sonarr = nodes.norte;
-          transmission = nodes.norte;
+          transmission = nodes.pizza;
         };
       };
     in

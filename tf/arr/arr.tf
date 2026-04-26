@@ -57,14 +57,28 @@ resource "radarr_indexer_torznab" "bitmagnet" {
   priority                  = 25
 }
 
+variable "transmission_host" {
+  type = string
+}
+
 resource "radarr_download_client_transmission" "transmission" {
   name     = "Transmission"
-  host     = "localhost"
+  host     = var.transmission_host
   port     = var.transmission_port
   priority = 25
   enable   = true
   username = var.transmission_username
   password = var.transmission_password
+}
+
+# Remote Path Mappings are required because Transmission (on pizza) and
+# Radarr/Sonarr (on norte) see the same files at different paths.
+# Transmission reports paths like /mnt/nas-media/..., but Radarr needs to find
+# them at /mnt/nas/media/... to perform local hardlinks.
+resource "radarr_remote_path_mapping" "transmission_pizza" {
+  host        = var.transmission_host
+  remote_path = "/mnt/nas-media/transmission/downloads/"
+  local_path  = "/mnt/nas/media/transmission/downloads/"
 }
 
 resource "radarr_root_folder" "movies" {
@@ -84,12 +98,19 @@ resource "sonarr_indexer_torznab" "bitmagnet" {
 
 resource "sonarr_download_client_transmission" "transmission" {
   name     = "Transmission"
-  host     = "localhost"
+  host     = var.transmission_host
   port     = var.transmission_port
   priority = 25
   enable   = true
   username = var.transmission_username
   password = var.transmission_password
+}
+
+# See radarr_remote_path_mapping for explanation.
+resource "sonarr_remote_path_mapping" "transmission_pizza" {
+  host        = var.transmission_host
+  remote_path = "/mnt/nas-media/transmission/downloads/"
+  local_path  = "/mnt/nas/media/transmission/downloads/"
 }
 
 resource "sonarr_root_folder" "movies" {

@@ -123,6 +123,14 @@
     };
   };
 
+  systemd.services.transmission.serviceConfig = {
+    SupplementaryGroups = [ "nas-media" ];
+  };
+  services.transmission.settings = {
+    download-dir = "/mnt/nas-media/transmission/downloads";
+    incomplete-dir = "/mnt/nas-media/transmission/incomplete";
+  };
+
   # Dynamic DNS. None of this shit is documented AFAICS, found from a
   # combination of Reddit and AI.
   age.secrets.cloudflare-dns-api-token.file = ../../secrets/cloudflare-dns-api-token.age;

@@ -32,11 +32,5 @@
     # with the settings above.
     credentialsFile = config.age.secrets.transmission-rpc-password-json.path;
   };
-  bjackman.impermanence.extraPersistence.directories = [
-    {
-      directory = config.services.transmission.settings.download-dir;
-      mode = "0755";
-    }
-  ];
   systemd.services.transmission.serviceConfig.StateDirectoryMode = "0755";
 }

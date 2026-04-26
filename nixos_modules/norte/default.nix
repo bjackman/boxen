@@ -14,7 +14,6 @@
     ../brendan.nix
     ../server.nix
     ../common.nix
-    ../transmission.nix
     ../users.nix
     ../node-exporter.nix
     ../restic-exporter.nix
@@ -76,29 +75,6 @@
     smartctl.enable = true;
     zfs.enable = true;
   };
-
-  users.groups.media-writers = { };
-  systemd.services.transmission.serviceConfig = {
-    SupplementaryGroups = [ "media-writers" ];
-    ReadWritePaths = [ "/mnt/nas/media" ];
-  };
-  services.transmission.settings = {
-    download-dir = "/mnt/nas/media/transmission/downloads";
-    incomplete-dir = "/mnt/nas/media/transmission/incomplete";
-  };
-  systemd.tmpfiles.settings."10-transmission-incomplete" =
-    let
-      service = config.systemd.services.transmission.serviceConfig;
-      def = {
-        user = service.User;
-        group = service.Group;
-        mode = "0755";
-      };
-    in
-    {
-      "${config.services.transmission.settings.incomplete-dir}".d = def;
-      "${config.services.transmission.settings.download-dir}".d = def;
-    };
 
   users.groups.media-writers = { };
   systemd.tmpfiles.settings = {
