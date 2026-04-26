@@ -25,4 +25,6 @@
     source = "${pkgs.zed-editor.remote_server}/bin";
     recursive = true;
   };
+
+  home.packages = [ pkgs.btop-cuda ];
 }
