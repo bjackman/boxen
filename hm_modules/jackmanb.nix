@@ -60,6 +60,13 @@
       controlPath = "~/.ssh/master-%r@%n:%p";
       forwardAgent = true; # For gnubby
     };
+    # For fucked up Google-internal GCP SSH proxies, the hostnames are too long
+    # for the normal ControlMaster shit to work. Use an abbreviated one. Note it
+    # really has to be fully abbreviated, if you try to add any other stuff to
+    # the path to make it less confusing the issue comes back.
+    matchBlocks."*.gcpnode.com" = {
+      controlPath = "~/.ssh/%C";
+    };
     # systemd-ssh-proxy doesn't seem to play nice with ControlMaster, but also
     # it isn't useful there anyway.
     matchBlocks."unix/* unix%* vsock/* vsock%* vsock-mux/* vsock-mux%* machine/* machine%*".controlMaster =
