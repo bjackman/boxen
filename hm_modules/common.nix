@@ -161,7 +161,7 @@
     ];
 
     age.secrets.migadu-linuxdev-password.file = ../secrets/migadu-linuxdev-password.age;
-    accounts.email.accounts.linuxdev = {
+    accounts.email.accounts.linuxdev = rec {
       address = "brendan.jackman@linux.dev";
       realName = "Brendan Jackman";
       primary = lib.mkDefault true;
@@ -169,12 +169,16 @@
         outgoing = "smtps://brendan.jackman%40linux.dev@smtp.migadu.com:465";
         outgoing-cred-cmd = "cat ${config.age.secrets.migadu-linuxdev-password.path}";
       };
+      userName = address;
+      passwordCommand = "cat ${config.age.secrets.migadu-linuxdev-password.path}";
+      imap.host = "imap.migadu.com";
+      mbsync = {
+        enable = true;
+        create = "maildir";
+      };
     };
-    # TODO: This doesn't configure any way to fetch mail from the @linux.dev
-    # account which means I won't see mail sent to me directly.
-    # https://gemini.google.com/share/b583ccdd6571 - AI suggests just adding
-    # an IMAP fetch via mbsync to the same maildir as lei, apparently notmuch
-    # should be able to handle this with a bit of tweaking.
+    programs.mbsync.enable = true;
+    services.mbsync.enable = true;
     lkml = {
       enable = true;
       accountRef = lib.mkDefault "linuxdev";
