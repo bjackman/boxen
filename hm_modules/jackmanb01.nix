@@ -21,4 +21,18 @@
         "exec ssh bj /usr/local/google/home/jackmanb/.nix-profile/bin/wezterm cli spawn --new-window fish";
     };
   };
+
+  # Desktop entry to run Chrome forcing native Wayland mode, with a workaround
+  # flag to make fractional scaling work.
+  xdg.desktopEntries.chrome-wayland = {
+    name = "Google Chrome (Wayland)";
+    genericName = "Web Browser";
+    exec = "google-chrome --ozone-platform=wayland --disable-features=WaylandFractionalScaleV1 %U";
+    terminal = false;
+    categories = [ "Network" "WebBrowser" ];
+    icon = "google-chrome";
+    settings = {
+      StartupNotify = "true";
+    };
+  };
 }
