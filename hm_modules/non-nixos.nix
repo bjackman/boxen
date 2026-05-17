@@ -23,4 +23,6 @@
     # this is probably similar enough that it's helpful to have it warm.
     "github:bjackman/boxen/master#homeConfigurations.${config.home.username}.activationPackage"
   ];
+
+  targets.genericLinux.enable = true;
 }
