@@ -36,7 +36,11 @@
     genericName = "Text Editor`";
     exec = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --disable-features=WaylandFractionalScaleV1 --ozone-platform-hint=auto --unity-launch .config/home-manager";
     terminal = false;
-    categories = [ "Development" "TextEditor" "IDE" ];
+    categories = [
+      "Development"
+      "TextEditor"
+      "IDE"
+    ];
     icon = "code";
     settings = {
       StartupNotify = "true";

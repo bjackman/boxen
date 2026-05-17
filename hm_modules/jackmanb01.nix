@@ -29,7 +29,10 @@
     genericName = "Web Browser";
     exec = "google-chrome --ozone-platform=wayland --disable-features=WaylandFractionalScaleV1 %U";
     terminal = false;
-    categories = [ "Network" "WebBrowser" ];
+    categories = [
+      "Network"
+      "WebBrowser"
+    ];
     icon = "google-chrome";
     settings = {
       StartupNotify = "true";

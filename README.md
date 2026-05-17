@@ -244,13 +244,13 @@ It works like this:
   systemd service.
 
   - LKML mail is fetched from Lore using
-  [`lei`](https://public-inbox.org/lei.html). This goes into `~/Maildir/lore`.
+    [`lei`](https://public-inbox.org/lei.html). This goes into `~/Maildir/lore`.
 
   - Separately from this, mail is fetched from my actual mailbox via IMAP, this
-  goes into `~/Maildir/linuxdev`.
+    goes into `~/Maildir/linuxdev`.
 
   - `notmuch` then indexes the whole of `~/Maildir`. It should detect duplicates
-  for messages that appear in both lore and the IMAP mailbox.
+    for messages that appear in both lore and the IMAP mailbox.
 
 - There is a script packaged `notmuch-propagate-mute` which provides a muting
   mechanism (which AFAICT exists in no mail clients for some reason) for keeping
