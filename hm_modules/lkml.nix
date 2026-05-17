@@ -18,6 +18,18 @@
         since it has program configurations that are coupled with it.
       '';
     };
+
+    extraAddresses = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      description = ''
+        Additional email addresses to search for in lore archives.
+
+        This can be used to see mail that was sent to other addresses than the
+        ones that you are actually configuring for SMTP/git-send-email etc.
+        (e.g. from previous jobs).
+      '';
+    };
   };
   config = lib.mkIf config.lkml.enable (
     let
@@ -167,13 +179,19 @@
             # badly if you provide each "term" of the search query as separate
             # arguments. It also munges the date filter in a weird way that I
             # don't understand and which is buggy.
-            text = ''
-              lei q -I https://lore.kernel.org/all/ -o ${config.accounts.email.maildirBasePath}/lore \
-                --threads --dedupe=mid --augment \
-                'a:${account.address}' 'AND' 'dt:20250204132159..'
-              notmuch new
-              do-notmuch-propagate-mute
-            '';
+            text =
+              let
+                allAddresses = [ account.address ] ++ cfg.extraAddresses;
+                addressMatchers = map (addr: "a:${addr}") allAddresses;
+                addressTerm = "(${lib.concatStringsSep " OR " addressMatchers})";
+              in
+              ''
+                lei q -I https://lore.kernel.org/all/ -o ${config.accounts.email.maildirBasePath}/lore \
+                  --threads --dedupe=mid --augment \
+                  ${addressTerm} 'AND' 'dt:20250204132159..'
+                notmuch new
+                do-notmuch-propagate-mute
+              '';
           })
         ];
 

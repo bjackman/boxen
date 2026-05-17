@@ -182,6 +182,7 @@
     lkml = {
       enable = true;
       accountRef = lib.mkDefault "linuxdev";
+      extraAddresses = [ "jackmanb@google.com" ];
     };
   };
 }
