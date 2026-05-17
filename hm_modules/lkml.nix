@@ -7,15 +7,6 @@
 {
   options.lkml = {
     enable = lib.mkEnableOption "lkml";
-    # Home Manager also has accounts.email.maildirBasePath but since this setup
-    # is kinda special, define a separate one specifically for LKML.
-    maildirBasePath = lib.mkOption {
-      type = lib.types.path;
-      # Note in my old dotifles repo I was unable to set this due to notmuch not
-      # expanding ~ or $HOME. But in Nix I can can set it as an absolute path
-      # :).
-      default = "${config.home.homeDirectory}/lkml";
-    };
     # TODO: This is a bit crazy. Probably the solution to that is to drop the
     # usage of high-level aerc and notmuch configuration, and instead configure
     # them directly via home.files in here.
@@ -36,10 +27,8 @@
     {
       programs.notmuch = {
         enable = true;
-        # No option to directly override the default which is
-        # config.accounts.email.maildirBasePath.
         extraConfig = {
-          database.path = cfg.maildirBasePath;
+          maildir.synchronize_flags = "true";
         };
       };
 
@@ -126,10 +115,10 @@
               '';
             in
             {
-              source = "notmuch://${config.lkml.maildirBasePath}";
+              source = "notmuch://${config.accounts.email.maildirBasePath}";
               # Needed for postponing messages:
               #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
-              maildir-store = "${config.lkml.maildirBasePath}";
+              maildir-store = config.accounts.email.maildirBasePath;
               query-map = "${queryMap}";
             };
         };
@@ -153,7 +142,7 @@
             # Don't want errexit/pipefail as we'll be hiding the SIGABRT below.
             bashOptions = [ "nounset" ];
             text = ''
-              notmuch-propagate-mute --email ${account.address} --db-path ${cfg.maildirBasePath} "$@"
+              notmuch-propagate-mute --email ${account.address} --db-path ${config.accounts.email.maildirBasePath} "$@"
               # Due to garbage Python bindings, the script always gets SIGABRT.
               # Hide that from this script's exit code since this will
               # eventually be used in a systemd service and it's annoying if
@@ -179,7 +168,7 @@
             # arguments. It also munges the date filter in a weird way that I
             # don't understand and which is buggy.
             text = ''
-              lei q -I https://lore.kernel.org/all/ -o ${cfg.maildirBasePath} \
+              lei q -I https://lore.kernel.org/all/ -o ${config.accounts.email.maildirBasePath}/lore \
                 --threads --dedupe=mid --augment \
                 'a:${account.address}' 'AND' 'dt:20250204132159..'
               notmuch new

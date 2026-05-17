@@ -243,12 +243,14 @@ It works like this:
 - A command called `get-lkml` takes care of fetching mail. It's also run via a
   systemd service.
 
-  - Email is fetched from Lore using [`lei`](https://public-inbox.org/lei.html).
-    There is **no IMAP** or anything, this system works exclusively from mailing
-    list archives. If someone emails you without CCing the list, you just have to
-    reply via webmail or something.
+  - LKML mail is fetched from Lore using
+  [`lei`](https://public-inbox.org/lei.html). This goes into `~/Maildir/lore`.
 
-  - It's then indexed using `notmuch`
+  - Separately from this, mail is fetched from my actual mailbox via IMAP, this
+  goes into `~/Maildir/linuxdev`.
+
+  - `notmuch` then indexes the whole of `~/Maildir`. It should detect duplicates
+  for messages that appear in both lore and the IMAP mailbox.
 
 - There is a script packaged `notmuch-propagate-mute` which provides a muting
   mechanism (which AFAICT exists in no mail clients for some reason) for keeping
