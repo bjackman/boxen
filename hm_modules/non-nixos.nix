@@ -25,4 +25,22 @@
   ];
 
   targets.genericLinux.enable = true;
+
+  # Desktop entry to run VS Code forcing native Wayland mode, with a workaround
+  # flag to make fractional scaling work.
+  # According to Gemini, VS Code does have a native way to configure these flags
+  # but the maintainers have advised against relying on that for the Wayland
+  # setup because of the way Electron initialisation happens.
+  xdg.desktopEntries.vscode-wayland = {
+    name = "Visual Studio Code (Wayland)";
+    genericName = "Text Editor`";
+    exec = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform-hint=auto --unity-launch .config/home-manager";
+    terminal = false;
+    categories = [ "Development" "TextEditor" "IDE" ];
+    icon = "code";
+    settings = {
+      StartupNotify = "true";
+      Keywords = "vscode;vs;code;";
+    };
+  };
 }
