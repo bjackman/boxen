@@ -183,7 +183,11 @@
               let
                 allAddresses = [ account.address ] ++ cfg.extraAddresses;
                 addressMatchers = map (addr: "a:${addr}") allAddresses;
-                addressTerm = "(${lib.concatStringsSep " OR " addressMatchers})";
+                # The quoting shit above is also why this quoting is such a
+                # mess, we want to send parens as individual arguments, need to
+                # put them in quotes so that they don't get interpreted as a
+                # subshell.
+                addressTerm = ''"(" ${lib.concatStringsSep " OR " addressMatchers} ")"'';
               in
               ''
                 lei q -I https://lore.kernel.org/all/ -o ${config.accounts.email.maildirBasePath}/lore \
