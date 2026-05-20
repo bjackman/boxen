@@ -59,6 +59,11 @@
       controlPersist = "8h";
       controlPath = "~/.ssh/master-%r@%n:%p";
       forwardAgent = true; # For gnubby
+      # Prevent stale multiplexed connections from hanging. This is an attempt
+      # to prevent the issue where VS Code fails to reconnect and I have to run
+      # `pkill ssh` (alternative workaround `ssh -O exit bj`).
+      serverAliveInterval = 60;
+      serverAliveCountMax = 3;
     };
     # For fucked up Google-internal GCP SSH proxies, the hostnames are too long
     # for the normal ControlMaster shit to work. Use an abbreviated one. Note it
