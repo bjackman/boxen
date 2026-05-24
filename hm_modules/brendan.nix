@@ -8,6 +8,7 @@
     homeDirectory = "/home/brendan";
     packages = with pkgs; [
       llm-agents.gemini-cli
+      llm-agents.antigravity
       vlc
       nautilus
     ];
