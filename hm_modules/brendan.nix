@@ -9,6 +9,7 @@
     packages = with pkgs; [
       llm-agents.gemini-cli
       llm-agents.antigravity
+      llm-agents.claude-code
       vlc
       nautilus
     ];
