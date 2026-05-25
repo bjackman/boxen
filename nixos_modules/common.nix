@@ -11,7 +11,6 @@
   ];
 
   nixpkgs.overlays = [ self.outputs.overlays.default ];
-  nixpkgs.config.allowUnfree = true;
 
   # Set up the default soft ulimit for open
   # file descriptors. Without this I've run into "too many open files" during

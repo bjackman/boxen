@@ -101,9 +101,11 @@
             sashiko = sashiko.packages.${system}.default;
           })
         ];
+        config.allowUnfree = true;
       };
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
+        config.allowUnfree = true;
       };
       # This is a rather bananas dance to create a cross-compiled deploy-rs.
       # There is a binary in there that needs to be build for the target
