@@ -306,3 +306,27 @@ editor, but:
   is like another field, you can scroll down to it to get back to editing.
 - `ctrl-x` gives you an Aerc command prompt, this is writen in the bindings
   config with `$ex` - I don't understand this.
+
+### Copying tags between devices
+
+The config in this repo should automatically cause all the relevant mails to be
+downloaded from remote severs. The important "state" is mostly in notmuch tags
+though, which is not automatically synced anywhere. Run this to export the tags
+to a file:
+
+```sh
+notmuch dump > /tmp/notmuch-dump.txt
+```
+
+Then copy the dump to the other machine. Back up the maildir on that machine in
+case this goes wrong then do:
+
+```sh
+notmuch restore < /tmp/notmuch-dump.txt
+```
+
+UNTESTED oneshot command (BACK UP FIRST):
+
+```sh
+notmuch dump | ssh $machine notmuch restore
+```
