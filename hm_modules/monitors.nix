@@ -75,12 +75,14 @@
               criteria = "Samsung Electric Company LS27A600U HNMR402251";
               # To the right of the Lenovo one
               position = "2560,0";
+              scale = 1.0;
             }
             {
               # This should match both my personal and my work laptop.
               criteria = "eDP-1";
               # Below the Lenovo one.
               position = "0,1440";
+              scale = 1.0;
             }
           ];
         };
