@@ -2,6 +2,9 @@
 {
   imports = [
     ./common.nix
+    # Don't import this from common.nix because the secrets aren't exposed to
+    # Google SSH keys.
+    ./chungito-ctrl.nix
   ];
   home = {
     username = "brendan";
