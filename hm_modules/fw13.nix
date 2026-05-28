@@ -1,5 +1,8 @@
 {
-  imports = [ ./pc.nix ];
+  imports = [
+    ./pc.nix
+    ./ssh-server.nix
+  ];
 
   wayland.windowManager.sway.config.input = {
     "type:touchpad" = {
