@@ -61,6 +61,10 @@
 
   services.tailscale.enable = true;
 
+  bjackman.impermanence.extraPersistence.users.brendan.files = [
+    ".claude.json" # yuck
+  ];
+
   bjackman.impermanence.extraPersistence.users.brendan.directories = [
     "Downloads"
     "Music"
@@ -80,6 +84,7 @@
     ".vscode"
     ".gemini" # yuck
     ".ollama" # yuck
+    ".claude" # yuck
     {
       directory = ".mozilla/firefox";
       mode = "0700";
