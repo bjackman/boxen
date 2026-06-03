@@ -10,7 +10,7 @@
     username = "brendan";
     homeDirectory = "/home/brendan";
     packages = with pkgs; [
-      llm-agents.antigravity
+      llm-agents.antigravity-cli
       llm-agents.claude-code
       vlc
       nautilus
