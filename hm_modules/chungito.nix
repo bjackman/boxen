@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 {
   imports = [
     ./homelab-ctrl.nix
@@ -27,4 +32,17 @@
   };
 
   home.packages = [ pkgs.btop-cuda ];
+
+  bjackman.waybar.showKeyboardLayout = true;
+
+  wayland.windowManager.sway.config = {
+    input."*".xkb_layout = "us,ch";
+    keybindings =
+      let
+        mod = config.wayland.windowManager.sway.config.modifier;
+      in
+      {
+        "${mod}+space" = lib.mkForce "input type:keyboard xkb_switch_layout next";
+      };
+  };
 }
