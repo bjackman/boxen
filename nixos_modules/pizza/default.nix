@@ -84,34 +84,46 @@
     after = [ "dev-disk-by\\x2dpartlabel-disk\\x2dmain\\x2droot.device" ];
     before = [ "sysroot.mount" ];
     unitConfig.DefaultDependencies = "no";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = pkgs.writeShellScript "rollback" ''
-        mkdir /btrfs_tmp
-        mount /dev/disk/by-partlabel/disk-main-root /btrfs_tmp
-        if [[ -e /btrfs_tmp/root ]]; then
-            mkdir -p /btrfs_tmp/old_roots
-            timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%-d_%H:%M:%S")
-            mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
-        fi
+    serviceConfig.Type = "oneshot";
+    # Use `script`, NOT `serviceConfig.ExecStart = pkgs.writeShellScript ...`.
+    # In the systemd stage-1 initrd only the scripts generated from `script`
+    # (so-called "jobScripts") get copied into the initramfs together with
+    # their closure (see nixpkgs systemd/initrd.nix: jobScripts are appended to
+    # `storePaths`). An ExecStart pointing at a standalone writeShellScript
+    # store path is *not* pulled into the initrd, so at boot systemd can't find
+    # it and the unit fails with status=203/EXEC ("Unable to locate executable
+    # /nix/store/...-rollback: No such file or directory"). That's what bricked
+    # the rollback after the 26.05 systemd-stage-1 switch.
+    script = ''
+      mkdir /btrfs_tmp
+      mount /dev/disk/by-partlabel/disk-main-root /btrfs_tmp
+      if [[ -e /btrfs_tmp/root ]]; then
+          mkdir -p /btrfs_tmp/old_roots
+          timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%-d_%H:%M:%S")
+          mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
+      fi
 
-        delete_subvolume_recursively() {
-            IFS=$'\n'
-            for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
-                delete_subvolume_recursively "/btrfs_tmp/$i"
-            done
-            btrfs subvolume delete "$1"
-        }
+      delete_subvolume_recursively() {
+          IFS=$'\n'
+          for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
+              delete_subvolume_recursively "/btrfs_tmp/$i"
+          done
+          btrfs subvolume delete "$1"
+      }
 
-        for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +30); do
-            delete_subvolume_recursively "$i"
-        done
+      for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +30); do
+          delete_subvolume_recursively "$i"
+      done
 
-        btrfs subvolume create /btrfs_tmp/root
-        umount /btrfs_tmp
-      '';
-    };
+      btrfs subvolume create /btrfs_tmp/root
+      umount /btrfs_tmp
+    '';
   };
+
+  # The default systemd initrd /bin ships coreutils, btrfs-progs and
+  # mount/umount, but NOT findutils. The rollback script's old_roots cleanup
+  # calls `find`, so add it explicitly or that loop fails at boot.
+  boot.initrd.systemd.initrdBin = [ pkgs.findutils ];
   fileSystems = {
     # Defined in disko.nix, but set neededForBoot here.
     "/persistent".neededForBoot = true;
