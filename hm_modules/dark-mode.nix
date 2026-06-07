@@ -16,6 +16,9 @@
     };
     gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
+    # I dunno what this really does it was just recommended as the new default
+    # in an evaluation warning on upgrade to 26.05.
+    gtk4.theme = null;
   };
   qt = {
     enable = true;
