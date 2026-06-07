@@ -60,6 +60,7 @@
   fileSystems."/mnt/nas" = {
     device = "nas";
     fsType = "zfs";
+    options = [ "nofail" ];
   };
   # /mnt/nas directly mounts the root dataset of the pool. In order to avoid
   # needing to snapshot this directory, the media tree is on a different
@@ -69,6 +70,7 @@
   fileSystems."/mnt/nas/media" = {
     device = "nas/media";
     fsType = "zfs";
+    options = [ "nofail" ];
   };
 
   services.prometheus.exporters = {
