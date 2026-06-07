@@ -3,10 +3,16 @@ let
   ports = config.bjackman.ports;
 in
 {
-  imports = [ ./postgres.nix ];
+  imports = [
+    ./iap.nix
+    ./postgres.nix
+  ];
 
   bjackman.ports = {
     bitmagnet = { };
+  };
+  bjackman.iap.services.bitmagnet = {
+    port = config.bjackman.ports.bitmagnet.port;
   };
 
   services.bitmagnet = {
