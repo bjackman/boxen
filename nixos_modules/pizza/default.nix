@@ -71,31 +71,48 @@
   # operation, it actually rearranges the subvolumes. Then we create a new /root
   # subvolume and delete old ones (older than 30d). This all happens before the
   # rootfs gets mounted.
-  # Note the by-partlabel path is coupled with the disko configuration.n
-  boot.initrd.postResumeCommands = lib.mkAfter ''
-    mkdir /btrfs_tmp
-    mount /dev/disk/by-partlabel/disk-main-root /btrfs_tmp
-    if [[ -e /btrfs_tmp/root ]]; then
-        mkdir -p /btrfs_tmp/old_roots
-        timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%-d_%H:%M:%S")
-        mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
-    fi
-
-    delete_subvolume_recursively() {
-        IFS=$'\n'
-        for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
-            delete_subvolume_recursively "/btrfs_tmp/$i"
-        done
-        btrfs subvolume delete "$1"
+  # Note the by-partlabel path is coupled with the disko configuration.
+  assertions = [
+    {
+      assertion = config.boot.initrd.systemd.enable;
+      message = "btrfs-impermanence rollback service requires systemd stage 1 (boot.initrd.systemd.enable)";
     }
+  ];
+  boot.initrd.systemd.services.rollback = {
+    description = "Rollback BTRFS root subvolume to a pristine state";
+    wantedBy = [ "initrd.target" ];
+    requires = [ "dev-disk-by\\x2dpartlabel-disk\\x2dmain\\x2droot.device" ];
+    after = [ "dev-disk-by\\x2dpartlabel-disk\\x2dmain\\x2droot.device" ];
+    before = [ "sysroot.mount" ];
+    unitConfig.DefaultDependencies = "no";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "rollback" ''
+        mkdir /btrfs_tmp
+        mount /dev/disk/by-partlabel/disk-main-root /btrfs_tmp
+        if [[ -e /btrfs_tmp/root ]]; then
+            mkdir -p /btrfs_tmp/old_roots
+            timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%-d_%H:%M:%S")
+            mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
+        fi
 
-    for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +30); do
-        delete_subvolume_recursively "$i"
-    done
+        delete_subvolume_recursively() {
+            IFS=$'\n'
+            for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
+                delete_subvolume_recursively "/btrfs_tmp/$i"
+            done
+            btrfs subvolume delete "$1"
+        }
 
-    btrfs subvolume create /btrfs_tmp/root
-    umount /btrfs_tmp
-  '';
+        for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +30); do
+            delete_subvolume_recursively "$i"
+        done
+
+        btrfs subvolume create /btrfs_tmp/root
+        umount /btrfs_tmp
+      '';
+    };
+  };
   fileSystems = {
     # Defined in disko.nix, but set neededForBoot here.
     "/persistent".neededForBoot = true;
