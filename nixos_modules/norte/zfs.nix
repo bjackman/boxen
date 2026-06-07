@@ -30,4 +30,7 @@
       "zfs.zfs_vdev_sync_read_max_active=1"
       "zfs.zfs_arc_sys_free=${mb 512}"
     ];
+
+  # Now default, set explicitly on upgrade to 26.06
+  boot.zfs.forceImportRoot = false;
 }

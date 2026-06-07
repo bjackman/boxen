@@ -402,7 +402,7 @@ notmuch dump | ssh $machine notmuch restore
   previously accepted a list of events, it now accepts an attrset keyed by the event name.
   ```
 
-- [ ] **`nixos_modules/sandy.nix`**: Set `boot.zfs.forceImportRoot = false` explicitly:
+- [x] **`nixos_modules/norte.nix`**: Set `boot.zfs.forceImportRoot = false` explicitly:
 
   ```
   evaluation warning: `boot.zfs.forceImportRoot` is using the default value of `true`.
@@ -429,5 +429,5 @@ After deploying to each machine:
   backend coexistence).
 - **chungito / fw13** (swayidle): After fixing swayidle config, confirm the screen locks/blanks on
   idle as expected.
-- **sandy** (ZFS): Confirm ZFS pools import cleanly on boot; check `zpool status`.
+- **norte** (ZFS): Confirm ZFS pools import cleanly on boot; check `zpool status`.
 - **dark mode**: On a graphical host, confirm GTK4 apps still render in dark mode.
