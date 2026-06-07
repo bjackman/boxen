@@ -330,3 +330,104 @@ UNTESTED oneshot command (BACK UP FIRST):
 ```sh
 notmuch dump | ssh $machine notmuch restore
 ```
+
+## NixOS 26.05 Upgrade Notes
+
+### Changes made
+
+- [x] **`flake.nix`**: Update `nixpkgs` to `nixos-26.05` and `home-manager` to `release-26.05`.
+
+- [x] **`nixos_modules/pizza/default.nix`**: Replace `boot.initrd.postResumeCommands` with
+  `boot.initrd.systemd.services.rollback`. The nixos-hardware t480 module now enables systemd
+  stage 1 initrd in 26.05, which forbids the old bash hook:
+
+  ```
+  error: Failed assertions:
+  - systemd stage 1 does not support `boot.initrd.postResumeCommands`.
+  ```
+
+  Also added an `assertions` entry to fail loudly if systemd stage 1 is ever disabled.
+
+- [x] **`nixos_modules/prometheus/perses.nix`**: Delete the `nixpkgs.overlays` block that pinned
+  Perses to `0.53.0-beta.4`. Upstream 26.05 ships `0.53.1`:
+
+  ```
+  evaluation warning: Upstream Perses version (0.53.1) is >= your override (0.53.0-beta.4).
+  You can delete the overlay.
+  ```
+
+- [x] **`hm_modules/dark-mode.nix`**: Add `gtk.gtk4.theme = null` to adopt the new default:
+
+  ```
+  evaluation warning: The default value of `gtk.gtk4.theme` has changed from `config.gtk.theme`
+  to `null`. You are currently using the legacy default because `home.stateVersion` is less
+  than "26.05".
+  ```
+
+- [x] **`hm_modules/nixos.nix`**: Add `programs.firefox.configPath = ".mozilla/firefox"` to keep
+  the pre-26.05 path (avoids migrating profile data on each machine):
+
+  ```
+  evaluation warning: The default value of `programs.firefox.configPath` has changed from
+  `".mozilla/firefox"` to `"${config.xdg.configHome}/mozilla/firefox"`.
+  ```
+
+- [x] **`nixos_modules/pc.nix`**: Change `networking.wireless.enable = false` to `lib.mkForce false`.
+  NetworkManager in 26.05 sets `networking.wireless.enable = true` internally (to use wpa_supplicant
+  as a backend), conflicting with the explicit `false` that prevents wpa_supplicant standalone from
+  running alongside NM:
+
+  ```
+  error: The option `networking.wireless.enable' has conflicting definition values:
+  - In `nixos_modules/pc.nix': false
+  - In `nixos/modules/services/networking/networkmanager.nix': true
+  ```
+
+- [ ] **`github:bjackman/jellarr`**: Update `pnpmDeps.hash` (fetcherVersion 1 → 3). The pnpm
+  dependency store is stale — `@vitest/utils` bumped to 4.0.6:
+
+  ```
+  [ERR_PNPM_NO_OFFLINE_TARBALL] A package is missing from the store but cannot download it
+  in offline mode. The missing package may be downloaded from
+  https://registry.npmjs.org/@vitest/utils/-/utils-4.0.6.tgz.
+  ```
+
+  Fix: set `pnpmDeps.hash = ""`, build to get hash mismatch, copy in the new hash.
+
+- [ ] **`hm_modules/` (swayidle)**: Fix `services.swayidle.events` syntax — now an attrset keyed
+  by event name instead of a list (affects chungito, fw13, brendan home config):
+
+  ```
+  evaluation warning: The syntax of services.swayidle.events has changed. While it
+  previously accepted a list of events, it now accepts an attrset keyed by the event name.
+  ```
+
+- [ ] **`nixos_modules/sandy.nix`**: Set `boot.zfs.forceImportRoot = false` explicitly:
+
+  ```
+  evaluation warning: `boot.zfs.forceImportRoot` is using the default value of `true`.
+  It is highly recommended to set it to `false`, the new default from 26.11 on.
+  ```
+
+- [ ] **`hm_modules/jackmanb.nix`**: Migrate `programs.ssh.matchBlocks` to `programs.ssh.settings`:
+
+  ```
+  trace: warning: `programs.ssh.matchBlocks` defined in `hm_modules/jackmanb.nix` is deprecated.
+  Use `programs.ssh.settings`.
+  ```
+
+### Test plan
+
+After deploying to each machine:
+
+- **pizza** (BTRFS impermanence): Reboot and confirm root is wiped (check that `/` is a fresh
+  subvolume — e.g. `/tmp` is empty, ephemeral files from the previous boot are gone). Confirm the
+  `rollback` unit ran: `journalctl -b --unit rollback`.
+- **pizza** (services): Confirm Jellarr, Perses, Jellyfin, Miniflux, FileBrowser, Silverbullet, and
+  Transmission are all healthy after reboot.
+- **all PC/laptop hosts** (wireless): Confirm WiFi connects normally (NetworkManager + wpa_supplicant
+  backend coexistence).
+- **chungito / fw13** (swayidle): After fixing swayidle config, confirm the screen locks/blanks on
+  idle as expected.
+- **sandy** (ZFS): Confirm ZFS pools import cleanly on boot; check `zpool status`.
+- **dark mode**: On a graphical host, confirm GTK4 apps still render in dark mode.
