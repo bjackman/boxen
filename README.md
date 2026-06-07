@@ -383,7 +383,7 @@ notmuch dump | ssh $machine notmuch restore
   - In `nixos/modules/services/networking/networkmanager.nix': true
   ```
 
-- [ ] **`github:bjackman/jellarr`**: Update `pnpmDeps.hash` (fetcherVersion 1 → 3). The pnpm
+- [x] **`github:bjackman/jellarr`**: Update `pnpmDeps.hash` (fetcherVersion 1 → 3). The pnpm
   dependency store is stale — `@vitest/utils` bumped to 4.0.6:
 
   ```
