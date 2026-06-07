@@ -72,12 +72,9 @@ in
     services.swayidle = {
       enable = true;
       # Lock screen when going to sleep.
-      events = [
-        {
-          event = "before-sleep";
-          command = "${lib.getExe config.programs.swaylock.package}";
-        }
-      ];
+      events = {
+        before-sleep = "${lib.getExe config.programs.swaylock.package}";
+      };
       # Debug mode - this is just basic logging, should be default.
       extraArgs = [ "-d" ];
       # Lock screen after being idle for a while.

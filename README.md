@@ -394,7 +394,7 @@ notmuch dump | ssh $machine notmuch restore
 
   Fix: set `pnpmDeps.hash = ""`, build to get hash mismatch, copy in the new hash.
 
-- [ ] **`hm_modules/` (swayidle)**: Fix `services.swayidle.events` syntax — now an attrset keyed
+- [x] **`hm_modules/sway.nix`**: Fix `services.swayidle.events` syntax — now an attrset keyed
   by event name instead of a list (affects chungito, fw13, brendan home config):
 
   ```
