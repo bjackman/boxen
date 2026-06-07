@@ -106,6 +106,10 @@
             "gid=${mountCfg.localGroup}"
             "file_mode=${mountCfg.fileMode}"
             "dir_mode=${mountCfg.dirMode}"
+            # Don't mount until tailscale is up so that we can look up the
+            # server via MagicDNS.
+            "x-systemd.after=tailscaled.service"
+            "x-systemd.requires=tailscaled.service"
           ];
         }
       ) cfg;
