@@ -1,5 +1,22 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
+  # dbus-broker's reload times out mid-session in 26.05/systemd-260, causing
+  # switch-to-configuration to exit non-zero (and deploy-rs to roll back).
+  # NixOS's dbus module (services/system/dbus.nix) sets reloadIfChanged=true on
+  # both the `dbus-broker` user unit AND its `dbus` alias, and
+  # switch-to-configuration acts on the `dbus` alias name — so overriding only
+  # `dbus-broker` isn't enough. Suppress reload *and* restart on both names so
+  # the switch leaves the running session bus untouched. Config is picked up on
+  # next session start anyway.
+  systemd.user.services.dbus = {
+    reloadIfChanged = lib.mkForce false;
+    restartIfChanged = false;
+  };
+  systemd.user.services.dbus-broker = {
+    reloadIfChanged = lib.mkForce false;
+    restartIfChanged = false;
+  };
+
   users.users.brendan = {
     isNormalUser = true;
     description = "Brendan Jackman";
