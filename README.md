@@ -409,8 +409,7 @@ notmuch dump | ssh $machine notmuch restore
   It is highly recommended to set it to `false`, the new default from 26.11 on.
   ```
 
-- [ ] **`hm_modules/jackmanb.nix`**: Migrate `programs.ssh.matchBlocks` to `programs.ssh.settings`:
-
+- [x] **`hm_modules/jackmanb.nix`**: Migrate `programs.ssh.matchBlocks` to `programs.ssh.settings`:
   ```
   trace: warning: `programs.ssh.matchBlocks` defined in `hm_modules/jackmanb.nix` is deprecated.
   Use `programs.ssh.settings`.

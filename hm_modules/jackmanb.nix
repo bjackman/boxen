@@ -52,29 +52,29 @@
   programs.ssh = {
     enable = true;
     package = null; # Don't install (this is the default, but make sure)
-    matchBlocks."bj".hostname = "bj.c.googlers.com";
-    matchBlocks."aethelred".hostname = "aethelred.zrh.corp.google.com";
-    matchBlocks."*" = {
-      controlMaster = "auto";
-      controlPersist = "8h";
-      controlPath = "~/.ssh/master-%r@%n:%p";
-      forwardAgent = true; # For gnubby
+    settings."bj".HostName = "bj.c.googlers.com";
+    settings."aethelred".HostName = "aethelred.zrh.corp.google.com";
+    settings."*" = {
+      ControlMaster = "auto";
+      ControlPersist = "8h";
+      ControlPath = "~/.ssh/master-%r@%n:%p";
+      ForwardAgent = true; # For gnubby
       # Prevent stale multiplexed connections from hanging. This is an attempt
       # to prevent the issue where VS Code fails to reconnect and I have to run
       # `pkill ssh` (alternative workaround `ssh -O exit bj`).
-      serverAliveInterval = 60;
-      serverAliveCountMax = 3;
+      ServerAliveInterval = 60;
+      ServerAliveCountMax = 3;
     };
     # For fucked up Google-internal GCP SSH proxies, the hostnames are too long
     # for the normal ControlMaster shit to work. Use an abbreviated one. Note it
     # really has to be fully abbreviated, if you try to add any other stuff to
     # the path to make it less confusing the issue comes back.
-    matchBlocks."*.gcpnode.com" = {
-      controlPath = "~/.ssh/%C";
+    settings."*.gcpnode.com" = {
+      ControlPath = "~/.ssh/%C";
     };
     # systemd-ssh-proxy doesn't seem to play nice with ControlMaster, but also
     # it isn't useful there anyway.
-    matchBlocks."unix/* unix%* vsock/* vsock%* vsock-mux/* vsock-mux%* machine/* machine%*".controlMaster =
+    settings."unix/* unix%* vsock/* vsock%* vsock-mux/* vsock-mux%* machine/* machine%*".ControlMaster =
       "no";
     # To pre-empt deprecation of default values:
     enableDefaultConfig = false;
