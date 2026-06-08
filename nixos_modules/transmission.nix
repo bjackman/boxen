@@ -21,7 +21,6 @@
     allowedUsers = [ "brendan" ];
   };
 
-  age.secrets.transmission-rpc-password-json.file = ../secrets/transmission-rpc-password.json.age;
   services.transmission = {
     package = pkgs.transmission_4;
     enable = true;
@@ -29,14 +28,15 @@
     settings = {
       rpc-bind-address = "0.0.0.0";
       rpc-whitelist-enabled = false;
-      rpc-authentication-required = true;
-      rpc-username = "brendan";
+      # Transmission's anti-DNS-rebinding host check only allows localhost by
+      # default, which rejects RPC calls arriving with the proxy's Host header
+      # (transmission.home.yawn.io). Disable it so the UI works through the IAP
+      # proxy.
+      rpc-host-whitelist-enabled = false;
+      # Trust the LAN baby, I trust this LAN with my life, very trustworth LAN
+      rpc-authentication-required = false;
       rpc-port = config.bjackman.ports.transmission.port;
     };
-    # This is a weird roundabout way to set rpc-password in the the settings.
-    # The name of the option is bad, it's actually a JSON file that gets merged
-    # with the settings above.
-    credentialsFile = config.age.secrets.transmission-rpc-password-json.path;
   };
   systemd.services.transmission.serviceConfig.StateDirectoryMode = "0755";
 }
