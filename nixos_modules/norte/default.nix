@@ -137,6 +137,16 @@
   };
 
   users.groups.media-writers = { };
+
+  # Need media-writers ACL to support hardlinking with transmissions' output
+  # (assuming protect_hardlinks=1)
+  systemd.services.sonarr.serviceConfig.SupplementaryGroups = [
+    config.users.groups.media-writers.name
+  ];
+  systemd.services.radarr.serviceConfig.SupplementaryGroups = [
+    config.users.groups.media-writers.name
+  ];
+
   systemd.tmpfiles.settings = {
     "10-mnt-nas-media" = {
       "/mnt/nas/media" = {
