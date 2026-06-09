@@ -132,6 +132,9 @@
               #  https://lists.sr.ht/~rjarry/aerc-discuss/%3CD931B2ZI6UH5.1L6FTH0TGJIQO@google.com%3E
               maildir-store = config.accounts.email.maildirBasePath;
               query-map = "${queryMap}";
+              # Prevent HM from restricting the maildir store to this account's subdir,
+              # which would cause aerc to override query-map folders with physical queries.
+              maildir-account-path = "";
             };
         };
       };
