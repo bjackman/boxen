@@ -76,6 +76,7 @@
               # To the right of the Lenovo one
               position = "2560,0";
               scale = 1.0;
+              mode = "2560x1440 @ 74.998 Hz";
             }
             {
               # This should match both my personal and my work laptop.
