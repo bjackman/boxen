@@ -19,9 +19,9 @@
 
   bjackman.nix-warmups = [
     # Note this might not actually be the configuration we're currently
-    # building (e.g. we might be building a config named $USER@$HOST). But
-    # this is probably similar enough that it's helpful to have it warm.
-    "github:bjackman/boxen/master#homeConfigurations.${config.home.username}.activationPackage"
+    # building. But this is probably similar enough that it's helpful to have it
+    # warm.
+    "github:bjackman/boxen/master#homeConfigurations.brendan.activationPackage"
   ];
 
   targets.genericLinux.enable = true;
