@@ -34,8 +34,8 @@
             }
             {
               criteria = "eDP-1";
-              # To the right of the big boi. X is 3840 / 1.5.
-              position = "2560,0";
+              # To the right of the big boi.
+              position = "3840,0";
             }
           ];
         };
