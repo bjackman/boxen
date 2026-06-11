@@ -330,3 +330,10 @@ UNTESTED oneshot command (BACK UP FIRST):
 ```sh
 notmuch dump | ssh $machine notmuch restore
 ```
+
+# TODO
+
+- Fix persistence of vscode folder trust
+- Fix recent alerts
+- Set up agent to triage recent alerts
+- Remove sashiko stuff
