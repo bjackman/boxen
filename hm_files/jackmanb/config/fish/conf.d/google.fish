@@ -18,4 +18,5 @@ if status is-interactive
     alias netboot-ovss='/google/bin/releases/platforms-ovss/netboot-ovss'
     alias kdt='/google/bin/releases/kernel-release/tools/kdt/kdt.par'
     alias ice='/google/bin/releases/kernel-tools/icebreaker-release/ice'
+    alias jetski='/google/bin/releases/jetski-devs/tools/cli'
 end
