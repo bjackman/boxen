@@ -202,7 +202,7 @@
         # --shell=none stops watchexec from trying to use a shell from $PATH,
         # since there isn't one in the service environment.
         "${pkgs.watchexec}/bin/watchexec --debounce 3s "
-        + "--watch /mnt/nas/media/radarr --watch /mnt/nas/media/radarr "
+        + "--watch /mnt/nas/media/radarr --watch /mnt/nas/media/sonarr "
         + "--shell=none -- ${refreshScript}";
       Restart = "always";
     };
