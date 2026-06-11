@@ -78,6 +78,7 @@
     # can't be bothered to figure it out, just persist the whole mess.
     ".config/Code"
     ".vscode"
+    ".vscode-shared"
     ".ollama" # yuck
     ".claude" # yuck
     {
