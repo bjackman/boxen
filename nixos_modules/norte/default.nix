@@ -179,6 +179,7 @@
       "network.target"
       "run-agenix.d.mount"
     ];
+    unitConfig.RequiresMountsFor = [ "/mnt/nas/media" ];
     wantedBy = [ "multi-user.target" ];
     # Putting watchexec in here doesn't work since this PATH isn't used execute
     # the ExecStart, the ExecStart command is just executed with this PATH.
