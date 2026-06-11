@@ -205,6 +205,7 @@
         + "--watch /mnt/nas/media/radarr --watch /mnt/nas/media/sonarr "
         + "--shell=none -- ${refreshScript}";
       Restart = "always";
+      RestartSec = "5s";
     };
   };
 
