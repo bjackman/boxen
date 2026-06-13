@@ -21,8 +21,9 @@ in
 
   services.prometheus = {
     enable = true;
-    # No auth, assume we're behind a reverse proxy.
-    listenAddress = "127.0.0.1";
+    # Note we listen on all interfaces but the firewall setup below only exposes
+    # the port on tailscale0.
+    listenAddress = "0.0.0.0";
     scrapeConfigs =
       let
         # Given the name of an exporter configured via
@@ -162,6 +163,11 @@ in
     nssmdns4 = true;
     nssmdns6 = true;
   };
+
+  # Expose Prometheus directly on Tailscale for bypassing Authelia.
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
+    config.services.prometheus.port
+  ];
 
   bjackman.impermanence.extraPersistence.directories =
     let
