@@ -92,4 +92,6 @@
       },
     };
   '';
+
+  programs.agent-skills.targets.antigravity.enable = true;
 }

@@ -57,6 +57,10 @@
       url = "github:bjackman/sashiko?ref=nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agent-skills = {
+      url = "github:Kyure-A/agent-skills-nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -86,6 +90,7 @@
       nix-index-database,
       llm-agents,
       sashiko,
+      agent-skills,
       ...
     }:
     let

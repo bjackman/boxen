@@ -21,4 +21,6 @@
     enable = true;
     defaultEditor = true;
   };
+
+  programs.agent-skills.targets.claude.enable = true;
 }

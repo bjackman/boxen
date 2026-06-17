@@ -5,6 +5,7 @@
   nixpkgs-unstable, # from specialArgs
   nix-index-database,
   agenix,
+  agent-skills,
   ...
 }:
 {
@@ -18,6 +19,7 @@
     ./nix-warmup.nix
     nix-index-database.homeModules.default
     agenix.homeManagerModules.default
+    agent-skills.outputs.homeManagerModules.default
   ];
 
   options = {
@@ -184,5 +186,7 @@
       accountRef = lib.mkDefault "linuxdev";
       extraAddresses = [ "jackmanb@google.com" ];
     };
+
+    programs.agent-skills.enable = true;
   };
 }
