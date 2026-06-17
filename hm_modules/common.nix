@@ -187,6 +187,12 @@
       extraAddresses = [ "jackmanb@google.com" ];
     };
 
-    programs.agent-skills.enable = true;
+    programs.agent-skills = {
+      enable = true;
+      sources.my-skills = {
+        path = ../hm_files/skills;
+      };
+      skills.enable = [ "investigate-kernel-patch-history" ];
+    };
   };
 }
