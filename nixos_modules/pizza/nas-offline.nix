@@ -29,4 +29,14 @@
   # itself -- statting/creating it triggers a mount attempt against the dead NAS
   # during systemd-tmpfiles-setup. Drop it while the NAS is down.
   systemd.tmpfiles.settings."10-mnt-nas-media" = lib.mkForce { };
+
+  # The hourly Silverbullet restic backup pushes to a repo on Norte over SFTP
+  # (sftp:brendan-sftp@norte:...), so with the NAS down every run fails and
+  # leaves restic-backups-silverbullet.service in the "failed" state -- which
+  # fires the HostSystemdServiceCrashed alert. Disable the timer (stop future
+  # runs) and the service (unload the unit so the failed state clears and the
+  # alert stops). The Silverbullet app itself keeps running; only its backup
+  # pauses until Norte is back.
+  systemd.timers.restic-backups-silverbullet.enable = lib.mkForce false;
+  systemd.services.restic-backups-silverbullet.enable = lib.mkForce false;
 }
