@@ -28,6 +28,7 @@
     # Pizza so deploys succeed without the dead share. Remove when Norte is back.
     ./nas-offline.nix
     ./iptv.nix
+    ./tvheadend.nix
     # Don't load headless.nix, it disables all GPU stuff but we want GPU stuff
     # for Jellyfin.
     "${modulesPath}/profiles/minimal.nix"
