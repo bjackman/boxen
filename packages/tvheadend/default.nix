@@ -1,28 +1,10 @@
 # Packaging ourselves coz it was removed from nixpkgs:
 # https://github.com/NixOS/nixpkgs/pull/332259/changes
 {
+  pkgs,
   lib,
   stdenv,
   src,
-
-  # buildtime
-  makeWrapper,
-  pkg-config,
-  python3,
-  which,
-  gettext,
-
-  # runtime
-  avahi,
-  bzip2,
-  dbus,
-  gnutar,
-  gzip,
-  libiconv,
-  openssl,
-  pcre2,
-  uriparser,
-  zlib,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -31,7 +13,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   inherit src;
 
-  nativeBuildInputs = [
+  nativeBuildInputs = with pkgs; [
     makeWrapper
     pkg-config
     python3
@@ -39,7 +21,7 @@ stdenv.mkDerivation (finalAttrs: {
     gettext
   ];
 
-  buildInputs = [
+  buildInputs = with pkgs; [
     avahi
     bzip2
     dbus
@@ -81,18 +63,21 @@ stdenv.mkDerivation (finalAttrs: {
 
     # tvheadend execs a hard-coded /usr/bin/tar for its config backups.
     substituteInPlace src/config.c \
-      --replace-quiet "/usr/bin/tar" "${gnutar}/bin/tar"
+      --replace-quiet "/usr/bin/tar" "${pkgs.gnutar}/bin/tar"
   '';
 
   postInstall = ''
     # Runtime helpers it execs: the config backup is a bzip2 tarball.
     wrapProgram $out/bin/tvheadend \
       --prefix PATH : ${
-        lib.makeBinPath [
-          gnutar
-          bzip2
-          gzip
-        ]
+        lib.makeBinPath (
+          with pkgs;
+          [
+            gnutar
+            bzip2
+            gzip
+          ]
+        )
       }
   '';
 
