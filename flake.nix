@@ -61,6 +61,10 @@
       url = "github:Kyure-A/agent-skills-nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    tvheadend = {
+      url = "github:tvheadend/tvheadend";
+      flake = false;
+    };
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -189,6 +193,7 @@
           spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
           spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
           slopclone = final.callPackage ./packages/slopclone { };
+          tvheadend = final.callPackage ./packages/tvheadend { src = inputs.tvheadend; };
         };
       };
 

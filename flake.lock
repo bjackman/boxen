@@ -777,7 +777,8 @@
         "nixpkgs": "nixpkgs_5",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "sashiko": "sashiko",
-        "treefmt-nix": "treefmt-nix_3"
+        "treefmt-nix": "treefmt-nix_3",
+        "tvheadend": "tvheadend"
       }
     },
     "rust-analyzer-src": {
@@ -986,6 +987,22 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "tvheadend": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781991294,
+        "narHash": "sha256-hgf3GGODdOGyFyfVJsOJX7gz3YV6NVfi8GMoY6oiJtE=",
+        "owner": "tvheadend",
+        "repo": "tvheadend",
+        "rev": "692b06909e3f37e16191d8e4f8f71bdd92da8bf1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tvheadend",
+        "repo": "tvheadend",
         "type": "github"
       }
     },
