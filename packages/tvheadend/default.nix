@@ -7,9 +7,16 @@
   src,
 }:
 
+let
+  # Dumb version string that doesn't need to be manually updated. It might be
+  # possible to get a better version string from git tags in the flake input but
+  # not too sure how so just do this simple thing.
+  d = src.lastModifiedDate;
+  date = "${lib.substring 0 4 d}-${lib.substring 4 2 d}-${lib.substring 6 2 d}";
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "tvheadend";
-  version = "4.3-unstable";
+  version = "0-unstable-${date}-g${src.shortRev}";
 
   inherit src;
 
