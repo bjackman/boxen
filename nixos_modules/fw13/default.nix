@@ -35,10 +35,5 @@
 
   environment.systemPackages = [ pkgs.btop-rocm ];
 
-  services.ollama = {
-    # enable = true;
-    package = pkgsUnstable.ollama-rocm;
-  };
-
   system.stateVersion = "25.05";
 }

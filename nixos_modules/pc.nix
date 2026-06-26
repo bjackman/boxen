@@ -79,7 +79,6 @@
     ".config/Code"
     ".vscode"
     ".vscode-shared"
-    ".ollama" # yuck
     ".claude" # yuck
     {
       directory = ".mozilla/firefox";
