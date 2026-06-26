@@ -1,58 +1,52 @@
 { pkgs, ... }:
-# Init7 TV7 IPTV -> Jellyfin Live TV. Deliberately MINIMAL: I really only ever
-# watch SRF zwei, so this is the dumbest thing that works.
+# Init7 TV7 IPTV: the network-level glue for receiving Init7's multicast and
+# generating the channel list. The actual IPTV backend is TVHeadend
+# (tvheadend.nix), which reads the M3U this module generates, joins the
+# multicast, demuxes each channel and re-streams a clean TS to Jellyfin. We need
+# TVHeadend in front of Jellyfin because Init7 ships junk PIDs (SCTE-35 / data
+# streams) that make Jellyfin mis-probe some channels like ITV; see tvheadend.nix
+# for the full diagnosis.
 #
 # How Init7 TV works: channels are delivered as IPv4 multicast UDP (group
 # 233.50.230.0/24, port 5000) over the WAN. The FritzBox proxies the multicast
-# onto the LAN via IGMP. Crucially, only Pizza ever joins the multicast group --
-# the LG TV just pulls an ordinary HTTP stream from Jellyfin, and Jellyfin's
-# "M3U tuner" runs ffmpeg under the hood to join the group and remux out to the
-# client. SRF zwei is plain H.264 720p50 + AC-3, which the LG direct-plays, so
-# normally nothing even transcodes.
+# onto the LAN via IGMP. Only Pizza ever joins the multicast group: the LG TV
+# pulls an ordinary HTTP stream from Jellyfin, Jellyfin pulls from TVHeadend's
+# HTTP playlist, and TVHeadend is what actually joins the group and demuxes it.
 #
-# The first thing the host needs is the firewall rule below. The multicast
-# floods in fine on enp0s31f6, but the default-drop INPUT policy silently eats
-# it before it reaches ffmpeg's socket (tcpdump sees the packets because it taps
-# before the firewall; the application doesn't). Getting a channel to play AT
-# ALL is purely this rule -- reverse-path filtering and FritzBox config are
-# plausible-looking red herrings for the "never plays" symptom.
+# This module provides three things, all still required under that topology:
 #
-# The second thing (init7-igmp-refresh, below) is a TEMPORARY workaround for a
-# different symptom: a channel plays fine for a few minutes, then freezes. Cause
-# (proven by packet capture + a controlled re-join test): the FritzBox proxies
-# the multicast onto the LAN but never sends IGMP General Queries (zero IGMP seen
-# in >125s, a full query interval). Linux only emits a membership report when a
-# socket first joins or when answering a query, so ffmpeg's single join-time
-# report ages out of the FritzBox's forwarding table after a couple of minutes
-# and is never renewed -- the multicast stops, ffmpeg's input freezes mid-stream
-# (frame= stalls while speed decays), and Jellyfin loops killing/restarting it
-# (the code-137/251 ffmpeg exits). Each restart re-joins, which re-arms
-# forwarding for another couple of minutes; hence "works for a while, drops".
-# Confirmed the cure: injecting a raw IGMPv2 report for a dead group makes
-# forwarding resume instantly and stay up as long as reports keep coming. Note
-# this is independent of transcoding -- the plain-copy SRF zwei stream dies too.
+# 1. The firewall rule below. The multicast floods in fine on enp0s31f6, but the
+#    default-drop INPUT policy silently eats it before it reaches TVHeadend's
+#    socket (tcpdump sees the packets because it taps before the firewall; the
+#    application doesn't). Getting a channel to play AT ALL is purely this rule --
+#    reverse-path filtering and FritzBox config are plausible-looking red herrings
+#    for the "never plays" symptom.
 #
-# The real fault is the FritzBox's missing querier, and FRITZ!OS exposes no knob
-# for it. The correct fix is a proper IGMP querier on the LAN, which has to live
-# on a box OTHER than Pizza (a host won't answer its own query -- tested). That
-# arrives with the UniFi Dream Router 7 (enable IGMP snooping + querier there);
-# once it's in, DELETE init7-igmp-refresh and retest the dropouts.
+# 2. init7-playlist: regenerates init7.m3u from Init7's live XSPF. TVHeadend's
+#    IPTV automatic network reads this M3U to discover channels.
 #
-# Why not TVHeadend? TVHeadend is the "proper" IPTV backend and would be the
-# right call if I watched real amounts of TV: it grabs EPG straight from the
-# stream's embedded EIT tables (no external XMLTV to wrangle), filters out the
-# junk PIDs Init7 ships (SCTE-35 / teletext / data streams), maintains a single
-# shared multicast subscription, and does DVR/timeshift. But it's a second
-# stateful service with its own web-UI-driven config and its own data dir to
-# persist through impermanence -- not worth it for one channel. If that ever
-# changes, TVHeadend slots in as a backend behind Jellyfin's native TVHeadend
-# tuner type.
+# 3. init7-igmp-refresh: a TEMPORARY workaround for a freeze-after-a-few-minutes
+#    symptom. Cause (proven by packet capture + a controlled re-join test): the
+#    FritzBox proxies the multicast onto the LAN but never sends IGMP General
+#    Queries (zero IGMP seen in >125s, a full query interval). Linux only emits a
+#    membership report when a socket first joins or when answering a query, so the
+#    subscriber's single join-time report ages out of the FritzBox's forwarding
+#    table after a couple of minutes and is never renewed -- the multicast stops
+#    and the stream freezes mid-play. Confirmed the cure: re-emitting a raw IGMPv2
+#    report for the joined group makes forwarding resume instantly and stay up as
+#    long as reports keep coming.
 #
-# Remaining manual step (one-off, in the Jellyfin web UI, since Live TV config
-# is not declaratively expressible via jellarr):
+#    The real fault is the FritzBox's missing querier, and FRITZ!OS exposes no
+#    knob for it. The correct fix is a proper IGMP querier on the LAN, which has
+#    to live on a box OTHER than Pizza (a host won't answer its own query --
+#    tested). That arrives with the UniFi Dream Router 7 (enable IGMP snooping +
+#    querier there); once it's in, DELETE init7-igmp-refresh and retest.
+#
+# Jellyfin's tuner points at TVHeadend, not this M3U directly (manual one-off in
+# the Jellyfin web UI, since Live TV config isn't expressible via jellarr):
 #   Dashboard -> Live TV -> Tuner Devices -> Add -> "M3U Tuner"
-#   File or URL: /var/lib/jellyfin-iptv/init7.m3u
-# EPG is skipped on purpose; for a single live channel the guide adds nothing.
+#   File or URL: http://127.0.0.1:9981/playlist/channels.m3u
+# EPG is not set up yet (deferred); until it is, Jellyfin's guide will be empty.
 let
   playlistDir = "/var/lib/jellyfin-iptv";
   playlist = "${playlistDir}/init7.m3u";
@@ -62,8 +56,8 @@ let
   # debugging), so refetch this rather than hardcoding a udp:// URL.
   xspfUrl = "http://api.init7.net/tvchannels.xspf";
 
-  # Convert Init7's XSPF into the M3U that Jellyfin's tuner wants. stdlib only,
-  # written to a file (rather than pkgs.writers.writePython3) to avoid its
+  # Convert Init7's XSPF into the M3U that TVHeadend's IPTV network reads. stdlib
+  # only, written to a file (rather than pkgs.writers.writePython3) to avoid its
   # build-time flake8 linting.
   xspfToM3u = pkgs.writeText "init7-xspf-to-m3u.py" ''
     import sys
@@ -92,10 +86,10 @@ let
   '';
 
   # TEMPORARY workaround (see header): re-emit an IGMPv2 membership report every
-  # INTERVAL seconds for whatever multicast groups ffmpeg currently has joined,
+  # INTERVAL seconds for whatever multicast groups TVHeadend currently has joined,
   # so the FritzBox's forwarding table never ages out. Groups are read live from
   # /proc/net/igmp, so this tracks the active channel with zero coupling to
-  # Jellyfin and needs no list of channels. Link-local control groups
+  # TVHeadend and needs no list of channels. Link-local control groups
   # (224.0.0.0/24) are skipped; everything else multicast is refreshed. Delete
   # this once a real IGMP querier (UniFi Dream Router 7) is on the LAN. stdlib
   # only; a raw IGMP socket needs CAP_NET_RAW (granted in the unit).
@@ -196,14 +190,14 @@ in
 
   # Keep the M3U fresh from Init7's live playlist.
   systemd.services.init7-playlist = {
-    description = "Generate Init7 IPTV M3U for Jellyfin from the live XSPF";
+    description = "Generate Init7 IPTV M3U for TVHeadend from the live XSPF";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.python3}/bin/python3 ${xspfToM3u} ${xspfUrl} ${playlist}";
       StateDirectory = "jellyfin-iptv";
-      # The generated file is read by Jellyfin, a separate service/user.
+      # The generated file is read by TVHeadend, a separate service/user.
       UMask = "0022";
     };
   };
