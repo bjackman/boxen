@@ -50,6 +50,48 @@ let
       fi
     '';
   };
+
+  # The auto-network discovers muxes/services from the M3U, but its bouquet
+  # option doesn't actually map those services to channels (tested: 242
+  # services, 0 channels). Jellyfin pulls /playlist/channels.m3u, so it needs
+  # channels to exist. Map them ourselves via the service mapper API. Runs every
+  # boot and is idempotent (already-mapped services are left as-is, no
+  # duplicates), so it self-heals if the persisted state is ever lost.
+  mapChannels = pkgs.writeShellApplication {
+    name = "tvheadend-map-channels";
+    runtimeInputs = with pkgs; [
+      curl
+      jq
+      coreutils
+    ];
+    text = ''
+      api="http://127.0.0.1:${toString httpPort}"
+
+      # Wait for the HTTP API to come up.
+      for _ in $(seq 1 60); do
+        if curl -sf "$api/api/serverinfo" >/dev/null; then break; fi
+        sleep 2
+      done
+
+      # Wait for the auto-network scan to discover services, and for that count
+      # to stop growing, so we map the full set rather than an early subset.
+      prev=-1
+      for _ in $(seq 1 60); do
+        n=$(curl -sf "$api/api/mpegts/service/grid?limit=1" | jq -r '.total // 0')
+        if [ "$n" -gt 0 ] && [ "$n" = "$prev" ]; then break; fi
+        prev=$n
+        sleep 5
+      done
+
+      # Map every discovered service. check_availability=false maps without
+      # subscribing (fast, includes momentarily-idle services); encrypted=true
+      # ignores the encryption flag so nothing is skipped.
+      services=$(curl -sf "$api/api/mpegts/service/grid?limit=100000" | jq -c '[.entries[].uuid]')
+      node=$(jq -cn --argjson s "$services" \
+        '{services: $s, check_availability: false, encrypted: true, merge_same_name: false}')
+      curl -sf "$api/api/service/mapper/save" --data-urlencode "node=$node" >/dev/null
+    '';
+  };
 in
 {
   users.users.tvheadend = {
@@ -85,6 +127,20 @@ in
       StateDirectory = "tvheadend";
       Restart = "on-failure";
       RestartSec = "5s";
+    };
+  };
+
+  systemd.services.tvheadend-map-channels = {
+    description = "Map TVHeadend services to channels for Jellyfin";
+    after = [ "tvheadend.service" ];
+    requires = [ "tvheadend.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = lib.getExe mapChannels;
+      User = "tvheadend";
+      Group = "tvheadend";
     };
   };
 }
