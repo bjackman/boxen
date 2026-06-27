@@ -44,15 +44,24 @@
   # https://discourse.nixos.org/t/suspend-problem/54033/28
   # https://discourse.nixos.org/t/black-screen-after-suspend-hibernate-with-nvidia/54341/6:
 
-  # sleep-then-hibernate doesn't work due to some Nvidia bullshit or other:
+  # Use suspend-to-RAM (S3) rather than hibernate. Hibernate was unreliable:
+  # the idle-triggered hibernate aborts mid-write (Nvidia VRAM preservation),
+  # the machine resets, and the next boot finds an invalid image
+  # ("PM: Image not found (code -22)") and cold-boots, losing the session.
   #
-  # NVRM: GPU 0000:0a:00.0: PreserveVideoMemoryAllocations module parameter is set.
-  # System Power Management attempted without driver procfs suspend interface.
-  # nvidia 0000:0a:00.0: PM: failed to suspend async: error -5
-  # PM: Some devices failed to suspend, or early wake event detected
+  # Historically plain suspend also failed, with:
+  #   NVRM: GPU 0000:0a:00.0: PreserveVideoMemoryAllocations module parameter is set.
+  #   System Power Management attempted without driver procfs suspend interface.
+  #   nvidia 0000:0a:00.0: PM: failed to suspend async: error -5
+  # ...but that was before the driver gained kernel suspend notifiers. The live
+  # modprobe config now sets NVreg_UseKernelSuspendNotifiers=1 (via
+  # hardware.nvidia.powerManagement.enable), which is the supported S3 path, and
+  # /sys/power/mem_sleep defaults to "deep" (real S3), so suspend should work.
   #
-  # So, just skip the suspend step and go right to hibernando.
-  services.logind.settings.Login.SleepOperation = "hibernate";
+  # NOTE: don't drop this override -- the default SleepOperation is
+  # "suspend-then-hibernate suspend", which would fall back into the broken
+  # hibernate path. Pin it to plain suspend.
+  services.logind.settings.Login.SleepOperation = "suspend";
 
   bjackman.impermanence.enable = true;
 
