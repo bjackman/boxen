@@ -36,9 +36,16 @@
       Program =
         let
           restic-daily = "${config.home.homeDirectory}/.nix-profile/bin/restic-daily";
-          script = pkgs.writeShellScript "restic-backup-daily" ''
+          backup = pkgs.writeShellScript "restic-backup-daily" ''
             ${restic-daily} backup ~/Desktop ~/Documents ~/Downloads ~/Pictures
             ${restic-daily} forget --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 6
+          '';
+          # Hold an idle-sleep assertion for the duration of the backup. If the
+          # Mac sleeps mid-run the restic process is killed and leaves a stale
+          # lock in the repo that blocks future runs. (Note: -i only prevents the
+          # idle timeout, not lid-close/clamshell sleep on battery.)
+          script = pkgs.writeShellScript "restic-backup-daily-caffeinated" ''
+            exec /usr/bin/caffeinate -i ${backup}
           '';
         in
         "${script}";
