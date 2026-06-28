@@ -6,6 +6,15 @@
     homeDirectory = "/Users/romybinswanger";
   };
 
+  # Note: I was getting regular persistent backup failures due to stale locks on
+  # the Restic repo. According to Claude, Restic can detect and clean up stale
+  # locks but uses the combination of PID+Hostname to decide if it's safe to do
+  # this, and that is unstable on MacOS. It gave me these commands to stabilise
+  # it which should help to make the cleanup reliable:
+  # sudo scutil --set HostName macbook-air-8
+  # sudo scutil --set ComputerName macbook-air-8
+  # sudo scutil --set LocalHostName macbook-air-8
+
   services.restic = {
     enable = true;
     backups = {
