@@ -22,9 +22,13 @@
           "Videos"
         ];
         passwordFile = "${pkgs.writeText "restic-repo-password.txt" "hunter2"}";
-        # Note I have not actually tested if this works, I did it manually
-        # with `restic -r sftp:niamh@norte:/uploads/restic-repo init`
-        initialize = true;
+        # The repo already exists (initialized manually with
+        # `restic -r sftp:niamh@norte:/uploads/restic-repo init`), so leave this
+        # off. With it on, the pre-start `restic cat config || restic init` turns
+        # any transient repo-open failure (e.g. a stale lock or network blip)
+        # into an `init` attempt that dies with the confusing "config file
+        # already exists". Off means such failures fail honestly instead.
+        initialize = false;
         timerConfig = {
           OnCalendar = "daily";
           Persistent = true;
