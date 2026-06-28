@@ -401,6 +401,23 @@
           labels.severity = "critical";
         }
         {
+          alert = "ResticRepoLocked";
+          annotations = {
+            description = ''
+              A Restic repo on {{ $labels.instance }} has held a lock for hours.
+              A normal backup/prune/check only locks for minutes, so this is
+              almost certainly a stale lock left by an interrupted run, which
+              blocks all future backups until cleared with `restic unlock`.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Restic repo locked (instance {{ $labels.instance }})";
+          };
+          expr = "restic_locks_total > 0";
+          for = "6h";
+          labels.severity = "warning";
+        }
+        {
           alert = "ResticBackupStale";
           annotations = {
             description = ''
