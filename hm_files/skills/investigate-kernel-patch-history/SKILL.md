@@ -6,6 +6,12 @@ ______________________________________________________________________
 
 This skill helps you investigate the review history of a Linux kernel commit on the mailing list. It goes beyond a simple `b4 dig` by finding all iterations of the patchset, fetching them, and recursively discovering previous versions or critical context threads mentioned in the discussions.
 
+If the user doesn't give you the exact commit to investigate, do NOT run `git
+log` to find it as the kernel history is very large. If they describe the code
+that they want to learn the history of, use `git blame` to find the commit
+that introduced that code. If you cannot find the relevant commit, STOP and ask
+the user what to do.
+
 ## Workflow
 
 1. **Find Versions**: Run `b4 dig -c <commit> --all-series` to discover all known versions of the series (`v2`, `v3`, `v4`, `v5`, etc.).
