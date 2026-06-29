@@ -9,6 +9,9 @@ This skill helps you investigate the review history of a Linux kernel commit on 
 ## Workflow
 
 1. **Find Versions**: Run `b4 dig -c <commit> --all-series` to discover all known versions of the series (`v2`, `v3`, `v4`, `v5`, etc.).
+
+   If `b4` is not available, or the version doesn't include the `dig` command,
+   STOP and ask the user what to do.
 1. **Fetch Versions**: Download series mboxes for all versions found. Use `b4 mbox -o <outdir> <msgid>` for each version's series message ID.
 1. **Recursively Discover Missing Versions**:
    - Parse the downloaded mbox files.
