@@ -188,7 +188,7 @@
     };
 
     services.mbsync = {
-      postExec = "${pkgs.notmuch} new";
+      postExec = "${pkgs.notmuch}/bin/notmuch new";
       # Alternative: use services.imapnotify to trigger mbsync immediately when
       # there are new messages. But, seems fiddly, for now just run it often
       frequency = "minutely";
