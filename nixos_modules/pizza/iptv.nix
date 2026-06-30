@@ -8,39 +8,40 @@
 # for the full diagnosis.
 #
 # How Init7 TV works: channels are delivered as IPv4 multicast UDP (group
-# 233.50.230.0/24, port 5000) over the WAN. The FritzBox proxies the multicast
-# onto the LAN via IGMP. Only Pizza ever joins the multicast group: the LG TV
-# pulls an ordinary HTTP stream from Jellyfin, Jellyfin pulls from TVHeadend's
-# HTTP playlist, and TVHeadend is what actually joins the group and demuxes it.
+# 233.50.230.0/24, port 5000) over the WAN. The UniFi Dream Router 7 routes the
+# multicast onto the LAN via its IGMP proxy (see the UDR7 dependency note below).
+# Only Pizza ever joins the multicast group: the LG TV pulls an ordinary HTTP
+# stream from Jellyfin, Jellyfin pulls from TVHeadend's HTTP playlist, and
+# TVHeadend is what actually joins the group and demuxes it.
 #
-# This module provides three things, all still required under that topology:
+# This module provides two things:
 #
 # 1. The firewall rule below. The multicast floods in fine on enp0s31f6, but the
 #    default-drop INPUT policy silently eats it before it reaches TVHeadend's
 #    socket (tcpdump sees the packets because it taps before the firewall; the
 #    application doesn't). Getting a channel to play AT ALL is purely this rule --
-#    reverse-path filtering and FritzBox config are plausible-looking red herrings
-#    for the "never plays" symptom.
+#    reverse-path filtering and upstream-router config are plausible-looking red
+#    herrings for the "never plays" symptom.
 #
 # 2. init7-playlist: regenerates init7.m3u from Init7's live XSPF. TVHeadend's
 #    IPTV automatic network reads this M3U to discover channels.
 #
-# 3. init7-igmp-refresh: a TEMPORARY workaround for a freeze-after-a-few-minutes
-#    symptom. Cause (proven by packet capture + a controlled re-join test): the
-#    FritzBox proxies the multicast onto the LAN but never sends IGMP General
-#    Queries (zero IGMP seen in >125s, a full query interval). Linux only emits a
-#    membership report when a socket first joins or when answering a query, so the
-#    subscriber's single join-time report ages out of the FritzBox's forwarding
-#    table after a couple of minutes and is never renewed -- the multicast stops
-#    and the stream freezes mid-play. Confirmed the cure: re-emitting a raw IGMPv2
-#    report for the joined group makes forwarding resume instantly and stay up as
-#    long as reports keep coming.
+# UDR7 dependency (NOT captured in this repo -- it lives in the router's own
+# state, so a factory-reset will silently break IPTV): the Dream Router 7 must
+# route Init7's WAN multicast onto the LAN. Required config:
+#   - enable IGMP Snooping on the LAN network (Settings -> Networks -> Default);
+#   - mark the Init7 WAN (Internet 2) as the IGMP-proxy upstream:
+#       igmp_proxy_upstream=true, igmp_proxy_for="all"
+#     This has no UI control -- set it via the controller API
+#     (PUT /proxy/network/api/s/default/rest/networkconf/<wan _id>).
+# Without it the multicast never reaches enp0s31f6 and nothing plays.
 #
-#    The real fault is the FritzBox's missing querier, and FRITZ!OS exposes no
-#    knob for it. The correct fix is a proper IGMP querier on the LAN, which has
-#    to live on a box OTHER than Pizza (a host won't answer its own query --
-#    tested). That arrives with the UniFi Dream Router 7 (enable IGMP snooping +
-#    querier there); once it's in, DELETE init7-igmp-refresh and retest.
+# History: this replaced a FritzBox, which proxied the multicast itself but --
+# because FRITZ!OS never sent IGMP General Queries -- let the subscriber's
+# membership age out of its forwarding table, freezing the stream after a couple
+# of minutes. That needed an init7-igmp-refresh service (re-emitting IGMPv2
+# reports) as a workaround. The UDR7's igmpproxy queries its downstream itself,
+# so that hack is gone (removed 2026-06-30).
 #
 # Jellyfin's tuner points at TVHeadend, not this M3U directly (manual one-off in
 # the Jellyfin web UI, since Live TV config isn't expressible via jellarr):
@@ -84,73 +85,6 @@ let
         f.write("\n".join(lines) + "\n")
     print("wrote", len(lines) // 2, "channels to", out_path)
   '';
-
-  # TEMPORARY workaround (see header): re-emit an IGMPv2 membership report every
-  # INTERVAL seconds for whatever multicast groups TVHeadend currently has joined,
-  # so the FritzBox's forwarding table never ages out. Groups are read live from
-  # /proc/net/igmp, so this tracks the active channel with zero coupling to
-  # TVHeadend and needs no list of channels. Link-local control groups
-  # (224.0.0.0/24) are skipped; everything else multicast is refreshed. Delete
-  # this once a real IGMP querier (UniFi Dream Router 7) is on the LAN. stdlib
-  # only; a raw IGMP socket needs CAP_NET_RAW (granted in the unit).
-  igmpRefresh = pkgs.writeText "init7-igmp-refresh.py" ''
-    import socket
-    import struct
-    import sys
-    import time
-
-    iface = sys.argv[1] if len(sys.argv) > 1 else "enp0s31f6"
-    interval = int(sys.argv[2]) if len(sys.argv) > 2 else 60
-
-    def joined_groups(dev):
-        # Parse /proc/net/igmp: device lines start in column 0, group lines are
-        # indented and carry the group as little-endian hex (e.g. D4E632E9).
-        groups, cur = [], None
-        with open("/proc/net/igmp") as f:
-            for line in f:
-                if not line[:1].isspace():
-                    parts = line.split()
-                    cur = parts[1] if len(parts) > 1 else None
-                elif cur == dev:
-                    tok = line.split()[0]
-                    try:
-                        b = bytes.fromhex(tok)
-                    except ValueError:
-                        continue
-                    if len(b) == 4:
-                        groups.append(socket.inet_ntoa(b[::-1]))
-        return groups
-
-    def wanted(ip):
-        first = int(ip.split(".")[0])
-        return 224 <= first <= 239 and not ip.startswith("224.0.0.")
-
-    def v2_report(group):
-        body = struct.pack("!BBH4s", 0x16, 0, 0, socket.inet_aton(group))
-        if len(body) % 2:
-            body += b"\x00"
-        s = 0
-        for i in range(0, len(body), 2):
-            s += (body[i] << 8) + body[i + 1]
-        s = (s >> 16) + (s & 0xFFFF)
-        s += s >> 16
-        cksum = (~s) & 0xFFFF
-        return struct.pack("!BBH4s", 0x16, 0, cksum, socket.inet_aton(group))
-
-    raw = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IGMP)
-    ifindex = socket.if_nametoindex(iface)
-    raw.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                   struct.pack("4s4si", b"\x00" * 4, b"\x00" * 4, ifindex))
-    raw.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
-
-    while True:
-        targets = [g for g in joined_groups(iface) if wanted(g)]
-        for g in targets:
-            raw.sendto(v2_report(g), (g, 0))
-        if targets:
-            print("refreshed:", ", ".join(targets), flush=True)
-        time.sleep(interval)
-  '';
 in
 {
   # THE fix. Scoped to the multicast address space + port 5000 so it survives
@@ -161,32 +95,6 @@ in
   networking.firewall.extraStopCommands = ''
     iptables -D nixos-fw -p udp -d 224.0.0.0/4 --dport 5000 -j nixos-fw-accept || true
   '';
-
-  # TEMPORARY: keep the FritzBox forwarding the multicast by refreshing IGMP
-  # membership reports for the active channel. Remove once the UniFi Dream
-  # Router 7 is the LAN's IGMP querier (see header).
-  systemd.services.init7-igmp-refresh = {
-    description = "Refresh IGMP membership for Init7 multicast (FritzBox querier workaround)";
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.python3}/bin/python3 ${igmpRefresh} enp0s31f6 60";
-      Restart = "always";
-      RestartSec = "5s";
-      # Raw IGMP socket; nothing else is needed.
-      DynamicUser = true;
-      AmbientCapabilities = [ "CAP_NET_RAW" ];
-      CapabilityBoundingSet = [ "CAP_NET_RAW" ];
-      NoNewPrivileges = true;
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      ProtectKernelTunables = true;
-      ProtectControlGroups = true;
-      RestrictAddressFamilies = [ "AF_INET" ];
-      SystemCallFilter = [ "@system-service" ];
-    };
-  };
 
   # Keep the M3U fresh from Init7's live playlist.
   systemd.services.init7-playlist = {
