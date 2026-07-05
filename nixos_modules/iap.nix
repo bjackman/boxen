@@ -218,6 +218,8 @@ in
         80
         443
       ];
+      # QUIC
+      networking.firewall.allowedUDPPorts = [ 443 ];
 
       age.secrets =
         let
