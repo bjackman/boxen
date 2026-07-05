@@ -174,7 +174,6 @@ in
         # Lets Encrypt certificate. Because we want a wildcard certificate we need
         # to do the DNS-01 challenge, this supports that.
         globalConfig = ''
-          debug
           acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
         '';
         virtualHosts."*.${domain}, ${domain}".extraConfig = ''
