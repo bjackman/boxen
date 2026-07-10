@@ -209,6 +209,8 @@
         Service = {
           Type = "oneshot";
           ExecStart = "${config.home.path}/bin/get-lkml";
+          Nice = 19;
+          IOSchedulingClass = "idle";
         };
       };
 
