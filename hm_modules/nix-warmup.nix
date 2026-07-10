@@ -68,7 +68,7 @@
             Unit.Description = "Timer for ${flakeRef} nix warmup";
             Timer = {
               OnUnitActiveSec = "1h";
-              OnBootSec = "5m";
+              OnStartupSec = "5m";
               RandomizedDelaySec = "300";
             };
             Install.WantedBy = [ "timers.target" ];
