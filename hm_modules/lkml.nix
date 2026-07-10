@@ -217,8 +217,9 @@
           Description = "Timer for get-lkml";
         };
         Timer = {
-          OnCalendar = "hourly";
-          Persistent = true;
+          OnStartupSec = "5m";
+          OnUnitActiveSec = "1h";
+          RandomizedDelaySec = "300";
         };
         Install = {
           WantedBy = [ "timers.target" ];
