@@ -55,7 +55,11 @@
 
   hardware.bluetooth.enable = true;
 
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    # Sets loose reverse-path filtering, required to use exit nodes.
+    useRoutingFeatures = "client";
+  };
 
   bjackman.impermanence.extraPersistence.users.brendan.files = [
     ".claude.json" # yuck
