@@ -28,6 +28,13 @@ Rules:
   just check in with me first and ensure we have an easy way to revert to a
   clean state afterwards.
 
+- Keep comments concise. NEVER write comments about the change you're making
+  ("this is now an integer", "fixed the bug here" etc), always comment on the
+  code as it currently exists. Assume the reader is pretty competent with
+  Nix/NixOS/systemd etc so comments only need to explain _what_ the code does in
+  unusual or confusing circumstances. Usually, just comment _why_, or if that's
+  pretty self-explanatory then there's no need to comment at all.
+
 Tips:
 
 - I use Fish and most hosts have Fish set up as the login shell for my user. If
