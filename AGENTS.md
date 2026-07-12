@@ -33,3 +33,8 @@ Tips:
 - I use Fish and most hosts have Fish set up as the login shell for my user. If
 you're running commands you might want to explicitly prefix them with `bash -c`,
 or just use Fish syntax.
+
+- I tend not to install stuff globally, you'll find pretty standard stuff like
+`python` and `jq` absent from the `$PATH` (classic Unix coreutils like `awk`
+should always be there though). You can run these using `nix run` or `nix shell`
+instead.
