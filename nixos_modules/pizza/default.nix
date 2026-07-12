@@ -155,8 +155,20 @@
     };
   };
 
-  systemd.services.transmission.serviceConfig = {
-    SupplementaryGroups = [ "nas-media" ];
+  systemd.services.transmission = {
+    serviceConfig = {
+      SupplementaryGroups = [ "nas-media" ];
+      # The download/incomplete dirs live on the //norte/media CIFS automount.
+      # systemd's sandbox namespacing bind-mounts those paths at ExecStartPre,
+      # which fails with "No such device" if the automount can't be satisfied
+      # yet (e.g. norte still coming up after a reboot). Keep retrying so a slow
+      # mount self-heals instead of leaving the service dead.
+      Restart = "on-failure";
+      RestartSec = 30;
+    };
+    unitConfig.RequiresMountsFor = [ "/mnt/nas-media/transmission/downloads" ];
+    # norte can take a while to become reachable over Tailscale after a reboot.
+    startLimitIntervalSec = 0;
   };
   services.transmission.settings = {
     download-dir = "/mnt/nas-media/transmission/downloads";
