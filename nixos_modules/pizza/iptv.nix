@@ -39,9 +39,18 @@
 # History: this replaced a FritzBox, which proxied the multicast itself but --
 # because FRITZ!OS never sent IGMP General Queries -- let the subscriber's
 # membership age out of its forwarding table, freezing the stream after a couple
-# of minutes. That needed an init7-igmp-refresh service (re-emitting IGMPv2
-# reports) as a workaround. The UDR7's igmpproxy queries its downstream itself,
-# so that hack is gone (removed 2026-06-30).
+# of minutes. The init7-igmp-refresh service below (re-emitting IGMPv2 reports)
+# worked around that. It was briefly dropped (2026-06-30) on the assumption the
+# UDR7's igmpproxy keeps its own downstream state fresh -- but on 2026-07-14 the
+# whole feed went silent again (every channel, bps=0, zero multicast on pizza's
+# wire) until a fresh IGMP leave/rejoin revived it, so the refresh is back.
+#
+# CAVEAT: not certain this is the right fix. We proved the UDR7 stopped
+# forwarding and that a rejoin fixes it, but not *why* -- could be UDR7 igmpproxy
+# aging (which this masks), a one-off firmware glitch, or an IGMP-snooping/querier
+# misconfig better fixed on the router itself. Treat this as cheap host-side
+# insurance against that failure mode, not a proven root-cause fix; if the UDR7
+# is later confirmed to hold membership reliably, delete it.
 #
 # Jellyfin's tuner points at TVHeadend, not this M3U directly (manual one-off in
 # the Jellyfin web UI, since Live TV config isn't expressible via jellarr):
@@ -85,6 +94,73 @@ let
         f.write("\n".join(lines) + "\n")
     print("wrote", len(lines) // 2, "channels to", out_path)
   '';
+
+  # Re-emit an IGMPv2 membership report every INTERVAL seconds for whatever
+  # multicast groups TVHeadend currently has joined, so the UDR7's forwarding
+  # table never ages out (see header for the failure this guards against, and the
+  # caveat that it may be masking a symptom). Groups are read live from
+  # /proc/net/igmp, so this tracks the active channel with zero coupling to
+  # TVHeadend and needs no channel list. Link-local control groups (224.0.0.0/24)
+  # are skipped; everything else multicast is refreshed. stdlib only; the raw
+  # IGMP socket needs CAP_NET_RAW (granted in the unit).
+  igmpRefresh = pkgs.writeText "init7-igmp-refresh.py" ''
+    import socket
+    import struct
+    import sys
+    import time
+
+    iface = sys.argv[1] if len(sys.argv) > 1 else "enp0s31f6"
+    interval = int(sys.argv[2]) if len(sys.argv) > 2 else 60
+
+    def joined_groups(dev):
+        # Parse /proc/net/igmp: device lines start in column 0, group lines are
+        # indented and carry the group as little-endian hex (e.g. D4E632E9).
+        groups, cur = [], None
+        with open("/proc/net/igmp") as f:
+            for line in f:
+                if not line[:1].isspace():
+                    parts = line.split()
+                    cur = parts[1] if len(parts) > 1 else None
+                elif cur == dev:
+                    tok = line.split()[0]
+                    try:
+                        b = bytes.fromhex(tok)
+                    except ValueError:
+                        continue
+                    if len(b) == 4:
+                        groups.append(socket.inet_ntoa(b[::-1]))
+        return groups
+
+    def wanted(ip):
+        first = int(ip.split(".")[0])
+        return 224 <= first <= 239 and not ip.startswith("224.0.0.")
+
+    def v2_report(group):
+        body = struct.pack("!BBH4s", 0x16, 0, 0, socket.inet_aton(group))
+        if len(body) % 2:
+            body += b"\x00"
+        s = 0
+        for i in range(0, len(body), 2):
+            s += (body[i] << 8) + body[i + 1]
+        s = (s >> 16) + (s & 0xFFFF)
+        s += s >> 16
+        cksum = (~s) & 0xFFFF
+        return struct.pack("!BBH4s", 0x16, 0, cksum, socket.inet_aton(group))
+
+    raw = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IGMP)
+    ifindex = socket.if_nametoindex(iface)
+    raw.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                   struct.pack("4s4si", b"\x00" * 4, b"\x00" * 4, ifindex))
+    raw.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
+
+    while True:
+        targets = [g for g in joined_groups(iface) if wanted(g)]
+        for g in targets:
+            raw.sendto(v2_report(g), (g, 0))
+        if targets:
+            print("refreshed:", ", ".join(targets), flush=True)
+        time.sleep(interval)
+  '';
 in
 {
   # THE fix. Scoped to the multicast address space + port 5000 so it survives
@@ -95,6 +171,32 @@ in
   networking.firewall.extraStopCommands = ''
     iptables -D nixos-fw -p udp -d 224.0.0.0/4 --dport 5000 -j nixos-fw-accept || true
   '';
+
+  # Keep the UDR7 forwarding the multicast by refreshing IGMP membership for the
+  # active channel every 60s. See the header: guards against the UDR7 letting its
+  # forwarding state age out; may be masking a symptom rather than fixing a cause.
+  systemd.services.init7-igmp-refresh = {
+    description = "Refresh IGMP membership for Init7 multicast (UDR7 forwarding-stall workaround)";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.python3}/bin/python3 ${igmpRefresh} enp0s31f6 60";
+      Restart = "always";
+      RestartSec = "5s";
+      # Raw IGMP socket; nothing else is needed.
+      DynamicUser = true;
+      AmbientCapabilities = [ "CAP_NET_RAW" ];
+      CapabilityBoundingSet = [ "CAP_NET_RAW" ];
+      NoNewPrivileges = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      ProtectKernelTunables = true;
+      ProtectControlGroups = true;
+      RestrictAddressFamilies = [ "AF_INET" ];
+      SystemCallFilter = [ "@system-service" ];
+    };
+  };
 
   # Keep the M3U fresh from Init7's live playlist.
   systemd.services.init7-playlist = {
