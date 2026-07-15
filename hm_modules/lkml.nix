@@ -23,11 +23,15 @@
       type = lib.types.listOf lib.types.str;
       default = [ ];
       description = ''
-        Additional email addresses to search for in lore archives.
+        Other emails that you use to interact with LKML.
 
         This can be used to see mail that was sent to other addresses than the
         ones that you are actually configuring for SMTP/git-send-email etc.
         (e.g. from previous jobs).
+
+        NOTE: This assumes that the mails come from "you". Mails from this
+        addresses are automatically marked as "read". This logic will need to be
+        tweaked if you want to "subscribe" to other contributors.
       '';
     };
   };
@@ -35,6 +39,7 @@
     let
       cfg = config.lkml;
       account = config.accounts.email.accounts.${cfg.accountRef};
+      allAddresses = [ account.address ] ++ cfg.extraAddresses;
     in
     {
       programs.notmuch = {
@@ -42,6 +47,15 @@
         extraConfig = {
           maildir.synchronize_flags = "true";
         };
+        # If "I" wrote a mail, consider it as "read" from the start.
+        hooks.postNew =
+          let
+            fromMatchers = map (addr: "from:${addr}") allAddresses;
+            fromQuery = "(" + (lib.concatStringsSep " or " fromMatchers) + ")";
+          in
+          ''
+            notmuch tag -unread "tag:unread and ${fromQuery}"
+          '';
       };
 
       programs.aerc = {
@@ -184,7 +198,6 @@
             # don't understand and which is buggy.
             text =
               let
-                allAddresses = [ account.address ] ++ cfg.extraAddresses;
                 addressMatchers = map (addr: "a:${addr}") allAddresses;
                 # The quoting shit above is also why this quoting is such a
                 # mess, we want to send parens as individual arguments, need to
