@@ -105,7 +105,7 @@
           self.overlays.default
           deploy-rs.overlays.default
           agenix.overlays.default
-          llm-agents.overlays.default
+          llm-agents.overlays.shared-nixpkgs
           (final: prev: {
             sashiko = sashiko.packages.${system}.default;
           })
