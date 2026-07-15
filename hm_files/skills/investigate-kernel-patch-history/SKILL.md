@@ -6,8 +6,7 @@ ______________________________________________________________________
 
 This skill helps you investigate the review history of a Linux kernel commit on the mailing list. It goes beyond a simple `b4 dig` by finding all iterations of the patchset, fetching them, and recursively discovering previous versions or critical context threads mentioned in the discussions.
 
-If the user doesn't give you the exact commit to investigate, do NOT run `git
-log` to find it as the kernel history is very large. If they describe the code
+If the user doesn't give you the exact commit to investigate, do NOT run `git log` to find it as the kernel history is very large. If they describe the code
 that they want to learn the history of, use `git blame` to find the commit
 that introduced that code. If you cannot find the relevant commit, STOP and ask
 the user what to do.
@@ -18,16 +17,23 @@ the user what to do.
 
    If `b4` is not available, or the version doesn't include the `dig` command,
    STOP and ask the user what to do.
+
 1. **Fetch Versions**: Download series mboxes for all versions found. Use `b4 mbox -o <outdir> <msgid>` for each version's series message ID.
+
 1. **Recursively Discover Missing Versions**:
+
    - Parse the downloaded mbox files.
    - Read the cover letter or patches of the latest version.
    - Look for explicit links to previous series (e.g., `v1` links in cover letter text, or `https://lore.kernel.org/bpf/...` links).
    - If you find links to un-fetched versions (e.g., `v1`), fetch and parse them too.
+
 1. **Detect References to Other Context Threads**:
+
    - While messages are parsed, look for URLs in email bodies (e.g., references to past discussions that are not part of the series versions).
    - Note these URLs. If a reference is critical to understand the current review (e.g., "as discussed in thread X"), fetch and read that thread proactively. Otherwise, just add it to a "References" section in the output.
+
 1. **Output Generation**:
+
    - Generate a single Markdown file containing the history.
    - Order the versions chronologically or from oldest to newest.
    - For each version, include headers for each message and extract the body.

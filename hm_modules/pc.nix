@@ -22,7 +22,7 @@
     run nixpkgs-unstable#<package>` instead. You can also use `nix shell
     nixpkgs#<package> -c <command>` to run commands in a shell that has the
     package installed.
-    
+
     My default shell is Fish, you can just use Fish syntax if you like or for
     nontrival commands you can just explicitly run them via `bash -c`.
   '';

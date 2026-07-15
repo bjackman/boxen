@@ -31,7 +31,10 @@
     recursive = true;
   };
 
-  home.packages = with pkgs; [ btop-cuda mixxx ];
+  home.packages = with pkgs; [
+    btop-cuda
+    mixxx
+  ];
 
   bjackman.waybar.showKeyboardLayout = true;
 

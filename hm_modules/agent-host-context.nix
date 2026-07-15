@@ -3,7 +3,7 @@
 # The `agent-skills` library only manages Skills (lazily loaded by description),
 # so it can't deliver guaranteed always-on context. This module fills that gap:
 # it writes the guidance to each agent's always-loaded memory file (e.g.
-# ~/.claude/CLAUDE.md). 
+# ~/.claude/CLAUDE.md).
 {
   config,
   lib,
