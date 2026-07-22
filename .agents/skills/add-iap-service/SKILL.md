@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## name: add-iap-service description: Add a new IAP service using the bjackman.iap.services and bjackman.ports modules for automated port allocation and IAP reverse proxying. Use when creating a new self-hosted web service in this repository.
+---
+name: add-iap-service
+description: Add a new IAP service using the bjackman.iap.services and bjackman.ports modules for automated port allocation and IAP reverse proxying. Use when creating a new self-hosted web service in this repository.
+---
 
 # Adding a New NixOS Service
 

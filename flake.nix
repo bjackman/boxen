@@ -148,7 +148,13 @@
       treefmtCfg = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
         programs.nixfmt.enable = true;
-        programs.mdformat.enable = true;
+        programs.mdformat = {
+          enable = true;
+          # Without this plugin mdformat mangles the YAML frontmatter in agent
+          # Skill SKILL.md files (turns `---` into a thematic break and collapses
+          # the name/description onto one line).
+          plugins = ps: [ ps.mdformat-frontmatter ];
+        };
         programs.yamlfmt.enable = true;
       };
       # Allow different nodes' configs to refer to each other in cases
