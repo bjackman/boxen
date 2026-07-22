@@ -1,4 +1,13 @@
 { config, lib, ... }:
+let
+  # Alert runbooks live alongside the investigate-alert agent skill, one file
+  # per alert named after the kebab-cased alert name. Link an alert to its
+  # runbook so the diagnosis steps ride along in the Alertmanager email. Only
+  # alerts that actually have a runbook file should set this.
+  runbookUrl =
+    name:
+    "https://github.com/bjackman/boxen/blob/master/.agents/skills/investigate-alert/references/${name}.md";
+in
 {
   options.bjackman.prometheus.rules = lib.mkOption {
     type = lib.types.attrs;
@@ -426,6 +435,7 @@
                 LABELS = {{ $labels }}
             '';
             summary = "Restic backup stale (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "restic-backup-stale";
           };
           expr = ''
             time() - max by (instance) (restic_backup_timestamp) > ${toString (14 * 24 * 60 * 60)}

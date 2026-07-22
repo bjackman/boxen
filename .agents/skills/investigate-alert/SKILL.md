@@ -44,6 +44,8 @@ If no runbook exists, investigate generically (step 3), and when you reach a
 conclusion, **write a new `references/<alertname>.md`** capturing what the alert
 means, the likely causes, and the commands that diagnosed it, so the next
 investigation is faster. Keep it concise; humans are a secondary audience.
+Update the alert definition to include the `runbook_url` for the new runbook,
+following the existing examples in the code.
 
 ## 3. Generic investigation (no runbook yet)
 
