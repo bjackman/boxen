@@ -160,6 +160,7 @@
     bjackman.nix-warmups = [
       "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
       "github:bjackman/boxen/master#devShells.${pkgs.stdenv.hostPlatform.system}.default"
+      "github:sashiko-dev/sashiko#devShells.${pkgs.stdenv.hostPlatform.system}.default"
     ];
 
     age.secrets.migadu-linuxdev-password.file = ../secrets/migadu-linuxdev-password.age;
