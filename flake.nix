@@ -30,6 +30,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware";
+    # This was set up before stock NixOS supported the Pi5.
     # Alternatives: raspberry-pi-nix: Archived for unclear reasons
     # https://discourse.nixos.org/t/what-happened-to-raspberry-pi-nix/62417.
     # nixos-hardware has support for raspberry-pi but unclear how to actually
