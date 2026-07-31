@@ -116,5 +116,7 @@
     ];
   };
 
+  # TODO: Get kernel commit e1b849cfa6b6.
+
   system.stateVersion = "25.05";
 }
