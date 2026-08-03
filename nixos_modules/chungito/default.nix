@@ -116,10 +116,5 @@
     ];
   };
 
-  # Seeing a bug in cgroup cleanup that causes a kthread to hog CPU, it didn't
-  # get backported to 6.18 stable for some reason. Lost the details but try
-  # master.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
   system.stateVersion = "25.05";
 }
