@@ -30,10 +30,15 @@ Rules:
 
 - Keep comments concise. NEVER write comments about the change you're making
   ("this is now an integer", "fixed the bug here" etc), always comment on the
-  code as it currently exists. Assume the reader is pretty competent with
-  Nix/NixOS/systemd etc so comments only need to explain _what_ the code does in
-  unusual or confusing circumstances. Usually, just comment _why_, or if that's
-  pretty self-explanatory then there's no need to comment at all.
+  code as it currently exists.
+
+- Assume the reader is fluent in Nix/NixOS/Home Manager/systemd. Never label
+  what the code plainly says ("Foo's user-global settings" above a
+  `home.file.".foo/settings.json"`), and never explain standard behaviour of the
+  tools in use (store paths are read-only, what `mkIf` does, how a systemd timer
+  fires). Comment _why_ - or when the code is doing something unusual enough
+  that _what_ isn't obvious. Otherwise write no comment: that is the common
+  case.
 
 Tips:
 
