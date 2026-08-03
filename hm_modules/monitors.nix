@@ -168,99 +168,108 @@ in
 {
   services.kanshi = {
     enable = true;
-    settings = [
-      (makeProfile "fw13-unplugged" [
-        {
-          monitor = presets.fw13;
-          scale = 1.5;
-        }
-      ])
+    settings =
+      let
+        homeMonitors = [
+          {
+            monitor = presets.google-p2718ec;
+            name = "left";
+          }
+          {
+            monitor = presets.dell-p2720dc;
+            name = "right";
+            rightOf = "left";
+          }
+        ];
+      in
+      [
+        (makeProfile "fw13-unplugged" [
+          {
+            monitor = presets.fw13;
+            scale = 1.5;
+          }
+        ])
 
-      (makeProfile "sandy-office" [
-        {
-          monitor = presets.lg-ultrafine;
-          name = "main";
-          mode = "3840x2160";
-          scale = 1.0;
-        }
-        {
-          monitor = presets.eDP;
-          rightOf = "main";
-        }
-      ])
+        (makeProfile "sandy-office" [
+          {
+            monitor = presets.lg-ultrafine;
+            name = "main";
+            mode = "3840x2160";
+            scale = 1.0;
+          }
+          {
+            monitor = presets.eDP;
+            rightOf = "main";
+          }
+        ])
 
-      (makeProfile "home-office" [
-        {
-          monitor = presets.google-p2718ec;
-          name = "left";
-        }
-        {
-          monitor = presets.dell-p2720dc;
-          name = "right";
-          rightOf = "left";
-        }
-        {
-          monitor = presets.eDP;
-          below = "right";
-        }
-      ])
+        (makeProfile "home-office" homeMonitors)
+        (makeProfile "home-office-laptop" (
+          homeMonitors
+          ++ [
+            {
+              monitor = presets.eDP;
+              below = "right";
+            }
+          ]
+        ))
 
-      (makeProfile "corp-office" [
-        {
-          monitor = presets.lenovo-p27h;
-          name = "left";
-        }
-        {
-          monitor = presets.samsung-s27a;
-          name = "right";
-          rightOf = "left";
-          scale = 1.0;
-          mode = "2560x1440@74.998Hz";
-        }
-        {
-          monitor = presets.eDP;
-          below = "left";
-          scale = 1.0;
-        }
-      ])
+        (makeProfile "corp-office" [
+          {
+            monitor = presets.lenovo-p27h;
+            name = "left";
+          }
+          {
+            monitor = presets.samsung-s27a;
+            name = "right";
+            rightOf = "left";
+            scale = 1.0;
+            mode = "2560x1440@74.998Hz";
+          }
+          {
+            monitor = presets.eDP;
+            below = "left";
+            scale = 1.0;
+          }
+        ])
 
-      (makeProfile "corp-office-hotdesk" [
-        {
-          monitor = presets.lenovo-p32p;
-          name = "main";
-          scale = 1.25;
-        }
-        {
-          monitor = presets.eDP;
-          below = "main";
-        }
-      ])
+        (makeProfile "corp-office-hotdesk" [
+          {
+            monitor = presets.lenovo-p32p;
+            name = "main";
+            scale = 1.25;
+          }
+          {
+            monitor = presets.eDP;
+            below = "main";
+          }
+        ])
 
-      (makeProfile "corp-at-hotdesk" [
-        {
-          monitor = presets.dell-p3223qe;
-          name = "main";
-          mode = "3840x2160";
-          scale = 1.25;
-        }
-        {
-          monitor = presets.eDP;
-          below = "main";
-        }
-      ])
+        (makeProfile "corp-at-hotdesk" [
+          {
+            monitor = presets.dell-p3223qe;
+            name = "main";
+            mode = "3840x2160";
+            scale = 1.25;
+          }
+          {
+            monitor = presets.eDP;
+            below = "main";
+          }
+        ])
 
-      (makeProfile "corp-crbn-hotdesk" [
-        {
-          monitor = presets.corp-laptop;
-          name = "laptop";
-        }
-        {
-          monitor = presets.lenovo-t32ud;
-          rightOf = "laptop";
-          mode = "3840x2160";
-          scale = 1.25;
-        }
-      ])
-    ];
+        (makeProfile "corp-crbn-hotdesk" [
+          {
+            monitor = presets.corp-laptop;
+            name = "laptop";
+          }
+          {
+            monitor = presets.lenovo-t32ud;
+            rightOf = "laptop";
+            mode = "3840x2160";
+            scale = 1.25;
+          }
+        ])
+      ];
   };
 }
