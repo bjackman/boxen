@@ -23,4 +23,13 @@
   };
 
   programs.agent-skills.targets.claude.enable = true;
+  home.file.".claude/settings.json".source =
+    (pkgs.formats.json { }).generate "claude-settings.json"
+      {
+        model = "opus";
+        effortLevel = "medium";
+        agentPushNotifEnabled = true;
+        tui = "fullscreen";
+        respondToBashCommands = false;
+      };
 }
