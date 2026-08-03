@@ -215,7 +215,7 @@ in
           name = "right";
           rightOf = "left";
           scale = 1.0;
-          mode = "2560x1440 @ 74.998 Hz";
+          mode = "2560x1440@74.998Hz";
         }
         {
           monitor = presets.eDP;
