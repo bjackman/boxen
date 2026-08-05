@@ -44,7 +44,10 @@
         {
           name = "nix-warmup-${escapeRef flakeRef}";
           value = {
-            Unit.Description = "Warm up nix build for ${flakeRef}";
+            Unit = {
+              Description = "Warm up nix build for ${flakeRef}";
+              ConditionACPower = true;
+            };
             Service = {
               Type = "oneshot";
               CacheDirectory = "nix-warmups";
