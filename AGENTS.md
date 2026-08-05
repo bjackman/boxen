@@ -40,6 +40,13 @@ Rules:
   that _what_ isn't obvious. Otherwise write no comment: that is the common
   case.
 
+- In particular, don't justify a setting by restating its documented semantics,
+  including its edge cases and defaults ("`ConditionACPower` also passes on
+  machines with no mains supply"). Picking the option that does the obvious
+  right thing is not noteworthy. If the comment would be redundant once the
+  reader has the man page open, drop it; if the setting is genuinely subtle,
+  a reference to the docs beats a paraphrase of them.
+
 Tips:
 
 - I use Fish and most hosts have Fish set up as the login shell for my user. If
