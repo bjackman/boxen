@@ -127,7 +127,7 @@ For hosts using Home Manager standalone, they are under
 `.#homeConfigurations.<config>`. So for example:
 
 ```sh
-nix eval '.#homeConfigurations.jackmanb@jackmanb01.config.wayland.windowManager.sway.xwayland'
+nix eval '.#homeConfigurations.brendan.config.programs.vim.defaultEditor'
 ```
 
 ## Secrets

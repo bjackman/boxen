@@ -224,17 +224,6 @@
           modules = [ ./hm_modules/brendan.nix ];
           extraSpecialArgs = hmSpecialArgs;
         };
-        "jackmanb@bj" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./hm_modules/cloudtop.nix ];
-          extraSpecialArgs = hmSpecialArgs;
-        };
-        # corp laptop
-        "jackmanb@jackmanb01" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./hm_modules/jackmanb01.nix ];
-          extraSpecialArgs = hmSpecialArgs;
-        };
         niamh = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./hm_modules/niamh.nix ];

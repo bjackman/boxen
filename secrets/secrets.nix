@@ -8,7 +8,7 @@ let
   fw13-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHVBFKZzXD+YUcB83N+FfIHFH2rQpk060e1OjEWZMp59 root@nixos";
   norte-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEwxzu2JNI7hdrKWlmqjkwNLRf7kMEcSlxE3nKUrbEp6 root@norte";
   pizza-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAmiVXunDkdw9EBJtfPshYvR3od5p00vbL9MqlaJZgGf root@pizza";
-  all-personal = [
+  all = [
     chungito
     chungito-host
     fw13
@@ -16,33 +16,29 @@ let
     pizza-host
     norte-host
   ];
-  # This key was originally from a Google corp laptop. I no longer have that
-  # laptop but it also ended up on lots of other machines too.
-  jackmanb-zrh = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLVpV3PnFV5AW4G0aizNgoVu0Wtn3A3arUEJHaEsxy3iFgvvENBcYb+I00HRnYV4FZX1EGD0Fh6lIJcm9YUCm2EKkv9V/mMfV5xaiKcKGZYOLLpaIZw8J3tsuc+iIrl/8Qk1++l6pYIgOCpAgRAY1MxSD/Syg7rZMKiIH2/3CAzzjQej3SCf0Wc2I2/Sv1YUUhNxKGkMi7P4lG8R2erRG8DuPsglEhHW0ua3Hkygy3lfBO9j32JdOXB6+xswWOljiUwnVMt4AbBrZPxn/29BlS/olEgdfxt+jBNM33h9ofKwM+h5oGXomNedgr9qQVha4xj+dbqD7YB/lB/9HMjd1X jackmanb@jackmanb.zrh.corp.google.com";
-  all = all-personal ++ [ jackmanb-zrh ];
 in
 {
   # This is the password for the 'admin' user, configured via the PiKVM UI or
   # something I can't remember.
   "eadbald-pikvm-password.age".publicKeys = all;
   # Password for Jellyfin admin account
-  "jellyfin-admin-password.age".publicKeys = all-personal;
+  "jellyfin-admin-password.age".publicKeys = all;
   # Contains an API key for Jellyfin. From the Jellarr docs I am not really sure
   # how you are supposed to generate this. In the end, I did it by running
   # Jellyfin, generating one in the UI, and copying it from there.
-  "jellarr-api-key.age".publicKeys = all-personal;
+  "jellarr-api-key.age".publicKeys = all;
   # The same key again, but now in the form JELLARR_API_KEY=<key> because that's
   # how you have to provide it to Jellarr via its environmentFile option
   # (because it's been designed with sops-nix in mind).
-  "jellarr-env.age".publicKeys = all-personal;
+  "jellarr-env.age".publicKeys = all;
   # Contains a JSON object of the form { "rpc-password": "{asfjdsakl.H" }.
   # The value is the hash of password for the Transmission daemon. To generate
   # the hash, I wrote it into the settings.json manually and then restarted the
   # service. The transmission edits the settings file lol.
-  "transmission-rpc-password.json.age".publicKeys = all-personal;
+  "transmission-rpc-password.json.age".publicKeys = all;
   # This is the raw hash for my user in transmission. I believe this was the
   # value I wrote into the JSON file in the step described above.
-  "transmission-password.age".publicKeys = all-personal;
+  "transmission-password.age".publicKeys = all;
   # This is a weak password so encrypt it instead of just checking in the salted
   # hash. Ideally I'd prefer to limit this to only being available to
   # chungito-host. However unfortunately agenix just has a single rekey
@@ -50,36 +46,36 @@ in
   # here that your current SSH key can't decrypt, the process fails.
   # I can't be bothered to figure out how to modularise the secrets just now
   # so, fuck it, anyone can decrypt this shit. (At least on devices I own).
-  "weak-local-password-hash.age".publicKeys = all-personal;
+  "weak-local-password-hash.age".publicKeys = all;
   # Authelia secrets generated with openssl rand  -base64 64 | agenix -e <file>
-  "authelia/jwt-secret.age".publicKeys = all-personal;
-  "authelia/storage-encryption-key.age".publicKeys = all-personal;
-  "authelia/session-secret.age".publicKeys = all-personal;
-  "authelia/passwords.json.age".publicKeys = all-personal;
-  "authelia/hmac-secret.age".publicKeys = all-personal;
+  "authelia/jwt-secret.age".publicKeys = all;
+  "authelia/storage-encryption-key.age".publicKeys = all;
+  "authelia/session-secret.age".publicKeys = all;
+  "authelia/passwords.json.age".publicKeys = all;
+  "authelia/hmac-secret.age".publicKeys = all;
   # nix run nixpkgs#authelia -- crypto pair rsa generate && agenix -e authelia/oidc-priv.pem.age < private.pem && rm private.pem
-  "authelia/oidc-priv.pem.age".publicKeys = all-personal;
+  "authelia/oidc-priv.pem.age".publicKeys = all;
   # The below generates the plaintext secret ("Random Password") and a hash
   # ("Digest").
   # nix run nixpkgs#authelia -- crypto hash generate pbkdf2 --variant sha512 --random --random.length 72 --random.charset rfc3986
   # echo -n $RANDOM_PASSWORD | agenix -e authelia/perses-client-secret.age
   # echo -n '<HASH>' | agenix -e authelia/perses-client-secret-hash.age
-  "authelia/perses-client-secret.age".publicKeys = all-personal;
-  "authelia/perses-client-secret-hash.age".publicKeys = all-personal;
-  "authelia/jellyfin-client-secret.age".publicKeys = all-personal;
-  "authelia/jellyfin-client-secret-hash.age".publicKeys = all-personal;
-  "cloudflare-ddns-api-token.age".publicKeys = all-personal;
+  "authelia/perses-client-secret.age".publicKeys = all;
+  "authelia/perses-client-secret-hash.age".publicKeys = all;
+  "authelia/jellyfin-client-secret.age".publicKeys = all;
+  "authelia/jellyfin-client-secret-hash.age".publicKeys = all;
+  "cloudflare-ddns-api-token.age".publicKeys = all;
   # nix run nixpkgs#openssl -- rand -base64 12 | agenix -e filebrowser-samba-password.age
-  "filebrowser-samba-password.age".publicKeys = all-personal;
-  "media-samba-password.age".publicKeys = all-personal;
-  "alertmanager-gmail-password.age".publicKeys = all-personal;
+  "filebrowser-samba-password.age".publicKeys = all;
+  "media-samba-password.age".publicKeys = all;
+  "alertmanager-gmail-password.age".publicKeys = all;
   # nix run nixpkgs#openssl -- rand 32 | agenix -e perses-encryption-key.age
-  "perses-encryption-key.age".publicKeys = all-personal;
+  "perses-encryption-key.age".publicKeys = all;
   # This was generated by Radarr the first time I ran it, I extracted it from
   #  /var/lib/radarr/.config/Radarr/config.xml
-  "arr-api-key.age".publicKeys = all-personal;
+  "arr-api-key.age".publicKeys = all;
   "gemini-api-key.age".publicKeys = all;
-  "brendan-sftp-privkey.age".publicKeys = all-personal;
+  "brendan-sftp-privkey.age".publicKeys = all;
   # Password for brendan.jackman@linux.dev on https://webmail.migadu.com/. This
   # is also the IMAP and SMTP password.
   "migadu-linuxdev-password.age".publicKeys = all;

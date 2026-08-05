@@ -13,8 +13,6 @@ pkgs.writeShellApplication {
     };
   text = ''
     cd "$HOME_MANAGER_CONFIG_CHECKOUT/tf/slopbox"
-    # Stupid hack to make this work on gLinux where $HOME isn't in /home
-    export TF_VAR_host_src_share_path=$HOME/src/slop
 
     TF_VAR_nproc="$(nproc)"
     export TF_VAR_nproc

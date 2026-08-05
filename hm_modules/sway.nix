@@ -66,7 +66,6 @@ in
       ];
     };
 
-    # Notification server. Works on both gLinux and NixOS.
     services.mako.enable = true;
 
     services.swayidle = {
@@ -83,8 +82,7 @@ in
           warnAfterSecs = 3 * 60;
           lockAfterSecs = 5;
           screenOffAfterSecs = 2 * 60;
-          # Suspend breaks Google's corp SSH connections so wait for ages.
-          sleepAfterSecs = 2 * 60 * 60;
+          sleepAfterSecs = 30 * 60;
         in
         [
           {
