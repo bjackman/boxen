@@ -8,10 +8,19 @@
   config,
   lib,
   pkgs,
+  osConfig ? null,
   ...
 }:
 let
   cfg = config.bjackman.agentHostContext;
+
+  # Off NixOS the login shell is set out-of-band (chsh), so there's nothing to
+  # inspect; assume fish is the login shell if we bothered to configure it.
+  loginShellIsFish =
+    if osConfig == null then
+      config.programs.fish.enable
+    else
+      (osConfig.users.users.${config.home.username}.shell.pname or "") == "fish";
   contextFile = pkgs.writeText "agent-host-context.md" cfg;
 
   contextFiles = {
@@ -37,9 +46,17 @@ in
     '';
   };
 
-  config = lib.mkIf (cfg != "") {
-    home.file = lib.mapAttrs' (
-      _: path: lib.nameValuePair path { source = contextFile; }
-    ) enabledMemoryFiles;
-  };
+  config = lib.mkMerge [
+    (lib.mkIf loginShellIsFish {
+      bjackman.agentHostContext = lib.mkAfter ''
+        My default shell is Fish, you can just use Fish syntax if you like or for
+        nontrival commands you can just explicitly run them via `bash -c`.
+      '';
+    })
+    (lib.mkIf (cfg != "") {
+      home.file = lib.mapAttrs' (
+        _: path: lib.nameValuePair path { source = contextFile; }
+      ) enabledMemoryFiles;
+    })
+  ];
 }
