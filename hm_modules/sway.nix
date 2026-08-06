@@ -136,7 +136,8 @@ in
         # is already the default when it opens on the current workspace. I can't
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
-        for_window [app_id=org.wezfurlong.wezterm|firefox|dev.zed.Zed|Code] focus
+        for_window [app_id="^(org\.wezfurlong\.wezterm|firefox|dev\.zed\.Zed|code(-url-handler)?)$"] focus
+        for_window [class="^Code$"] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
       '';
@@ -156,6 +157,10 @@ in
           "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
           "editor" = [
             { app_id = "dev.zed.Zed"; }
+            # Wayland-native VSCode; -url-handler is the window spawned when
+            # something opens a vscode:// URL.
+            { app_id = "^code(-url-handler)?$"; }
+            # VSCode under XWayland.
             { class = "Code"; }
           ];
         };
