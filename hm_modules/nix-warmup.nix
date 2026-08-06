@@ -39,6 +39,20 @@
       # Creates a safe string for filenames and systemd unit names
       escapeRef = flakeRef: builtins.replaceStrings [ ":" "/" "#" "@" ] [ "-" "-" "-" "-" ] flakeRef;
 
+      # Don't run on "metered network", in practice this is about being tethered
+      # to a phone hotspot. Claude says that Android sets magic options in its
+      # AP or DHCP or something that NetworkManager is able to use to detect the
+      # tether.
+      unmetered = pkgs.writeShellScript "unmetered" ''
+        # NMMetered: 1=yes 2=no 3=guess-yes 4=guess-no 0=unknown
+        m=$(${pkgs.systemd}/bin/busctl --system get-property org.freedesktop.NetworkManager \
+              /org/freedesktop/NetworkManager \
+              org.freedesktop.NetworkManager Metered)
+        # Anything else, including busctl failing on hosts with no NetworkManager,
+        # leaves $m empty and we go ahead.
+        case "''${m##* }" in 1 | 3) exit 1 ;; *) exit 0 ;; esac
+      '';
+
       mkService =
         { flakeRef, buildArgs }:
         {
@@ -51,6 +65,7 @@
             Service = {
               Type = "oneshot";
               CacheDirectory = "nix-warmups";
+              ExecCondition = unmetered;
               # --refresh means to pull from the remote.
               # --out-link overrides what would normally be ./result. This is what
               # creates the GC root.
