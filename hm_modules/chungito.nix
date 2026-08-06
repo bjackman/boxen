@@ -34,6 +34,7 @@
   home.packages = with pkgs; [
     btop-cuda
     mixxx
+    signal-desktop
   ];
 
   bjackman.waybar.showKeyboardLayout = true;
