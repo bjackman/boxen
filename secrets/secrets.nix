@@ -64,7 +64,7 @@ in
   "authelia/perses-client-secret-hash.age".publicKeys = all;
   "authelia/jellyfin-client-secret.age".publicKeys = all;
   "authelia/jellyfin-client-secret-hash.age".publicKeys = all;
-  "cloudflare-ddns-api-token.age".publicKeys = all;
+  "cloudflare-dns-api-token.age".publicKeys = all;
   # nix run nixpkgs#openssl -- rand -base64 12 | agenix -e filebrowser-samba-password.age
   "filebrowser-samba-password.age".publicKeys = all;
   "media-samba-password.age".publicKeys = all;
