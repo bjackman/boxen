@@ -35,7 +35,7 @@
   zramSwap.enable = true;
 
   # Build getting stuck at "building man-cache", try disabling that...?
-  documentation.man.generateCaches = false;
+  documentation.man.cache.enable = false;
 
   hardware.raspberry-pi.config = {
     # As per
