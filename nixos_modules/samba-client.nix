@@ -11,6 +11,7 @@
   imports = [
     agenix.nixosModules.default
     agenix-template.nixosModules.default
+    ./magicdns-ready.nix
   ];
 
   options.bjackman.sambaMounts = lib.mkOption {
@@ -106,10 +107,11 @@
             "gid=${mountCfg.localGroup}"
             "file_mode=${mountCfg.fileMode}"
             "dir_mode=${mountCfg.dirMode}"
-            # Don't mount until tailscale is up so that we can look up the
-            # server via MagicDNS.
-            "x-systemd.after=tailscaled.service"
-            "x-systemd.requires=tailscaled.service"
+            # Don't mount until the server is actually resolvable via MagicDNS.
+            # Waiting on tailscaled.service alone loses the race whenever a
+            # config switch restarts it, and cifs gives up rather than retrying.
+            "x-systemd.after=magicdns-ready@${homelab.servers.samba.networking.hostName}.service"
+            "x-systemd.requires=magicdns-ready@${homelab.servers.samba.networking.hostName}.service"
           ];
         }
       ) cfg;
