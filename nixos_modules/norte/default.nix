@@ -189,7 +189,7 @@
         let
           jellyfinUrl =
             with homelab.servers.jellyfin;
-            "http://${networking.hostName}.fritz.box:${builtins.toString bjackman.jellyfin.httpPort}";
+            "http://${networking.hostName}:${builtins.toString bjackman.jellyfin.httpPort}";
           # watchexec prints the command it's running, which is useful, but it
           # risks leaking the API key into the journal. So put the actual key
           # read + update into its own little script.
