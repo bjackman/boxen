@@ -422,6 +422,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "Restic repo locked (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "restic-repo-locked";
           };
           expr = "restic_locks_total > 0";
           for = "6h";
