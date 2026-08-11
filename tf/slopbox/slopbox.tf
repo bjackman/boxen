@@ -74,7 +74,7 @@ resource "incus_instance" "slopbox" {
     properties = {
       path = "/"
       pool = "default"
-      size = "128GiB"
+      size = "512GiB"
     }
   }
 }
