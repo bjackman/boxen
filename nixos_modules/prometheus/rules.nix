@@ -136,6 +136,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "Host systemd service crashed (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "host-systemd-service-crashed";
           };
           expr = ''
             (node_systemd_unit_state{state="failed"} == 1)
