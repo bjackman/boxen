@@ -66,6 +66,7 @@
       url = "github:tvheadend/tvheadend";
       flake = false;
     };
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
   # Not really sure if this works. Not really sure if it's needed. Disable it
   # so we can at least avoid using it for other nodes than Norte.
@@ -96,291 +97,302 @@
       llm-agents,
       sashiko,
       agent-skills,
+      flake-parts,
       ...
     }:
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [
-          self.overlays.default
-          deploy-rs.overlays.default
-          agenix.overlays.default
-          llm-agents.overlays.shared-nixpkgs
-          (final: prev: {
-            sashiko = sashiko.packages.${system}.default;
-          })
-        ];
-        config.allowUnfree = true;
-      };
-      pkgsUnstableFor =
-        system:
-        import nixpkgs-unstable {
-          inherit system;
-          config.allowUnfree = true;
-        };
-      # This is a rather bananas dance to create a cross-compiled deploy-rs.
-      # There is a binary in there that needs to be build for the target
-      # architecture, so this sets up a version of nixpkgs that's cross-compiled
-      # to aarch64. Then deploy-rs provides an overlay that will build the
-      # package via this cross compilation. This does still require building
-      # rustc though lmao.
-      # Note this ISN'T used for the actual NixOS system, for that it's just
-      # built "natively" so you'll need the binfmt_misc magic to make it work.
-      # That is fine in practice because you just get everything from the binary
-      # cache.
-      # https://nixos.wiki/wiki/Cross_Compiling has a section about "lazy
-      # cross-compiling" that seems like a more elegant way to achieve something
-      # kinda similar to this.
-      pkgsCross = import nixpkgs {
-        localSystem = "x86_64-linux";
-        crossSystem = {
-          config = "aarch64-unknown-linux-gnu";
-        };
-        overlays = [ deploy-rs.overlays.default ];
-      };
-      treefmtCfg = treefmt-nix.lib.evalModule pkgs {
-        projectRootFile = "flake.nix";
-        programs.nixfmt.enable = true;
-        programs.mdformat = {
-          enable = true;
-          # Without this plugin mdformat mangles the YAML frontmatter in agent
-          # Skill SKILL.md files (turns `---` into a thematic break and collapses
-          # the name/description onto one line).
-          plugins = ps: [ ps.mdformat-frontmatter ];
-        };
-        programs.yamlfmt.enable = true;
-      };
-      # Allow different nodes' configs to refer to each other in cases
-      # where they are coupled.
-      homelab = rec {
-        # For cases where we actually care about the nodes themselves, use
-        # this:
-        nodes = {
-          pizza = self.nixosConfigurations.pizza.config;
-          norte = self.nixosConfigurations.norte.config;
-        };
-        # And this is for cases where we just want "the machine running
-        # the X server".
-        servers = {
-          samba = nodes.norte;
-          jellyfin = nodes.pizza;
-          bitmagnet = nodes.pizza;
-          radarr = nodes.norte;
-          sonarr = nodes.norte;
-          transmission = nodes.pizza;
-        };
-      };
-    in
-    {
-      formatter."${system}" = treefmtCfg.config.build.wrapper;
-
-      # This is a bit of a magical dance to get packages defined in this flake
-      # to be available as flake outputs (so they can easily be tested) and also
-      # exposed into the Home Manager module system. We define the packages in a
-      # nixpkgs overlay. We then consume the overlay into pkgs above (so Home
-      # Manager modules can consume the packages). Then we expose them as flake
-      # outputs here below.
-      # Note the overlay itself is system-agnostic, it's just a function that
-      # refers to whatever nixpkgs instance it's called on.
-      # https://discourse.nixos.org/t/multiple-packages-in-the-same-flake-that-depend-on-each-other/69673/5
-      overlays.default = final: prev: {
-        # Put all the packages defined this way under the "bjackman" key so it's
-        # obvious at the usage site that they come from an overlay.
-        bjackman = {
-          homepage = final.callPackage ./packages/homepage { src = ./packages/homepage; };
-          notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute { };
-          spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
-          spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
-          slopclone = final.callPackage ./packages/slopclone { };
-          tvheadend = final.callPackage ./packages/tvheadend { src = inputs.tvheadend; };
-        };
-      };
-
-      packages."${system}" = pkgs.bjackman // {
-        homepage = pkgs.bjackman.homepage;
-        # This is really a "check" but having it in there is super fucking
-        # annoying because it causes deploy-rs to fail. So, just put it as a
-        # package and we can have Limmat build it.
-        format = treefmtCfg.config.build.check self;
-        add-user = pkgs.callPackage ./packages/add-user.nix { };
-        deploy-tf-arr = pkgs.callPackage ./tf/arr/deploy.nix { inherit homelab; };
-        deploy-tf-slopbox = pkgs.callPackage ./tf/slopbox/deploy.nix { inherit self; };
-      };
-
-      # This defines the configurations for machines using standalone
-      # home-manager, which in my case means machines not running NixOS.
-      # Otherwise the HM config is injected via the NixOS module.
-      homeConfigurations = {
-        brendan = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./hm_modules/brendan.nix ];
-          extraSpecialArgs = inputs // {
-            pkgsUnstable = pkgsUnstableFor "x86_64-linux";
-          };
-        };
-        niamh = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./hm_modules/niamh.nix ];
-        };
-      };
-
-      nixosConfigurations =
-        let
-          mkNixosSystem =
-            {
-              system,
-              modules,
-              builder ? nixpkgs.lib.nixosSystem,
-            }:
-            builder {
-              inherit system modules;
-              # Squashing the inputs into specialArgs let's you refer to flake
-              # inputs in modules, which lets you declare imports closer to the code
-              # that depends on them. For example this means you can import the
-              # impermanence module near the code that set up impermanence settings.
-              # Note a slightly weird thing about this: we're splatting the contents
-              # of `inputs` into the specialArgs, but also setting an arg called
-              # `inputs`. The former is coz I already have a bunch of code that
-              # directly refers to inputs by their name in module args, the latter
-              # is because I still need to pass the whole `inputs` through as a unit
-              # from the NixOS module system into the Home Manager module system.
-              specialArgs = inputs // {
-                inherit inputs homelab;
-                pkgsUnstable = pkgsUnstableFor system;
+    flake-parts.lib.mkFlake { inherit inputs; } (
+      top@{
+        config,
+        withSystem,
+        moduleWithSystem,
+        ...
+      }:
+      {
+        flake =
+          let
+            system = "x86_64-linux";
+            pkgs = import nixpkgs {
+              inherit system;
+              overlays = [
+                self.overlays.default
+                deploy-rs.overlays.default
+                agenix.overlays.default
+                llm-agents.overlays.shared-nixpkgs
+                (final: prev: {
+                  sashiko = sashiko.packages.${system}.default;
+                })
+              ];
+              config.allowUnfree = true;
+            };
+            pkgsUnstableFor =
+              system:
+              import nixpkgs-unstable {
+                inherit system;
+                config.allowUnfree = true;
+              };
+            # This is a rather bananas dance to create a cross-compiled deploy-rs.
+            # There is a binary in there that needs to be build for the target
+            # architecture, so this sets up a version of nixpkgs that's cross-compiled
+            # to aarch64. Then deploy-rs provides an overlay that will build the
+            # package via this cross compilation. This does still require building
+            # rustc though lmao.
+            # Note this ISN'T used for the actual NixOS system, for that it's just
+            # built "natively" so you'll need the binfmt_misc magic to make it work.
+            # That is fine in practice because you just get everything from the binary
+            # cache.
+            # https://nixos.wiki/wiki/Cross_Compiling has a section about "lazy
+            # cross-compiling" that seems like a more elegant way to achieve something
+            # kinda similar to this.
+            pkgsCross = import nixpkgs {
+              localSystem = "x86_64-linux";
+              crossSystem = {
+                config = "aarch64-unknown-linux-gnu";
+              };
+              overlays = [ deploy-rs.overlays.default ];
+            };
+            treefmtCfg = treefmt-nix.lib.evalModule pkgs {
+              projectRootFile = "flake.nix";
+              programs.nixfmt.enable = true;
+              programs.mdformat = {
+                enable = true;
+                # Without this plugin mdformat mangles the YAML frontmatter in agent
+                # Skill SKILL.md files (turns `---` into a thematic break and collapses
+                # the name/description onto one line).
+                plugins = ps: [ ps.mdformat-frontmatter ];
+              };
+              programs.yamlfmt.enable = true;
+            };
+            # Allow different nodes' configs to refer to each other in cases
+            # where they are coupled.
+            homelab = rec {
+              # For cases where we actually care about the nodes themselves, use
+              # this:
+              nodes = {
+                pizza = self.nixosConfigurations.pizza.config;
+                norte = self.nixosConfigurations.norte.config;
+              };
+              # And this is for cases where we just want "the machine running
+              # the X server".
+              servers = {
+                samba = nodes.norte;
+                jellyfin = nodes.pizza;
+                bitmagnet = nodes.pizza;
+                radarr = nodes.norte;
+                sonarr = nodes.norte;
+                transmission = nodes.pizza;
               };
             };
-        in
-        {
-          chungito = mkNixosSystem {
-            system = "x86_64-linux";
-            modules = [
-              ./nixos_modules/chungito
-              { home-manager.users.brendan.imports = [ ./hm_modules/chungito.nix ]; }
-            ];
-          };
-          fw13 = mkNixosSystem {
-            system = "x86_64-linux";
-            modules = [
-              ./nixos_modules/fw13
-              { home-manager.users.brendan.imports = [ ./hm_modules/fw13.nix ]; }
-            ];
-          };
-          # Raspberry Pi 4B at my mum's place.
-          sandy = mkNixosSystem {
-            system = "aarch64-linux";
-            modules = [ ./nixos_modules/sandy.nix ];
-          };
-          # Thinkpad t480 at my place
-          pizza = mkNixosSystem {
-            system = "x86_64-linux";
-            modules = [ ./nixos_modules/pizza ];
-          };
-          norte = mkNixosSystem {
-            system = "aarch64-linux";
-            modules = [ ./nixos_modules/norte ];
-            # Raspberry Pi 5 with a Radxa SATA hat at my place.
-            # Note this is using a special nixosSystem helper. Raspberry Pi 5s
-            # are fucked up and someone made it work, so, well, we're gonna go
-            # with it.
-            builder = nixos-raspberrypi.lib.nixosSystem;
-          };
-          slopbox = mkNixosSystem {
-            system = "x86_64-linux";
-            modules = [
-              ./nixos_modules/slopbox.nix
-            ];
-          };
-        };
+          in
+          {
+            formatter."${system}" = treefmtCfg.config.build.wrapper;
 
-      deploy.nodes = {
-        sandy = {
-          hostname = "sandy";
-          profiles.system = {
-            user = "root";
-            path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.sandy;
-          };
-        };
-        norte = {
-          hostname = "norte";
-          profiles.system = {
-            user = "root";
-            path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.norte;
-          };
-        };
-        pizza = {
-          hostname = "pizza";
-          profiles.system = {
-            user = "root";
-            path = pkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.pizza;
-          };
-        };
-      };
+            # This is a bit of a magical dance to get packages defined in this flake
+            # to be available as flake outputs (so they can easily be tested) and also
+            # exposed into the Home Manager module system. We define the packages in a
+            # nixpkgs overlay. We then consume the overlay into pkgs above (so Home
+            # Manager modules can consume the packages). Then we expose them as flake
+            # outputs here below.
+            # Note the overlay itself is system-agnostic, it's just a function that
+            # refers to whatever nixpkgs instance it's called on.
+            # https://discourse.nixos.org/t/multiple-packages-in-the-same-flake-that-depend-on-each-other/69673/5
+            overlays.default = final: prev: {
+              # Put all the packages defined this way under the "bjackman" key so it's
+              # obvious at the usage site that they come from an overlay.
+              bjackman = {
+                homepage = final.callPackage ./packages/homepage { src = ./packages/homepage; };
+                notmuch-propagate-mute = final.callPackage ./packages/notmuch-propagate-mute { };
+                spellcheck_commitmsg = final.callPackage ./packages/spellcheck_commitmsg { };
+                spellcheck_commitmsgs = final.callPackage ./packages/spellcheck_commitmsgs { };
+                slopclone = final.callPackage ./packages/slopclone { };
+                tvheadend = final.callPackage ./packages/tvheadend { src = inputs.tvheadend; };
+              };
+            };
 
-      # Since these are laptops and we can only deploy to them when they're
-      # powered on, don't put them in the "real" deploy field.
-      # I don't yet know if there's any real way to deploy this. I think maybe
-      # deploy-rs is not flexible enough here. Probably easiest to just deploy
-      # these freaky nodes via a simple custom script. I don't think I get any
-      # benefit out of higher-level tools here anyway.
-      extraDeploy.nodes = {
-        airbuntu = {
-          hostname = "airbuntu";
-          sshUser = "niamh";
-          profiles.home = {
-            user = "niamh";
-            path = deploy-rs.lib.x86_64-linux.activate.home-manager self.homeConfigurations.niamh;
-          };
-        };
-        romy = {
-          hostname = "macbook-air-8";
-          sshUser = "romybinswanger";
-          profiles.home = {
-            user = "romybinswanger";
-            path =
-              let
-                # Also want to avoid trying to check this configurations since
-                # it can only be built with access to a Darwin builder, so we
-                # hide this down here away from the main homeConfigurations
-                # flake output.
-                config = home-manager.lib.homeManagerConfiguration {
-                  pkgs = import nixpkgs { system = "aarch64-darwin"; };
-                  modules = [ ./hm_modules/romy.nix ];
+            packages."${system}" = pkgs.bjackman // {
+              homepage = pkgs.bjackman.homepage;
+              # This is really a "check" but having it in there is super fucking
+              # annoying because it causes deploy-rs to fail. So, just put it as a
+              # package and we can have Limmat build it.
+              format = treefmtCfg.config.build.check self;
+              add-user = pkgs.callPackage ./packages/add-user.nix { };
+              deploy-tf-arr = pkgs.callPackage ./tf/arr/deploy.nix { inherit homelab; };
+              deploy-tf-slopbox = pkgs.callPackage ./tf/slopbox/deploy.nix { inherit self; };
+            };
+
+            # This defines the configurations for machines using standalone
+            # home-manager, which in my case means machines not running NixOS.
+            # Otherwise the HM config is injected via the NixOS module.
+            homeConfigurations = {
+              brendan = home-manager.lib.homeManagerConfiguration {
+                inherit pkgs;
+                modules = [ ./hm_modules/brendan.nix ];
+                extraSpecialArgs = inputs // {
+                  pkgsUnstable = pkgsUnstableFor "x86_64-linux";
                 };
+              };
+              niamh = home-manager.lib.homeManagerConfiguration {
+                inherit pkgs;
+                modules = [ ./hm_modules/niamh.nix ];
+              };
+            };
+
+            nixosConfigurations =
+              let
+                mkNixosSystem =
+                  {
+                    system,
+                    modules,
+                    builder ? nixpkgs.lib.nixosSystem,
+                  }:
+                  builder {
+                    inherit system modules;
+                    # Squashing the inputs into specialArgs let's you refer to flake
+                    # inputs in modules, which lets you declare imports closer to the code
+                    # that depends on them. For example this means you can import the
+                    # impermanence module near the code that set up impermanence settings.
+                    # Note a slightly weird thing about this: we're splatting the contents
+                    # of `inputs` into the specialArgs, but also setting an arg called
+                    # `inputs`. The former is coz I already have a bunch of code that
+                    # directly refers to inputs by their name in module args, the latter
+                    # is because I still need to pass the whole `inputs` through as a unit
+                    # from the NixOS module system into the Home Manager module system.
+                    specialArgs = inputs // {
+                      inherit inputs homelab;
+                      pkgsUnstable = pkgsUnstableFor system;
+                    };
+                  };
               in
-              deploy-rs.lib.aarch64-darwin.activate.home-manager config;
+              {
+                chungito = mkNixosSystem {
+                  system = "x86_64-linux";
+                  modules = [
+                    ./nixos_modules/chungito
+                    { home-manager.users.brendan.imports = [ ./hm_modules/chungito.nix ]; }
+                  ];
+                };
+                fw13 = mkNixosSystem {
+                  system = "x86_64-linux";
+                  modules = [
+                    ./nixos_modules/fw13
+                    { home-manager.users.brendan.imports = [ ./hm_modules/fw13.nix ]; }
+                  ];
+                };
+                # Raspberry Pi 4B at my mum's place.
+                sandy = mkNixosSystem {
+                  system = "aarch64-linux";
+                  modules = [ ./nixos_modules/sandy.nix ];
+                };
+                # Thinkpad t480 at my place
+                pizza = mkNixosSystem {
+                  system = "x86_64-linux";
+                  modules = [ ./nixos_modules/pizza ];
+                };
+                norte = mkNixosSystem {
+                  system = "aarch64-linux";
+                  modules = [ ./nixos_modules/norte ];
+                  # Raspberry Pi 5 with a Radxa SATA hat at my place.
+                  # Note this is using a special nixosSystem helper. Raspberry Pi 5s
+                  # are fucked up and someone made it work, so, well, we're gonna go
+                  # with it.
+                  builder = nixos-raspberrypi.lib.nixosSystem;
+                };
+                slopbox = mkNixosSystem {
+                  system = "x86_64-linux";
+                  modules = [
+                    ./nixos_modules/slopbox.nix
+                  ];
+                };
+              };
+
+            deploy.nodes = {
+              sandy = {
+                hostname = "sandy";
+                profiles.system = {
+                  user = "root";
+                  path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.sandy;
+                };
+              };
+              norte = {
+                hostname = "norte";
+                profiles.system = {
+                  user = "root";
+                  path = pkgsCross.deploy-rs.lib.activate.nixos self.nixosConfigurations.norte;
+                };
+              };
+              pizza = {
+                hostname = "pizza";
+                profiles.system = {
+                  user = "root";
+                  path = pkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.pizza;
+                };
+              };
+            };
+
+            # Since these are laptops and we can only deploy to them when they're
+            # powered on, don't put them in the "real" deploy field.
+            # I don't yet know if there's any real way to deploy this. I think maybe
+            # deploy-rs is not flexible enough here. Probably easiest to just deploy
+            # these freaky nodes via a simple custom script. I don't think I get any
+            # benefit out of higher-level tools here anyway.
+            extraDeploy.nodes = {
+              airbuntu = {
+                hostname = "airbuntu";
+                sshUser = "niamh";
+                profiles.home = {
+                  user = "niamh";
+                  path = deploy-rs.lib.x86_64-linux.activate.home-manager self.homeConfigurations.niamh;
+                };
+              };
+              romy = {
+                hostname = "macbook-air-8";
+                sshUser = "romybinswanger";
+                profiles.home = {
+                  user = "romybinswanger";
+                  path =
+                    let
+                      # Also want to avoid trying to check this configurations since
+                      # it can only be built with access to a Darwin builder, so we
+                      # hide this down here away from the main homeConfigurations
+                      # flake output.
+                      config = home-manager.lib.homeManagerConfiguration {
+                        pkgs = import nixpkgs { system = "aarch64-darwin"; };
+                        modules = [ ./hm_modules/romy.nix ];
+                      };
+                    in
+                    deploy-rs.lib.aarch64-darwin.activate.home-manager config;
+                };
+              };
+            };
+
+            # Check all NixOS systems and Home Manager configurations build.
+            checks."${system}" =
+              (nixpkgs.lib.mapAttrs (_: conf: conf.config.system.build.toplevel) (
+                nixpkgs.lib.filterAttrs (_: c: c.pkgs.stdenv.hostPlatform.system == system) self.nixosConfigurations
+              ))
+              // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations);
+
+            devShells."${system}" = {
+              default = pkgs.mkShell {
+                packages = [
+                  home-manager.packages."${system}".default
+                  limmat.packages."${system}".default
+                  pkgs.agenix
+                  pkgs.nix-diff
+                  pkgs.nixos-rebuild
+                  deploy-rs.packages.x86_64-linux.default
+                  pkgs.perses # For percli
+                  pkgs.cue
+                  pkgs.opentofu
+                ];
+              };
+              homepage = pkgs.mkShell {
+                packages = [
+                  pkgs.pandoc
+                  pkgs.python3 # For python3 -m http.server
+                ];
+              };
+            };
           };
-        };
-      };
-
-      # Check all NixOS systems and Home Manager configurations build.
-      checks."${system}" =
-        (nixpkgs.lib.mapAttrs (_: conf: conf.config.system.build.toplevel) (
-          nixpkgs.lib.filterAttrs (_: c: c.pkgs.stdenv.hostPlatform.system == system) self.nixosConfigurations
-        ))
-        // (nixpkgs.lib.mapAttrs (_: conf: conf.activationPackage) self.homeConfigurations);
-
-      devShells."${system}" = {
-        default = pkgs.mkShell {
-          packages = [
-            home-manager.packages."${system}".default
-            limmat.packages."${system}".default
-            pkgs.agenix
-            pkgs.nix-diff
-            pkgs.nixos-rebuild
-            deploy-rs.packages.x86_64-linux.default
-            pkgs.perses # For percli
-            pkgs.cue
-            pkgs.opentofu
-          ];
-        };
-        homepage = pkgs.mkShell {
-          packages = [
-            pkgs.pandoc
-            pkgs.python3 # For python3 -m http.server
-          ];
-        };
-      };
-    };
-
+      }
+    );
 }
