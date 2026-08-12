@@ -3,6 +3,7 @@
   pkgs,
   self,
   agenix,
+  llm-agents,
   ...
 }:
 {
@@ -10,7 +11,13 @@
     agenix.nixosModules.default
   ];
 
-  nixpkgs.overlays = [ self.outputs.overlays.default ];
+  nixpkgs = {
+    overlays = [
+      self.outputs.overlays.default
+      llm-agents.overlays.shared-nixpkgs
+    ];
+    config.allowUnfree = true;
+  };
 
   # Set up the default soft ulimit for open
   # file descriptors. Without this I've run into "too many open files" during

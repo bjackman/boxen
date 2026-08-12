@@ -234,7 +234,6 @@
         let
           brendanHome = {
             imports = [ home-manager.nixosModules.home-manager ];
-            nixpkgs = { inherit pkgs; };
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
