@@ -19,6 +19,105 @@
                 ||     ||
 ```
 
+## Flake structure
+
+This flake uses `flake-parts`. `flake-parts`' documentation is really reference
+only, there's not much conceptual introduction. Here's a snapshot of the key
+parts of my current understanding:
+
+### Module systems
+
+`flake-parts` creates a third module system, so we have:
+
+1. `flake_modules/` which define the flake outputs.
+
+   1b. There is also a _nested_ module system within this namely the `perSystem`
+   modules, described below.
+
+1. `nixos_modules/` which are used to construct NixOS configs. But of course the
+   NixOS configs are instantiated by flake modules, and there are some NixOS
+   modules directly inline in flake modules.
+
+1. `hm_modules/` which are used to construct Home Manager configs, which again
+   are instantiated by, and may be inline in, flake modules. But Home Manager
+   modules are _also_ constructed by NixOS modules.
+
+The different module systems interact in two main ways:
+
+- Flake modules instantiate nixpkgs, and the nixpkgs instantiation is passed to
+  the HM config constructor. AI claims that this nixpkgs instantiation isn't
+  actually used directly but rather HM reconstructs its own nixpkgs by
+  inspection. NixOS configs _can_ be directly passed an existing nixpkgs
+  instantiation but in this config I have tried to avoid that, instead NixOS
+  configs just reuse overlays and construct their own `pkgs` - this helps avoid
+  flake-level code having to deal _too much_ with instantiating nixpkgs correctly
+  for different configs, older versions had bugs in this area.
+
+- `specialArgs` - this is the most important way. When flake modules instantiate
+  NixOS/HM configurations, they set additional arguments that get passed to each
+  module. In this flake that is used to:
+
+  - Pass extra nixpkgs instantiations in, namely we add `pkgsUnstable` so that
+    we can install the latest version of a package even if the rest of the system
+    is on the stable release.
+
+  - Make modules "aware" that they are in a flake, that is we pass in `inputs`
+    and allow modules to refer to them directly.
+
+    This is a bit of a confusing corner of the programming style in here and
+    something I've ummed and ahh'd about a bit, something that will likely be
+    changed later. Suppose you want to refer, in a module, to package that is not
+    in upstream nixpkgs. You could:
+
+    1. Pass it in directly via `specialArgs`, this is nice and explicit but it
+       would get pretty messy when instantiating modules. Note in this style
+       `specialArgs` is a "bottleneck" that everybody's args have to go through.
+       This is more appealing in the context of instantiating _packages_ with
+       non-nixpkgs dependencies (since each package can have its own extra
+       arguments that you add to the `callPackage` invocation) but for modules I
+       think it would be a mess.
+
+    1. Add it to an overlay which you apply to nixpkgs before instantiating the
+       module, then have the module just refer to it via `pkgs`. This is concise
+       and keeps your module "ignorant" of the overall system that is
+       instantiating it.
+
+    1. Add the whole of the flake's `inputs` to `specialArgs`. Referring to
+       `inputs` in the module makes it nice and clear in module code that you
+       are referring to something "custom", but it also means your module is
+       coupled to the fact that it's in a flake.
+
+    In this code we go for a combination of 2 and 3: For flake modules, option 3
+    has no real downside since they are inherently coupled to the flake (they
+    _are_ the flake). For NixOS and HM modules we try to use option 2 for
+    packages, but then we end up using option 3 anyway e.g. for module imports.
+
+    A particular foible of option 3 is that for flake modules, we pass `inputs`
+    as its own `specialArgs` but for NixOS/HM modules we splat the inputs into
+    their own arguments and refer to them directly. However then we _ALSO_ still
+    pass in the whole `inputs` into NixOS modules, since that's needed in order
+    to forward them wholesale to instantiated HM modules. Perhaps a reason for
+    preferring the individual-arg style in the past was that it doesn't couple
+    the modules to a flake quite so explicitly (you could still pass the inputs
+    individuall via `specialArgs` i.e. option 1 above). But now that we are
+    forced to have the `inputs` arg anyway we should probably just use that
+    everywhere.
+
+### How `flake-parts` works
+
+Aside from modularising the flake, `flake-parts` also divides the world into
+"system-agnostic" stuff (defined directly in the `flake` option) and `perSystem`
+stuff. System-agnostic stuff doesn't get an instantiated nixpkgs (you don't get
+a `pkgs` module argument at all).
+
+`perSystem` is a flake option that takes a module as its value. This module
+_does_ get a `pkgs` argument. So, you define packages inside the `perSystem`. In
+this flake, the way the nixpkgs instantiations actually happen is configured in
+`flake_modules/nixpkgs.nix`.
+
+Then, in the system-agnostic parts you can still "reach" into the `perSystem`
+parts with `withSystem`(and some related functions too).
+
 ## HOWTOs
 
 ### Adding a new user for dä homelab
@@ -94,8 +193,6 @@ can rekey secrets to allow it to access them.
   if so, fix it. (It was only the known proxies)
 - [ ] Jellyfin KnownProxies is configured via my forked Jellyfin with an AI slop
   patch to add networking configuration.
-- [ ] Clean up `specialArgs` (for both NixOS and Home Manager). I think I probably
-  just want to pass `inputs` into the modules.
 - [ ] See if it's possible to virtualise these systems so that I can vibe-code
   in this repo.
 - [ ] Run Woodpecker CI (or similar) in homelab.
