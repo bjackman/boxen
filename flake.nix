@@ -113,10 +113,12 @@
         ];
         config.allowUnfree = true;
       };
-      pkgsUnstable = import nixpkgs-unstable {
-        inherit system;
-        config.allowUnfree = true;
-      };
+      pkgsUnstableFor =
+        system:
+        import nixpkgs-unstable {
+          inherit system;
+          config.allowUnfree = true;
+        };
       # This is a rather bananas dance to create a cross-compiled deploy-rs.
       # There is a binary in there that needs to be build for the target
       # architecture, so this sets up a version of nixpkgs that's cross-compiled
@@ -214,7 +216,7 @@
           inherit pkgs;
           modules = [ ./hm_modules/brendan.nix ];
           extraSpecialArgs = inputs // {
-            inherit pkgsUnstable;
+            pkgsUnstable = pkgsUnstableFor "x86_64-linux";
           };
         };
         niamh = home-manager.lib.homeManagerConfiguration {
@@ -225,64 +227,69 @@
 
       nixosConfigurations =
         let
-          # Squashing the inputs into specialArgs let's you refer to flake
-          # inputs in modules, which lets you declare imports closer to the code
-          # that depends on them. For example this means you can import the
-          # impermanence module near the code that set up impermanence settings.
-          # Note a slightly weird thing about this: we're splatting the contents
-          # of `inputs` into the specialArgs, but also setting an arg called
-          # `inputs`. The former is coz I already have a bunch of code that
-          # directly refers to inputs by their name in module args, the latter
-          # is because I still need to pass the whole `inputs` through as a unit
-          # from the NixOS module system into the Home Manager module system.
-          specialArgs = inputs // {
-            inherit inputs homelab pkgsUnstable;
-          };
+          mkNixosSystem =
+            {
+              system,
+              modules,
+              builder ? nixpkgs.lib.nixosSystem,
+            }:
+            builder {
+              inherit system modules;
+              # Squashing the inputs into specialArgs let's you refer to flake
+              # inputs in modules, which lets you declare imports closer to the code
+              # that depends on them. For example this means you can import the
+              # impermanence module near the code that set up impermanence settings.
+              # Note a slightly weird thing about this: we're splatting the contents
+              # of `inputs` into the specialArgs, but also setting an arg called
+              # `inputs`. The former is coz I already have a bunch of code that
+              # directly refers to inputs by their name in module args, the latter
+              # is because I still need to pass the whole `inputs` through as a unit
+              # from the NixOS module system into the Home Manager module system.
+              specialArgs = inputs // {
+                inherit inputs homelab;
+                pkgsUnstable = pkgsUnstableFor system;
+              };
+            };
         in
         {
-          chungito = nixpkgs.lib.nixosSystem {
+          chungito = mkNixosSystem {
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/chungito
               { home-manager.users.brendan.imports = [ ./hm_modules/chungito.nix ]; }
             ];
-            inherit specialArgs;
           };
-          fw13 = nixpkgs.lib.nixosSystem {
+          fw13 = mkNixosSystem {
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/fw13
               { home-manager.users.brendan.imports = [ ./hm_modules/fw13.nix ]; }
             ];
-            inherit specialArgs;
           };
           # Raspberry Pi 4B at my mum's place.
-          sandy = nixpkgs.lib.nixosSystem {
+          sandy = mkNixosSystem {
             system = "aarch64-linux";
             modules = [ ./nixos_modules/sandy.nix ];
-            inherit specialArgs;
           };
           # Thinkpad t480 at my place
-          pizza = nixpkgs.lib.nixosSystem {
+          pizza = mkNixosSystem {
             system = "x86_64-linux";
             modules = [ ./nixos_modules/pizza ];
-            inherit specialArgs;
           };
-          # Raspberry Pi 5 with a Radxa SATA hat at my place.
-          # Note this is using a special nixosSystem helper. Raspberry Pi 5s
-          # are fucked up and someone made it work, so, well, we're gonna go
-          # with it.
-          norte = nixos-raspberrypi.lib.nixosSystem {
+          norte = mkNixosSystem {
             system = "aarch64-linux";
             modules = [ ./nixos_modules/norte ];
-            inherit specialArgs;
+            # Raspberry Pi 5 with a Radxa SATA hat at my place.
+            # Note this is using a special nixosSystem helper. Raspberry Pi 5s
+            # are fucked up and someone made it work, so, well, we're gonna go
+            # with it.
+            builder = nixos-raspberrypi.lib.nixosSystem;
           };
-          slopbox = nixpkgs.lib.nixosSystem {
+          slopbox = mkNixosSystem {
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/slopbox.nix
             ];
-            inherit specialArgs;
           };
         };
 
