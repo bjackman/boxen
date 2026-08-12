@@ -5,6 +5,9 @@
     ./common.nix
     ./server.nix
     "${modulesPath}/virtualisation/incus-virtual-machine.nix"
+    # Note it's unusual to directly import brendan-home.nix from a host's
+    # top-level module, usually they'll import pc.nix, but this is a VM.
+    ./brendan-home.nix
   ];
 
   services.openssh = {

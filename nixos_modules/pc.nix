@@ -1,7 +1,10 @@
 # Stuff for my user but on computers with screens and a keyboard and shit.
 { pkgs, ... }:
 {
-  imports = [ ./impermanence.nix ];
+  imports = [
+    ./impermanence.nix
+    ./brendan-home.nix
+  ];
 
   boot.loader = {
     systemd-boot.enable = true;

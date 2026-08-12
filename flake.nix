@@ -137,15 +137,6 @@
         };
         overlays = [ deploy-rs.overlays.default ];
       };
-      # Hm. This is how I'm passing in stuff to my home manager modules that
-      # needs to be a flake input. This seems kinda yucky, I think I'm doing
-      # something wrong here. For the NixOS modules below, instead of injecting
-      # the flake inputs via specialArgs, I just listed them explicitly where I
-      # instantiate the config. For the pkgsUnstable thing, an alternative would
-      # just be to inject the pacakges into pkgs, via an overlay.
-      hmSpecialArgs = inputs // {
-        inherit pkgsUnstable;
-      };
       treefmtCfg = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
         programs.nixfmt.enable = true;
@@ -222,7 +213,9 @@
         brendan = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./hm_modules/brendan.nix ];
-          extraSpecialArgs = hmSpecialArgs;
+          extraSpecialArgs = inputs // {
+            inherit pkgsUnstable;
+          };
         };
         niamh = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
@@ -232,28 +225,18 @@
 
       nixosConfigurations =
         let
-          brendanHome = {
-            imports = [ home-manager.nixosModules.home-manager ];
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "backup";
-              extraSpecialArgs = hmSpecialArgs;
-              users.brendan = {
-                imports = [
-                  ./hm_modules/common.nix
-                  ./hm_modules/brendan.nix
-                  ./hm_modules/nixos.nix
-                ];
-              };
-            };
-          };
           # Squashing the inputs into specialArgs let's you refer to flake
           # inputs in modules, which lets you declare imports closer to the code
           # that depends on them. For example this means you can import the
           # impermanence module near the code that set up impermanence settings.
+          # Note a slightly weird thing about this: we're splatting the contents
+          # of `inputs` into the specialArgs, but also setting an arg called
+          # `inputs`. The former is coz I already have a bunch of code that
+          # directly refers to inputs by their name in module args, the latter
+          # is because I still need to pass the whole `inputs` through as a unit
+          # from the NixOS module system into the Home Manager module system.
           specialArgs = inputs // {
-            inherit homelab pkgsUnstable;
+            inherit inputs homelab pkgsUnstable;
           };
         in
         {
@@ -261,7 +244,6 @@
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/chungito
-              brendanHome
               { home-manager.users.brendan.imports = [ ./hm_modules/chungito.nix ]; }
             ];
             inherit specialArgs;
@@ -270,7 +252,6 @@
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/fw13
-              brendanHome
               { home-manager.users.brendan.imports = [ ./hm_modules/fw13.nix ]; }
             ];
             inherit specialArgs;
@@ -300,7 +281,6 @@
             system = "x86_64-linux";
             modules = [
               ./nixos_modules/slopbox.nix
-              brendanHome
             ];
             inherit specialArgs;
           };
