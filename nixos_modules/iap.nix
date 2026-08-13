@@ -56,11 +56,14 @@ in
                   enable = lib.mkOption {
                     type = bool;
                     description = ''
-                      Use OIDC instead of forward_auth.
+                      Service authenticates its own requests via OIDC rather
+                      than trusting the proxy.
 
-                      Service is directly reverse-proxied by Caddy. Hopefully it
-                      isn't trivially pwnable via its login page. It will then need
-                      to be configured to do SSO via Authelia.
+                      By default this also turns off forward_auth, so the
+                      service is directly reverse-proxied by Caddy and its login
+                      page is exposed. Set forwardAuth back to true to keep both,
+                      for a service whose pre-auth surface you don't want facing
+                      the internet.
                     '';
                     default = false;
                   };
@@ -74,14 +77,29 @@ in
                     '';
                   };
                 };
+                forwardAuth = lib.mkOption {
+                  type = bool;
+                  default = !config.oidc.enable;
+                  defaultText = "!config.oidc.enable";
+                  description = ''
+                    Require an Authelia session at the proxy before the request
+                    reaches the service at all.
+
+                    Combining this with oidc.enable means the user passes
+                    Authelia twice - once for the cookie, once for the service's
+                    own login - but the service sees no unauthenticated traffic
+                    and still trusts no headers, which is the only combination
+                    that survives a pre-auth bug in the service itself.
+                  '';
+                };
                 allowedUsers = lib.mkOption {
                   type = with lib.types; nullOr (listOf str);
                   default = null;
                   description = ''
                     List of users allowed to access this service.
 
-                    If null, all authenticated users can access it. Must be null
-                    if oidc.enable.
+                    If null, all authenticated users can access it. Enforced by
+                    the forward_auth rule, so it requires forwardAuth.
                   '';
                 };
                 url = lib.mkOption {
@@ -155,10 +173,12 @@ in
     in
     lib.mkIf cfg.host {
       assertions = lib.mapAttrsToList (name: service: {
-        assertion = !(service.oidc.enable && service.allowedUsers != null);
+        assertion = service.allowedUsers == null || service.forwardAuth;
         message = ''
-          IAP Service '${name}' cannot have both `oidc.enable` and `allowedUsers` set.
-          Configure user restrictions via oidc.autheliaConfig instead (I dunno how).
+          IAP Service '${name}' sets `allowedUsers` but not `forwardAuth`, so the
+          Authelia rule carrying that restriction is never consulted. Either turn
+          on forwardAuth or configure the restriction via oidc.autheliaConfig
+          instead (I dunno how).
         '';
       }) cfg.services;
 
@@ -200,7 +220,7 @@ in
             builtins.map (service: ''
               @${service.subdomain} host ${service.subdomain}.${domain}
               handle @${service.subdomain} {
-                ${lib.optionalString (!service.oidc.enable) forwardAuth}
+                ${lib.optionalString service.forwardAuth forwardAuth}
                 reverse_proxy ${service.host}:${builtins.toString service.port}
               }
             '') allServices
@@ -297,11 +317,11 @@ in
             ]
             ++ builtins.map (service: {
               domain = [ "${service.subdomain}.${domain}" ];
-              # If using OIDC, disable the ForwardAuth middleware.
-              policy = if service.oidc.enable then "bypass" else "one_factor";
+              # Without the ForwardAuth middleware in front there's nothing to
+              # authorize here; the service does its own auth over OIDC.
+              policy = if service.forwardAuth then "one_factor" else "bypass";
               # If allowedUsers is set then apply this rule only to those users;
               # other users will fall back to the default_policy and be blocked.
-              # Note OIDC and allowedUsers can't coexist, see the assertion.
               subject = if service.allowedUsers != null then map (u: "user:${u}") service.allowedUsers else null;
             }) allServices;
           };
