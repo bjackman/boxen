@@ -102,11 +102,17 @@ in
                     the forward_auth rule, so it requires forwardAuth.
                   '';
                 };
+                fqdn = lib.mkOption {
+                  type = str;
+                  readOnly = true;
+                  description = "Hostname the service is served under";
+                  default = "${config.subdomain}.${domain}";
+                };
                 url = lib.mkOption {
                   type = str;
                   readOnly = true;
                   description = "URL where the service is available via the proxy";
-                  default = "https://${config.subdomain}.${domain}";
+                  default = "https://${config.fqdn}";
                 };
               };
             }
@@ -218,7 +224,7 @@ in
 
           ${lib.concatStringsSep "\n" (
             builtins.map (service: ''
-              @${service.subdomain} host ${service.subdomain}.${domain}
+              @${service.subdomain} host ${service.fqdn}
               handle @${service.subdomain} {
                 ${lib.optionalString service.forwardAuth forwardAuth}
                 reverse_proxy ${service.host}:${builtins.toString service.port}
@@ -316,7 +322,7 @@ in
               }
             ]
             ++ builtins.map (service: {
-              domain = [ "${service.subdomain}.${domain}" ];
+              domain = [ service.fqdn ];
               # Without the ForwardAuth middleware in front there's nothing to
               # authorize here; the service does its own auth over OIDC.
               policy = if service.forwardAuth then "one_factor" else "bypass";
