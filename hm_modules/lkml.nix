@@ -201,11 +201,21 @@
               repo="$NOTMUCH_GIT_DIR"
               broken="$repo/sync-broken"
 
+              # Merge commits take git's default message. Otherwise a hand-run
+              # sync opens an editor, and only the absence of a tty keeps the
+              # timer's run from trying to do the same.
+              export GIT_MERGE_AUTOEDIT=no
+              # Fail rather than hang on a prompt when run from the timer.
+              export GIT_SSH_COMMAND="ssh -o BatchMode=yes"
+
               # The first sync on a device takes minutes, so a hand-run one and
               # the timer can otherwise end up in the same repo at once.
               mkdir -p "$(dirname "$repo")"
               exec 9>"$repo.lock"
-              flock 9
+              if ! flock -w 10 9; then
+                echo "another sync is already running, skipping" >&2
+                exit 0
+              fi
 
               if [ -e "$broken" ]; then
                 echo "A previous merge left notmuch out of sync with $repo." >&2
