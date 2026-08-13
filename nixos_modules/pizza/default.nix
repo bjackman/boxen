@@ -17,6 +17,7 @@
     ../filebrowser.nix
     ../prometheus
     ../bitmagnet.nix
+    ../forgejo.nix
     ../miniflux.nix
     ../silverbullet.nix
     ../iap.nix
