@@ -195,27 +195,55 @@
               pkgs.openssh
             ];
             text = ''
-              repo="''${XDG_DATA_HOME:-$HOME/.local/share}/notmuch/default/git"
-              bootstrap=
-              if ! [ -e "$repo" ]; then
-                bootstrap=1
-                notmuch git init
-                git -C "$repo" symbolic-ref HEAD refs/heads/master
-                git -C "$repo" remote add origin ${lib.escapeShellArg cfg.tagsRepoUrl}
-              else
-                git -C "$repo" remote set-url origin ${lib.escapeShellArg cfg.tagsRepoUrl}
+              url=${lib.escapeShellArg cfg.tagsRepoUrl}
+              NOTMUCH_GIT_DIR="''${XDG_DATA_HOME:-$HOME/.local/share}/notmuch/''${NOTMUCH_PROFILE:-default}/git"
+              export NOTMUCH_GIT_DIR
+              repo="$NOTMUCH_GIT_DIR"
+              broken="$repo/sync-broken"
+
+              if [ -e "$broken" ]; then
+                echo "A previous merge left notmuch out of sync with $repo." >&2
+                echo "Resolve by hand (see 'notmuch git status'), then rm $broken" >&2
+                exit 1
               fi
-              # On first sync the whole tag set is "changed", which trips
-              # notmuch-git's git.safe_fraction sanity check.
-              notmuch git commit ''${bootstrap:+--force}
-              git -C "$repo" fetch origin
-              if git -C "$repo" rev-parse --verify --quiet origin/master > /dev/null; then
-                if [ -n "$bootstrap" ]; then
-                  notmuch git merge origin/master || notmuch git checkout --force
+
+              if ! [ -e "$repo" ]; then
+                if git ls-remote --heads "$url" master | grep -q master; then
+                  # Joining a sync that's already running elsewhere. Union the
+                  # two tag sets: the remote's history has no ancestor in common
+                  # with this database, so neither side's state can be treated
+                  # as the newer one. checkout alone would drop this machine's
+                  # tags, commit alone would drop the other's.
+                  mkdir -p "$(dirname "$repo")"
+                  notmuch git clone "$url"
+                  local_tags=$(mktemp)
+                  notmuch dump --output="$local_tags"
+                  notmuch git checkout --force
+                  notmuch restore --accumulate --input="$local_tags"
+                  rm -f "$local_tags"
                 else
-                  notmuch git merge origin/master
+                  notmuch git init
+                  git -C "$repo" symbolic-ref HEAD refs/heads/master
+                  git -C "$repo" remote add origin "$url"
+                fi
+                # The first commit on a machine "changes" every message's tags,
+                # tripping notmuch-git's git.safe_fraction check.
+                notmuch git commit --force
+              else
+                git -C "$repo" remote set-url origin "$url"
+                notmuch git commit
+                git -C "$repo" fetch origin
+                # merge does the git merge before loading the result into
+                # notmuch, so an aborted checkout (e.g. safe_fraction, after a
+                # big batch of tagging elsewhere) leaves the repo ahead of the
+                # database. Stop rather than let the next run commit the stale
+                # database over the top, silently reverting the other machine.
+                if ! notmuch git merge origin/master; then
+                  touch "$broken"
+                  exit 1
                 fi
               fi
+
               git -C "$repo" push origin master
             '';
           };

@@ -421,15 +421,38 @@ other).
   the comment where it's set for why it can't use the iap fqdn.
 
 - A `sync-lkml-tags` script, run every 15 minutes by a systemd user timer, does
-  commit → fetch → merge → push. On first run it creates the local clone (at
-  notmuch-git's default location, `~/.local/share/notmuch/default/git`) and
-  forces past notmuch-git's `git.safe_fraction` sanity check, since the initial
-  commit "changes" every message's tags. After that the check stays active for
-  normal operation.
+  commit → fetch → merge → push against a local repo at notmuch-git's default
+  location, `~/.local/share/notmuch/default/git`.
 
-- Failure is benign: if a device is offline the timer's fetch/push just fails
-  and gets retried later, and tags merge cleanly when it reconnects. If both
-  devices push at once, one push loses and is retried on the next run.
+- The first run on a device is a special case, and there are two different
+  ones. If the remote is still empty, it just creates the repo. If another
+  device has already synced, it instead clones the remote and _unions_ the two
+  tag sets (via `notmuch dump`/`restore --accumulate`): there's no common
+  ancestor yet, so neither side is "newer", and taking either one wholesale
+  would throw away the other device's tags. Both cases force past notmuch-git's
+  `git.safe_fraction` check, since a device's first commit "changes" every
+  message's tags. Afterwards the check stays active for normal operation.
+
+- Failure is mostly benign: if a device is offline the fetch/push just fails
+  and gets retried later. If both devices push at once, one push loses and
+  retries on the next run.
+
+  The exception is a failed `notmuch git merge`, which is why the script leaves
+  a `sync-broken` marker in the repo and refuses to run until it's removed.
+  `merge` does the git merge _before_ loading the result into notmuch, so if
+  the load aborts (most likely `safe_fraction`, after a big batch of tagging on
+  the other device) the repo is left ahead of the database - and the next run's
+  `commit` would take the stale database as truth and silently revert the other
+  device's work. Resolve by hand with `notmuch git status` and, if the diff
+  really is legitimate, `notmuch git checkout --force`.
 
 The Forgejo repo must be created by hand, as a completely empty repo (no README
 etc). Whichever device syncs first populates it.
+
+If a device's local repo ever gets into a state that can't be reconciled (e.g.
+unrelated histories), it's just a cache of the database plus the remote - delete
+it and re-run `sync-lkml-tags` to re-join from scratch:
+
+```sh
+rm -rf ~/.local/share/notmuch/default/git && sync-lkml-tags
+```
