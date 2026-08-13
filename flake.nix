@@ -52,6 +52,8 @@
     };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
+      # Warning: this `follows` might not do anything if we are anyway only
+      # using llm-agents via a flake overlay.
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     sashiko = {
