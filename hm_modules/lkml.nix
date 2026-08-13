@@ -172,6 +172,7 @@
 
       home.packages =
         let
+          notmuchPython = pkgs.python3.withPackages (ps: [ ps.notmuch2 ]);
           # Dumb wrapper so I don't have to code args into the binds.conf
           do-notmuch-propagate-mute = pkgs.writeShellApplication {
             name = "do-notmuch-propagate-mute";
@@ -196,6 +197,14 @@
             ];
             text = ''
               url=${lib.escapeShellArg cfg.tagsRepoUrl}
+
+              # notmuch-git asks the database whether it knows a message before
+              # treating a tag that's in git but not in the database as deleted
+              # rather than as belonging to a message this device simply doesn't
+              # have. Without notmuch2 it falls back to a check that considers
+              # every message known, and nixpkgs doesn't put notmuch2 on its
+              # path, so it commits deletions for the other device's tags.
+              export PYTHONPATH=${notmuchPython}/${notmuchPython.sitePackages}
               NOTMUCH_GIT_DIR="''${XDG_DATA_HOME:-$HOME/.local/share}/notmuch/''${NOTMUCH_PROFILE:-default}/git"
               export NOTMUCH_GIT_DIR
               repo="$NOTMUCH_GIT_DIR"

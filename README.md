@@ -433,10 +433,19 @@ other).
   `git.safe_fraction` check, since a device's first commit "changes" every
   message's tags. Afterwards the check stays active for normal operation.
 
-- Devices don't need identical maildirs. notmuch-git distinguishes "tag is in
-  git but its message isn't in this database" from "tag was deleted here", and
-  only commits the latter, so a device with a less complete lore mirror doesn't
-  delete the other's tags.
+- Devices don't need identical maildirs, but this depends on a detail worth
+  knowing about. notmuch-git has to distinguish "this tag is in git but its
+  message isn't in my database" from "this tag was deleted here", and only
+  commit the latter. It asks the database via notmuch2, and when it can't
+  import that it silently falls back to a check that answers "known" for every
+  message - so it commits deletions for everything the other device has and
+  this one doesn't. nixpkgs doesn't put notmuch2 on notmuch-git's path, so
+  `sync-lkml-tags` sets PYTHONPATH itself. Don't remove that.
+
+  Even with notmuch2 there's a residual case: a message this device knows only
+  as a ghost (referenced by a thread it has, but not itself present) counts as
+  known, so its tags do get committed as deletions. That's rare enough to live
+  with - it was ~30 messages out of ~6700 when the two devices first met.
 
 - Failure is mostly benign: if a device is offline the fetch/push just fails
   and gets retried later. A push rejected because the other device got there
