@@ -6,6 +6,7 @@
   nix-index-database,
   agenix,
   agent-skills,
+  homelab,
   ...
 }:
 {
@@ -185,6 +186,14 @@
       accountRef = lib.mkDefault "linuxdev";
       # Don't work here any more but still care about email sent to this address.
       extraAddresses = [ "jackmanb@google.com" ];
+      tagsRepoUrl =
+        # Not the iap fqdn: that resolves to the public IP, where only Caddy
+        # (HTTPS) is exposed - Forgejo's SSH server is tailnet-only. SSH_DOMAIN
+        # is whatever Forgejo itself advertises as its SSH clone address.
+        let
+          forgejo = homelab.servers.forgejo.services.forgejo;
+        in
+        "ssh://${forgejo.user}@${forgejo.settings.server.SSH_DOMAIN}:${toString forgejo.settings.server.SSH_PORT}/brendan/lkml-tags.git";
     };
 
     services.mbsync = {

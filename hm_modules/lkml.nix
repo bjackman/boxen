@@ -19,6 +19,14 @@
       '';
     };
 
+    tagsRepoUrl = lib.mkOption {
+      type = lib.types.str;
+      description = ''
+        Git remote holding the notmuch tag database, synced via notmuch-git.
+        Must be writable non-interactively (e.g. over SSH).
+      '';
+    };
+
     extraAddresses = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
@@ -179,10 +187,43 @@
               exit 0
             '';
           };
+          sync-lkml-tags = pkgs.writeShellApplication {
+            name = "sync-lkml-tags";
+            runtimeInputs = [
+              pkgs.notmuch
+              pkgs.git
+              pkgs.openssh
+            ];
+            text = ''
+              repo="''${XDG_DATA_HOME:-$HOME/.local/share}/notmuch/default/git"
+              bootstrap=
+              if ! [ -e "$repo" ]; then
+                bootstrap=1
+                notmuch git init
+                git -C "$repo" symbolic-ref HEAD refs/heads/master
+                git -C "$repo" remote add origin ${lib.escapeShellArg cfg.tagsRepoUrl}
+              else
+                git -C "$repo" remote set-url origin ${lib.escapeShellArg cfg.tagsRepoUrl}
+              fi
+              # On first sync the whole tag set is "changed", which trips
+              # notmuch-git's git.safe_fraction sanity check.
+              notmuch git commit ''${bootstrap:+--force}
+              git -C "$repo" fetch origin
+              if git -C "$repo" rev-parse --verify --quiet origin/master > /dev/null; then
+                if [ -n "$bootstrap" ]; then
+                  notmuch git merge origin/master || notmuch git checkout --force
+                else
+                  notmuch git merge origin/master
+                fi
+              fi
+              git -C "$repo" push origin master
+            '';
+          };
         in
         [
           # Expose the packages directly for testing.
           do-notmuch-propagate-mute
+          sync-lkml-tags
           (pkgs.writeShellApplication {
             name = "get-lkml";
             # For lei
@@ -234,6 +275,31 @@
           OnStartupSec = "5m";
           OnUnitActiveSec = "1h";
           RandomizedDelaySec = "300";
+        };
+        Install = {
+          WantedBy = [ "timers.target" ];
+        };
+      };
+
+      systemd.user.services.sync-lkml-tags = {
+        Unit = {
+          Description = "Sync notmuch tags via Forgejo";
+        };
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${config.home.path}/bin/sync-lkml-tags";
+          Slice = "background.slice";
+        };
+      };
+
+      systemd.user.timers.sync-lkml-tags = {
+        Unit = {
+          Description = "Timer for sync-lkml-tags";
+        };
+        Timer = {
+          OnStartupSec = "2m";
+          OnUnitActiveSec = "15m";
+          RandomizedDelaySec = "60";
         };
         Install = {
           WantedBy = [ "timers.target" ];

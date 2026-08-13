@@ -3,6 +3,7 @@
   inputs,
   home-manager,
   pkgsUnstable,
+  homelab,
   ...
 }:
 {
@@ -21,7 +22,7 @@
     };
 
     extraSpecialArgs = inputs // {
-      inherit pkgsUnstable;
+      inherit pkgsUnstable homelab;
     };
   };
 }

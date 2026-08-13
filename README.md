@@ -404,26 +404,32 @@ editor, but:
 - `ctrl-x` gives you an Aerc command prompt, this is writen in the bindings
   config with `$ex` - I don't understand this.
 
-### Copying tags between devices
+### Syncing tags between devices
 
 The config in this repo should automatically cause all the relevant mails to be
 downloaded from remote severs. The important "state" is mostly in notmuch tags
-though, which is not automatically synced anywhere. Run this to export the tags
-to a file:
+though. These are synced between devices, and thereby also backed up, using
+[`notmuch git`](https://notmuchmail.org/doc/latest/man1/notmuch-git.html),
+which stores tags as empty files in a git repository and thereby gets sane
+bidirectional merge semantics for free (raw `notmuch dump`/`restore` is
+last-writer-wins, so concurrent tag changes on two devices would clobber each
+other).
 
-```sh
-notmuch dump > /tmp/notmuch-dump.txt
-```
+- The hub is the `brendan/lkml-tags` repo on the Forgejo instance, accessed
+  over SSH via the tailnet. The remote URL is derived from the Forgejo server's
+  own config via the `homelab` plumbing - see the `lkml.tagsRepoUrl` option and
+  the comment where it's set for why it can't use the iap fqdn.
 
-Then copy the dump to the other machine. Back up the maildir on that machine in
-case this goes wrong then do:
+- A `sync-lkml-tags` script, run every 15 minutes by a systemd user timer, does
+  commit → fetch → merge → push. On first run it creates the local clone (at
+  notmuch-git's default location, `~/.local/share/notmuch/default/git`) and
+  forces past notmuch-git's `git.safe_fraction` sanity check, since the initial
+  commit "changes" every message's tags. After that the check stays active for
+  normal operation.
 
-```sh
-notmuch restore < /tmp/notmuch-dump.txt
-```
+- Failure is benign: if a device is offline the timer's fetch/push just fails
+  and gets retried later, and tags merge cleanly when it reconnects. If both
+  devices push at once, one push loses and is retried on the next run.
 
-UNTESTED oneshot command (BACK UP FIRST):
-
-```sh
-notmuch dump | ssh $machine notmuch restore
-```
+The Forgejo repo must be created by hand, as a completely empty repo (no README
+etc). Whichever device syncs first populates it.
