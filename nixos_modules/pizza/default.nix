@@ -40,6 +40,9 @@
 
   boot.loader = {
     systemd-boot.enable = true;
+    # Lower than pc.nix's limit: the ESP here is only 500M and a generation
+    # with a distinct kernel costs ~62M (the initrd carries firmware).
+    systemd-boot.configurationLimit = 5;
     efi.canTouchEfiVariables = true;
   };
 
