@@ -307,7 +307,12 @@ in
           };
 
           session = {
-            name = "session";
+            # This cookie is set for the whole domain, so it lands on every
+            # service's origin. A generic name collides with whatever the
+            # service calls its own session cookie - Forgejo's is "session" -
+            # and the service then reads Authelia's opaque ID instead of its
+            # own, since both arrive under one name in the Cookie header.
+            name = "authelia_session";
             cookies = [
               {
                 domain = "${domain}";
