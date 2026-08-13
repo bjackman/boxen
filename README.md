@@ -393,6 +393,7 @@ In the message viewer:
 - `rq` is reply-all.
 - `H` toggles view of the headers in the pager. This is useful because I don't
   know how to navigate the header view at the top.
+- `yl` copies the Lore URL of the message (if you're on Wayland).
 
 When you start composing a message you are in the "compose" view. You're in an
 $EDITOR inside Aerc's terminal emulator. So most of your keypresses go to the

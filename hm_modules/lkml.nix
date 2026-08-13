@@ -188,6 +188,37 @@
               exit 0
             '';
           };
+          copy-lore-url = pkgs.writeShellApplication {
+            name = "copy-lore-url";
+            runtimeInputs = [
+              pkgs.wl-clipboard
+              pkgs.libnotify
+              # IGNORECASE below is a gawk extension.
+              pkgs.gawk
+            ];
+            # Takes a message ID as an argument, or a message on stdin. The
+            # latter is what aerc uses: command templates like {{.MessageId}}
+            # resolve against the message list's selection even when the
+            # command was run from a message viewer showing something else.
+            text = ''
+              if [ $# -gt 0 ]; then
+                msgid=$1
+              else
+                msgid=$(awk 'BEGIN { IGNORECASE = 1 }
+                  /^$/ { exit }
+                  /^message-id:/ { sub(/^[^:]*:[ \t]*/, ""); print; exit }')
+              fi
+              msgid=''${msgid#<}
+              msgid=''${msgid%>}
+              if [ -z "$msgid" ]; then
+                notify-send -t 5000 "No lore URL" "Message has no Message-ID"
+                exit 1
+              fi
+              url="https://lore.kernel.org/all/$msgid/"
+              printf '%s' "$url" | wl-copy
+              notify-send -t 5000 "Copied lore URL" "$url"
+            '';
+          };
           sync-lkml-tags = pkgs.writeShellApplication {
             name = "sync-lkml-tags";
             runtimeInputs = [
@@ -292,6 +323,7 @@
           # Expose the packages directly for testing.
           do-notmuch-propagate-mute
           sync-lkml-tags
+          copy-lore-url
           (pkgs.writeShellApplication {
             name = "get-lkml";
             # For lei
