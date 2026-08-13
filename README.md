@@ -433,9 +433,16 @@ other).
   `git.safe_fraction` check, since a device's first commit "changes" every
   message's tags. Afterwards the check stays active for normal operation.
 
+- Devices don't need identical maildirs. notmuch-git distinguishes "tag is in
+  git but its message isn't in this database" from "tag was deleted here", and
+  only commits the latter, so a device with a less complete lore mirror doesn't
+  delete the other's tags.
+
 - Failure is mostly benign: if a device is offline the fetch/push just fails
-  and gets retried later. If both devices push at once, one push loses and
-  retries on the next run.
+  and gets retried later. A push rejected because the other device got there
+  first is fetched, merged and retried within the same run. A hand-run sync
+  takes a `flock` so it can't collide with the timer, which matters because the
+  first sync on a device takes minutes.
 
   The exception is a failed `notmuch git merge`, which is why the script leaves
   a `sync-broken` marker in the repo and refuses to run until it's removed.

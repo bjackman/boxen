@@ -201,6 +201,12 @@
               repo="$NOTMUCH_GIT_DIR"
               broken="$repo/sync-broken"
 
+              # The first sync on a device takes minutes, so a hand-run one and
+              # the timer can otherwise end up in the same repo at once.
+              mkdir -p "$(dirname "$repo")"
+              exec 9>"$repo.lock"
+              flock 9
+
               if [ -e "$broken" ]; then
                 echo "A previous merge left notmuch out of sync with $repo." >&2
                 echo "Resolve by hand (see 'notmuch git status'), then rm $broken" >&2
@@ -214,7 +220,6 @@
                   # with this database, so neither side's state can be treated
                   # as the newer one. checkout alone would drop this machine's
                   # tags, commit alone would drop the other's.
-                  mkdir -p "$(dirname "$repo")"
                   notmuch git clone "$url"
                   local_tags=$(mktemp)
                   notmuch dump --output="$local_tags"
@@ -230,21 +235,37 @@
                 # tripping notmuch-git's git.safe_fraction check.
                 notmuch git commit --force
               else
-                git -C "$repo" remote set-url origin "$url"
                 notmuch git commit
-                git -C "$repo" fetch origin
-                # merge does the git merge before loading the result into
-                # notmuch, so an aborted checkout (e.g. safe_fraction, after a
-                # big batch of tagging elsewhere) leaves the repo ahead of the
-                # database. Stop rather than let the next run commit the stale
-                # database over the top, silently reverting the other machine.
+              fi
+
+              git -C "$repo" remote set-url origin "$url"
+              # notmuch-git subcommands default to @{upstream}, which the init
+              # path above doesn't set up.
+              git -C "$repo" config branch.master.remote origin
+              git -C "$repo" config branch.master.merge refs/heads/master
+
+              # merge does the git merge before loading the result into notmuch,
+              # so an aborted checkout (e.g. safe_fraction, after a big batch of
+              # tagging elsewhere) leaves the repo ahead of the database. Stop
+              # rather than let the next run commit the stale database over the
+              # top, silently reverting the other machine.
+              merge() {
+                # Absent when this device is the one creating the remote.
+                git -C "$repo" rev-parse --verify --quiet origin/master > /dev/null || return 0
                 if ! notmuch git merge origin/master; then
                   touch "$broken"
                   exit 1
                 fi
-              fi
+              }
 
-              git -C "$repo" push origin master
+              git -C "$repo" fetch origin
+              merge
+              if ! git -C "$repo" push origin master; then
+                # Lost a push race with the other device.
+                git -C "$repo" fetch origin
+                merge
+                git -C "$repo" push origin master
+              fi
             '';
           };
         in
