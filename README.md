@@ -473,3 +473,10 @@ it and re-run `sync-lkml-tags` to re-join from scratch:
 ```sh
 rm -rf ~/.local/share/notmuch/default/git && sync-lkml-tags
 ```
+
+### Dead recipients
+
+There's a magic vibe-coded mechanism in here that scrapes the mailbox for
+"recipient is dead" and injects a special aerc message template to strip those
+recipients out of the to/cc. See
+`packages/notmuch-get-dead-addresses/notmuch_get_dead_addresses.py` for more.

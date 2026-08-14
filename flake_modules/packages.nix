@@ -24,6 +24,7 @@
     # obvious at the usage site that they come from an overlay.
     bjackman = {
       homepage = final.callPackage ../packages/homepage { src = ../packages/homepage; };
+      notmuch-get-dead-addresses = final.callPackage ../packages/notmuch-get-dead-addresses { };
       notmuch-propagate-mute = final.callPackage ../packages/notmuch-propagate-mute { };
       spellcheck_commitmsg = final.callPackage ../packages/spellcheck_commitmsg { };
       spellcheck_commitmsgs = final.callPackage ../packages/spellcheck_commitmsgs { };

@@ -48,6 +48,32 @@
       cfg = config.lkml;
       account = config.accounts.email.accounts.${cfg.accountRef};
       allAddresses = [ account.address ] ++ cfg.extraAddresses;
+
+      filter-dead-addresses = pkgs.writeShellApplication {
+        name = "filter-dead-addresses";
+        runtimeInputs = [ pkgs.bjackman.notmuch-get-dead-addresses ];
+        text = ''
+          # One address per line in, a header value out. Never fails and never
+          # emits a trailing newline: aerc substitutes this into a header block
+          # and falls back to the unfiltered stdin on a non-zero exit.
+          exec awk '
+            BEGIN {
+              cmd = "notmuch-get-dead-addresses --cache"
+              while ((cmd | getline line) > 0)
+                if (line != "") dead[tolower(line)] = 1
+              close(cmd)
+            }
+            $0 != "" {
+              addr = $0
+              if (match(addr, /<[^<>]*>$/))
+                addr = substr(addr, RSTART + 1, RLENGTH - 2)
+              if (tolower(addr) in dead) next
+              out = out (n++ ? ", " : "") $0
+            }
+            END { printf "%s", out }
+          '
+        '';
+      };
     in
     {
       programs.notmuch = {
@@ -63,6 +89,7 @@
           in
           ''
             notmuch tag -unread "tag:unread and ${fromQuery}"
+            ${pkgs.bjackman.notmuch-get-dead-addresses}/bin/notmuch-get-dead-addresses --refresh > /dev/null
           '';
       };
 
@@ -166,9 +193,52 @@
       # If you don't set it, then Aerc will produce an initial keybinding
       # setup on first run. Therefore we don't set it here and instead we just
       # have a config file checked in.
-      home.file."${config.xdg.configHome}/aerc/binds.conf" = {
-        source = ../hm_files/lkml/config/aerc/binds.conf;
-      };
+      home.file =
+        let
+          filter = "${filter-dead-addresses}/bin/filter-dead-addresses";
+          # Reply prefills To/Cc from the message being replied to, and a
+          # template's headers take precedence over the ones aerc computed, so
+          # this is the place to drop the dead addresses.
+          #
+          # A header whose addresses were all dead is still emitted, empty:
+          # otherwise aerc's unfiltered version would stand. aerc deletes empty
+          # recipient headers before sending.
+          filterRecipients = pkgs.writeText "aerc-filter-recipients" ''
+            {{- if .To }}To: {{ exec "${filter}" (.To | persons | join "\n") }}
+            {{ end -}}
+            {{- if .Cc }}Cc: {{ exec "${filter}" (.Cc | persons | join "\n") }}
+            {{ end -}}
+          '';
+          # quoted_reply serves :reply -q, new_message everything else,
+          # including plain :reply. The latter is also used by :compose, where
+          # To/Cc are empty and the headers above collapse to nothing.
+          filteredTemplate =
+            name:
+            pkgs.runCommand "aerc-template-${name}" { } ''
+              cat ${filterRecipients} \
+                ${config.programs.aerc.package}/share/aerc/templates/${name} > $out
+            '';
+          templateNames = [
+            "new_message"
+            "quoted_reply"
+          ];
+        in
+        {
+          # The HM packaging for Aerc call the setting "extraBinds", but actually
+          # if you set it then those are the _only_ keybindings you yet.
+          # If you don't set it, then Aerc will produce an initial keybinding
+          # setup on first run. Therefore we don't set it here and instead we just
+          # have a config file checked in.
+          "${config.xdg.configHome}/aerc/binds.conf" = {
+            source = ../hm_files/lkml/config/aerc/binds.conf;
+          };
+        }
+        // lib.listToAttrs (
+          map (name: {
+            name = "${config.xdg.configHome}/aerc/templates/${name}";
+            value.source = filteredTemplate name;
+          }) templateNames
+        );
 
       home.packages =
         let
@@ -324,6 +394,8 @@
           do-notmuch-propagate-mute
           sync-lkml-tags
           copy-lore-url
+          pkgs.bjackman.notmuch-get-dead-addresses
+          filter-dead-addresses
           (pkgs.writeShellApplication {
             name = "get-lkml";
             # For lei
