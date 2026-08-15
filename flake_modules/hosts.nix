@@ -93,6 +93,7 @@
         modules = [ ../hm_modules/brendan.nix ];
         extraSpecialArgs = inputs // {
           inherit pkgsUnstable;
+          inherit (config.bjackman) homelab;
         };
       };
       niamh = inputs.home-manager.lib.homeManagerConfiguration {
