@@ -88,7 +88,6 @@
         # outputs.
         systems = [ "x86_64-linux" ];
         imports = [
-          ./flake_modules/home.nix
           ./flake_modules/hosts.nix
           ./flake_modules/checks.nix
           ./flake_modules/deploy.nix
