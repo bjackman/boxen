@@ -21,6 +21,12 @@
   #   3. Update the impermanence directory in nixos_modules/pc.nix from
   #      ".mozilla/firefox" to ".config/mozilla/firefox" (or whatever $XDG_CONFIG_HOME resolves to).
   programs.firefox.configPath = ".mozilla/firefox";
+  # Profile dir must be named "default" on every machine; Home Manager generates
+  # profiles.ini from this attrset and won't preserve a pre-existing random name.
+  programs.firefox.profiles.default.settings = {
+    # Restore the previous session; pinned tabs are only restored as part of it.
+    "browser.startup.page" = 3;
+  };
   programs.vscode.enable = true;
 
   bjackman.nix-warmups = [
