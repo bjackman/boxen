@@ -78,6 +78,10 @@ in
   "arr-api-key.age".publicKeys = all;
   "gemini-api-key.age".publicKeys = all;
   "brendan-sftp-privkey.age".publicKeys = all;
+  # Deploy key with write access to github.com/bjackman/boxen, used by
+  # forgejo-github-mirror.service on pizza. Generated with:
+  # ssh-keygen -t ed25519 -C forgejo-github-mirror@pizza -f key && agenix -e github-mirror-privkey.age < key
+  "github-mirror-privkey.age".publicKeys = all;
   # Password for brendan.jackman@linux.dev on https://webmail.migadu.com/. This
   # is also the IMAP and SMTP password.
   "migadu-linuxdev-password.age".publicKeys = all;

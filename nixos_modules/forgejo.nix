@@ -40,6 +40,7 @@ in
     ./iap.nix
     ./postgres.nix
     ./impermanence.nix
+    ./forgejo-github-mirror.nix
   ];
 
   bjackman.ports = {
@@ -190,8 +191,10 @@ in
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ sshPort ];
 
-  # Note there are no backups: the plan is for GitHub push mirrors to be the
-  # copy of record. See design_docs/forgejo.md.
+  # Note there are no backups: the GitHub mirror is the copy of record, so a
+  # repo missing from this list has no backup at all. See design_docs/forgejo.md.
+  bjackman.forgejoGithubMirrors = [ "boxen" ];
+
   bjackman.impermanence.extraPersistence.directories = [
     {
       directory = cfg.stateDir;
