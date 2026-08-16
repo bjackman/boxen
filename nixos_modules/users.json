@@ -39,6 +39,14 @@
     ]
   },
   "rudy": {},
-  "zoe": {},
-  "jack": {}
+  "zoe": {
+    "groups": [
+      "jellyfin-users"
+    ]
+  },
+  "jack": {
+    "groups": [
+      "jellyfin-users"
+    ]
+  }
 }
