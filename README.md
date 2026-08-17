@@ -133,6 +133,22 @@ percli login https://perses.home.yawn.io
 nix build .#nixosConfigurations.pizza.config.bjackman.perses.resourceConfigs && percli apply -d result/
 ```
 
+### Access a public WiFi network from a Tailscale node
+
+Tailscale's Linux client can break the captive portal bullshit on public WLANs,
+it [sounds like](https://tailscale.com/docs/integrations/captive-portals) their
+proprietary clients detect this and notify you and coordinate the fix for you,
+but the Linux one doesn't.
+
+Fix:
+
+```sh
+sudo tailscale set --exit-node=  # Not 100% sure if this is necessary
+sudo tailscale set --accept-dns=false
+# Now connect to the captive portal, then you can restore MagicDNS
+sudo tailscale set --accept-dns=true
+```
+
 ## Installing
 
 How I installed `pizza`:
