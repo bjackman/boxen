@@ -362,8 +362,11 @@ in
         # Reload the service when the secret changes - since its path is fixed
         # (/run/agenix/authelia-passwords-json) changes to this won't actually change
         # the content of the Authelia config itself so we need to be explicit here.
+        # The same applies to the derived users file, whose content depends on
+        # bjackman.homelab.users as well as the encrypted passwords.
         restartTriggers = [
           config.age.secrets.authelia-passwords-json.file
+          config.bjackman.derived-secrets.files."authelia_users.json".script
         ];
         # https://www.authelia.com/configuration/methods/files/#file-filters
         environment.X_AUTHELIA_CONFIG_FILTERS = "template";
