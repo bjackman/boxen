@@ -277,6 +277,16 @@ The facts the design leans on, all from `claude --help` and
    losing `/var/lib/forgejo` is only survivable while this state is rebuildable
    from code.
 
+   The unit authenticates to the API as a **dedicated `bootstrap` admin account**
+   whose password is in agenix. The CLI covers users and passwords but not
+   collaborators, branch protection or labels, and those endpoints need an
+   account that can authenticate. A token would be the obvious alternative and
+   is a dead end: `forgejo admin user generate-access-token` can neither replace
+   nor delete a token, so a fixed name collides on the second run, and the
+   endpoints that could clean one up are basic-auth-only - which `brendan`
+   cannot do with `ENABLE_INTERNAL_SIGNIN` off. An account whose credential
+   comes from agenix is declarative, idempotent and revocable by deleting it.
+
 1. **Credentials from agenix, both sides declarative.** `slopbot` needs to *read*
    the API, and Forgejo access tokens can only be minted at runtime — they can't
    come from agenix, and shipping one from `pizza` to the VM reintroduces exactly

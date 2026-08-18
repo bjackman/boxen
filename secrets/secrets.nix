@@ -7,6 +7,7 @@ let
   fw13 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8GAbvAbJljzHXALqbG5t0oolXkwSE00r+2qfxubEEF brendan@fw13";
   fw13-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHVBFKZzXD+YUcB83N+FfIHFH2rQpk060e1OjEWZMp59 root@nixos";
   norte-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEwxzu2JNI7hdrKWlmqjkwNLRf7kMEcSlxE3nKUrbEp6 root@norte";
+  slopbox-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtq1hx4Z4uL/Hqjuz/d56uxFCpSuOAHiFOs8v0yMUaF root@slopbox";
   pizza-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAmiVXunDkdw9EBJtfPshYvR3od5p00vbL9MqlaJZgGf root@pizza";
   all = [
     chungito
@@ -85,4 +86,16 @@ in
   # Password for brendan.jackman@linux.dev on https://webmail.migadu.com/. This
   # is also the IMAP and SMTP password.
   "migadu-linuxdev-password.age".publicKeys = all;
+  # Forgejo credentials for the agent workflow. See design_docs/agent_prs.md.
+  #
+  # slopbot is the identity agents push and comment as. Both of these live in
+  # the agent VM as well as on pizza, hence the extra recipient.
+  # ssh-keygen -t ed25519 -C slopbot@forgejo -f key && agenix -e slopbot-ssh-privkey.age < key
+  "slopbot-ssh-privkey.age".publicKeys = all ++ [ slopbox-host ];
+  # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e slopbot-forgejo-password.age
+  "slopbot-forgejo-password.age".publicKeys = all ++ [ slopbox-host ];
+  # Admin account used only by forgejo-bootstrap.service, which needs API calls
+  # the CLI can't make. Never leaves pizza.
+  # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e forgejo-bootstrap-password.age
+  "forgejo-bootstrap-password.age".publicKeys = all;
 }
