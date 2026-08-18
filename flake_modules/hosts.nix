@@ -82,7 +82,6 @@
       };
     };
 
-
   # This defines the configurations for machines using standalone
   # home-manager, which in my case means machines not running NixOS.
   # Otherwise the HM config is injected via the NixOS module.
