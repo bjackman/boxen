@@ -536,3 +536,25 @@ against an API it half-remembers.
   API work can't treat the push as unconditional: it has to compare the PR's
   `head.sha` first, or a re-run aborts before the API work and leaves the PR
   half-configured. Verified end-to-end.
+
+## Implementation notes
+
+`slop` stays a shell script: it execs `tmux` and `claude` and has nothing to
+decide. `slop-pr` is Go, in `packages/slop-tools`, sharing an
+`internal/forgejo` client with the handler that P1 will add as a second command
+in the same module — the handler needs the same lookups (find the pull request
+for a topic, read its comments, reply, label) and two implementations of that
+would rot apart.
+
+The client is hand-rolled against `net/http` rather than using a Gitea SDK.
+Half a dozen endpoints don't justify vendoring an SDK that tracks a forge
+Forgejo has diverged from, and with no external dependencies `buildGoModule`
+takes `vendorHash = null`, so there's no hash to regenerate when anything
+upstream moves.
+
+The distinction Go buys over the shell version, and the reason for the port:
+`slop-pr` exits 1 when nothing was published and 2 when the change was pushed
+but the pull request couldn't be finished (labelled, assigned). The shell
+version conflated those, and in practice that meant a successful push followed
+by a failed lookup left an unlabelled pull request that the P1 handler would
+ignore, reported as a plain failure.

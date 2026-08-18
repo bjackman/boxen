@@ -30,7 +30,7 @@
       spellcheck_commitmsgs = final.callPackage ../packages/spellcheck_commitmsgs { };
       slopclone = final.callPackage ../packages/slopclone { };
       slop = final.callPackage ../packages/slop { };
-      slop-pr = final.callPackage ../packages/slop-pr { };
+      slop-tools = final.callPackage ../packages/slop-tools { };
       tvheadend = final.callPackage ../packages/tvheadend { src = inputs.tvheadend; };
     };
   };

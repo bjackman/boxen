@@ -82,7 +82,7 @@
         forgejoSsh = "ssh://forgejo@${forgejo.networking.hostName}:${toString forgejo.bjackman.ports.forgejo-ssh.port}";
         keyFile = config.age.secrets.slopbot-ssh-privkey.path;
       })
-      (pkgs.bjackman.slop-pr.override {
+      (pkgs.bjackman.slop-tools.override {
         forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
         passwordFile = config.age.secrets.slopbot-forgejo-password.path;
       })
