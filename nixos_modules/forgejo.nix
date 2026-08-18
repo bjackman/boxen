@@ -94,9 +94,16 @@ in
         USERNAME = "preferred_username";
       };
       repository.DEFAULT_BRANCH = "master";
-      # nixpkgs derives this from PROTOCOL, which is http because Caddy
-      # terminates TLS - but the site is only ever reached over https.
-      session.COOKIE_SECURE = true;
+      session = {
+        # nixpkgs derives this from PROTOCOL, which is http because Caddy
+        # terminates TLS - but the site is only ever reached over https.
+        COOKIE_SECURE = true;
+        # nixpkgs calls this "session", which any other service under
+        # *.home.yawn.io can also claim on the parent domain. Two cookies of
+        # one name arrive in one header and the wrong one wins, which breaks
+        # the OIDC callback with "could not find a matching session".
+        COOKIE_NAME = "forgejo_session";
+      };
     };
   };
 
