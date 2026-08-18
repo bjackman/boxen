@@ -424,6 +424,10 @@
                   ${addressTerm} 'AND' 'dt:20250204132159..'
                 notmuch new
                 do-notmuch-propagate-mute
+                # lei q leaves a lei-daemon in the cgroup. daemon-kill signals
+                # it in-process so it commits the store; otherwise the unit sits
+                # in stop-sigterm until systemd SIGKILLs it mid-index.
+                lei daemon-kill
               '';
           })
         ];
