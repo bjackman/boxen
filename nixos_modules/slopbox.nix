@@ -45,7 +45,12 @@
   # invalidate that hash so don't include the config reviison.
   system.configurationRevision = null;
 
-  boot.loader.timeout = 0;
+  boot.loader = {
+    timeout = 0;
+    # The image's ESP is only 249M and a 6.18 kernel+initrd is ~42M, so we
+    # can't keep many generations around before it fills up.
+    systemd-boot.configurationLimit = 4;
+  };
 
   system.stateVersion = "25.11";
 }
