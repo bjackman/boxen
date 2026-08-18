@@ -182,3 +182,68 @@ func (c *Client) SetAssignees(owner, repo string, number int, logins []string) e
 	path := fmt.Sprintf("/repos/%s/%s/issues/%d", url.PathEscape(owner), url.PathEscape(repo), number)
 	return c.do("PATCH", path, map[string]any{"assignees": logins}, nil)
 }
+
+type Comment struct {
+	ID      int64  `json:"id"`
+	Body    string `json:"body"`
+	User    User   `json:"user"`
+	Path    string `json:"path"`
+	Line    int64  `json:"line"`
+	HTMLURL string `json:"html_url"`
+}
+
+type Review struct {
+	ID    int64  `json:"id"`
+	Body  string `json:"body"`
+	User  User   `json:"user"`
+	State string `json:"state"`
+}
+
+// PullsWithLabel lists open pull requests carrying the named label.
+func (c *Client) PullsWithLabel(owner, repo, label string) ([]PullRequest, error) {
+	var pulls []PullRequest
+	path := fmt.Sprintf("/repos/%s/%s/pulls?state=open&limit=100", url.PathEscape(owner), url.PathEscape(repo))
+	if err := c.do("GET", path, nil, &pulls); err != nil {
+		return nil, err
+	}
+	var labelled []PullRequest
+	for _, pr := range pulls {
+		if pr.HasLabel(label) {
+			labelled = append(labelled, pr)
+		}
+	}
+	return labelled, nil
+}
+
+func (c *Client) IssueComments(owner, repo string, number int) ([]Comment, error) {
+	var comments []Comment
+	path := fmt.Sprintf("/repos/%s/%s/issues/%d/comments", url.PathEscape(owner), url.PathEscape(repo), number)
+	if err := c.do("GET", path, nil, &comments); err != nil {
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (c *Client) Reviews(owner, repo string, number int) ([]Review, error) {
+	var reviews []Review
+	path := fmt.Sprintf("/repos/%s/%s/pulls/%d/reviews", url.PathEscape(owner), url.PathEscape(repo), number)
+	if err := c.do("GET", path, nil, &reviews); err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}
+
+func (c *Client) ReviewComments(owner, repo string, number int, reviewID int64) ([]Comment, error) {
+	var comments []Comment
+	path := fmt.Sprintf("/repos/%s/%s/pulls/%d/reviews/%d/comments",
+		url.PathEscape(owner), url.PathEscape(repo), number, reviewID)
+	if err := c.do("GET", path, nil, &comments); err != nil {
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (c *Client) PostComment(owner, repo string, number int, body string) error {
+	path := fmt.Sprintf("/repos/%s/%s/issues/%d/comments", url.PathEscape(owner), url.PathEscape(repo), number)
+	return c.do("POST", path, map[string]any{"body": body}, nil)
+}
