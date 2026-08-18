@@ -278,6 +278,56 @@ The facts the design leans on, all from `claude --help` and
    and has to be rotated by hand. Annoying and unavoidable; the goal is to make
    rotation a one-liner, not to solve it.
 
+1. **Forgejo's own auth faces the internet; the Authelia forward-auth in front
+   of it goes away.** Something outside `pizza` has to reach the API — the agent
+   replies to reviews and applies labels, and later reads CI results — and today
+   `HTTP_ADDR` is loopback-only while the Caddy vhost gates *everything*,
+   `/api/v1` included, behind an Authelia session that no API client can obtain.
+
+   The alternatives were binding Forgejo's HTTP port on the tailnet, or exempting
+   `/api/v1` from `forward_auth` in Caddy. Both work. Neither is as simple as
+   admitting that Forgejo is a forge, that forges are internet-facing software,
+   and that Codeberg runs this exact code on the open internet. Accepted risk:
+   pre-auth vulnerabilities now matter, where before they were reachable only
+   from the tailnet.
+
+   Two things make that tolerable rather than reckless. `REQUIRE_SIGNIN_VIEW` is
+   already on, so there is no anonymous browsing surface. And of the two CVEs
+   `forgejo.nix`'s comment cites as the reason for the belt-and-braces posture,
+   the admin-impersonation one is only exploitable with
+   `ENABLE_REVERSE_PROXY_AUTHENTICATION`, which this deployment has always
+   refused to use.
+
+   The honest residual is not the software but the operation: Codeberg patches
+   within hours of disclosure and this instance patches whenever I next run
+   `nix flake update` and deploy. Exposure makes flake currency a security
+   property rather than a tidiness one.
+
+   **This is not a free deletion of two lines.** `iap.nix` derives the Authelia
+   access-control rule from `forwardAuth`, so dropping it turns the rule into
+   `bypass`, and `allowedUsers = [ "brendan" ]` must go with it (there's an
+   assertion). With `ENABLE_AUTO_REGISTRATION` and `ACCOUNT_LINKING = "auto"`,
+   that would let every jellyfin-user in `users.json` log in and be auto-created
+   as a Forgejo user. The restriction has to move into the OIDC exchange, as an
+   Authelia custom authorization policy on the client (4.39 supports these):
+
+   ```nix
+   identity_providers.oidc.authorization_policies.forgejo = {
+     default_policy = "deny";
+     rules = [ { policy = "one_factor"; subject = [ "user:brendan" ]; } ];
+   };
+   ```
+
+   with `authorization_policy = "forgejo"` in the client config. This is the
+   answer to the "(I dunno how)" in `iap.nix`'s assertion message, so that
+   assertion and its escape hatch are worth revisiting at the same time.
+
+   Consequences beyond this document: `forgejo.nix`'s long comment argues for
+   exactly the posture being abandoned and must be rewritten rather than left to
+   contradict the code. The git-over-HTTP surface becomes internet-facing too,
+   which is what `forgejo.md` decision 4 wanted to avoid but also what makes
+   Actions checkout work without tailnet access later.
+
 ## Design
 
 ### Naming
@@ -450,3 +500,9 @@ against an API it half-remembers.
   ever needs to drive an agent, decision 4's allowlist is the place it changes,
   and the blast radius of getting it wrong is `bypassPermissions` on a tailnet
   node.
+- **The Authelia custom authorization policy in decision 12 is unverified
+  against a live instance.** The schema exists in 4.39 (the deployed version is
+  4.39.20) but the exact spelling matters, and getting it wrong fails open into
+  "every jellyfin-user can create a Forgejo account" rather than into an error.
+  Check the rendered access decision for a non-`brendan` user before considering
+  the exposure change done.
