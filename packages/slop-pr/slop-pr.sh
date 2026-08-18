@@ -48,4 +48,13 @@ if ! api GET "/repos/$owner/$repo/issues/$number/labels" \
         -d "$(jq -n --argjson id "$label_id" '{labels: [$id]}')" >/dev/null
 fi
 
+# The point of the pull request is that I look at it, so put it in my assigned
+# queue. Assignees are set by replacing the whole list, so keep any others.
+assignees=$(api GET "/repos/$owner/$repo/issues/$number" | jq -c '[.assignees[]?.login]')
+if ! jq -e --arg user "$owner" 'index($user)' <<<"$assignees" >/dev/null; then
+    api PATCH "/repos/$owner/$repo/issues/$number" \
+        -d "$(jq -n --argjson current "$assignees" --arg user "$owner" \
+            '{assignees: ($current + [$user])}')" >/dev/null
+fi
+
 echo "$forgejo_url/$owner/$repo/pulls/$number"
