@@ -14,9 +14,6 @@ that I use, mainly:
 These rules apply to your autonomous behaviour, if I ask you in-session to break
 them then that's totally fine.
 
-- Don't do anything to the Git repository unless asked, I usually prefer to
-  commit changes myself.\`
-
 - You are probably connected to the Tailscale network that the hosts configured
   in here are on. You can feel free to run commands on them via SSH if they are
   "read-only" commands for gathering information.
@@ -30,6 +27,40 @@ them then that's totally fine.
   them. If you need to do this for experimental purposes, that's usually fine,
   just check in with me first and ensure we have an easy way to revert to a
   clean state afterwards.
+
+### Version control - on my workstation
+
+If you are running on one of my workstations (this is the default - if you're in
+a special environment you'll be told explicitly), don't make any chances to the
+git repository unless asked to, usually I'll want to do that myself. Exception:
+it's fine to `git add` files so that Nix can see them.
+
+If you have a reason to want to break this rule, it's OK to create a branch and
+then make commitson that in a separate worktree.
+
+### Version control - elsewhere
+
+If I've run you in a special enviroment where you have full ownership of the git
+repo, commit liberally:
+
+- Try to keep commits as small and atomic as possible. If you're ever in doubt
+  about commit boundaries, err on the side of more and smaller commits.
+
+- Follow the commit title style the repo uses. Titles are usually like
+  `<area>/<topic>: Blah`. The "topic" is can be excluded for stuff that just
+  affects a whole area (probably refactorings). If it's included it very often
+  corresponds to the name of a nix module. Some common areas:
+
+- `flake`: Stuff to do with the overall organisation of the flake.
+
+- `hm`: Home Manager modules.
+
+- `nixos`: NixOS modules, for stuff relating to the "host setup".
+
+- `tf`: Stuff relating to Terraform configuration.
+
+- `homelab`: Stuff relating to homelab services. The distinction between this
+  and `nixos`/`tf` is often fuzzy, just go on vibes.
 
 ### Comments
 
