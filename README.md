@@ -402,7 +402,7 @@ editor, but:
 - `ctrl-PageUp/PageDown` switches to other Aerc tabs
 - `ctrl-j/k` switches focus to the headers at the top of the window. The editor
   is like another field, you can scroll down to it to get back to editing.
-- `ctrl-x` gives you an Aerc command prompt, this is writen in the bindings
+- `ctrl-x` gives you an Aerc command prompt, this is written in the bindings
   config with `$ex` - I don't understand this.
 
 ### Syncing tags between devices
