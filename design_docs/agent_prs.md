@@ -68,10 +68,16 @@ The facts the design leans on, all from `claude --help` and
 
 1. **Changes arrive by AGit from a `slopbot` user, with `master` protected.**
    Unchanged from `forgejo.md` decision 8: the agent needs no branch write
-   access, leaves no branch litter, and re-pushing a topic produces a new
-   *version* of the PR with an inter-version diff, which is the review
-   experience I want. The security property is a branch protection rule, not
-   trust.
+   access and leaves no branch litter. Re-pushing a topic updates the PR in
+   place and records the old and new heads, which the UI renders as a comparison
+   between what I reviewed and what's there now. The security property is a
+   branch protection rule, not trust.
+
+   Verified against the live instance. Note that an update **requires
+   `-o force-push=true`**: without it, a re-pushed topic whose commit was
+   amended is rejected with "the tip of your current branch is behind its remote
+   counterpart". Iterating on a change is the normal case here, so `slop-pr`
+   passes it always.
 
 1. **The session lives in the agent VM, from the first turn.** Transcripts are
    keyed by working directory, so a session can only span my design discussion
@@ -89,8 +95,12 @@ The facts the design leans on, all from `claude --help` and
 
 1. **One session per change, keyed by the AGit topic, as UUIDv5.** The topic is
    chosen before the PR exists, survives every patchset, and is recoverable from
-   the PR's head ref — the only key that spans discussion, PR and versions. A PR
-   number can't be it: sessions predate PRs.
+   the PR — the only key that spans discussion, PR and versions. A PR number
+   can't be it: sessions predate PRs.
+
+   Recovery is from `head.label`, which reads `<owner>/<topic>`, **not** from
+   `head.ref`, which is only ever `refs/pull/<n>/head` for an AGit PR. Verified
+   against the live instance; the handler strips the owner prefix.
 
    `session_id = uuid5(NS, "<repo>:<topic>")` means there is **no PR-to-session
    mapping to store**: the handler derives the id from the PR in front of it.
@@ -450,17 +460,21 @@ against an API it half-remembers.
 
 ## Gotchas and open questions
 
-- **AGit push options are unverified.** Everything rests on `-o topic=` /
-  `-o title=` / `-o description=` being accepted over SSH, and on re-pushing a
-  topic producing a new version rather than an error. Needs a throwaway push to
-  a real repo against the live instance — the first thing to do, before writing
-  any of the above.
-- **API basic auth with `ENABLE_INTERNAL_SIGNIN = false` is unverified.** If it
-  doesn't work, decision 11's credential story changes to a bootstrap-minted
-  token pulled from `pizza`, which is worse but not fatal. Worth knowing before
-  writing the bootstrap unit, not after.
+- **AGit and basic auth are verified** (Forgejo 16.0.2, live instance).
+  `-o topic= / -o title= / -o description=` are accepted over SSH and populate
+  the PR; updates need `-o force-push=true`; `flow: 1` marks the PR as AGit;
+  `head.label` carries the topic. API basic auth works with
+  `ENABLE_INTERNAL_SIGNIN = false`, so decision 11's credential story stands.
+  Basic auth was exercised against Forgejo's own listener on `pizza`; through
+  Caddy it is currently blocked by the forward-auth that decision 12 removes,
+  which is worth re-checking once that lands.
+- **Version history is a timeline event, not a patchset object.** Each push
+  appears as a `pull_push` entry carrying `is_force_push` and the commit ids, so
+  "what changed since I reviewed" is derivable — but there is no numbered
+  patchset resource to fetch, and an agent wanting to know what it changed last
+  round has to reconstruct it from that timeline.
 - **Self-hosted cloud environments (`--environment ccpool_...`) are unverified**,
-  as is `--teleport`, whose semantics I don't know at all. Both sit in the area
+  as is `--teleport`, whose semantics I do not know at all. Both sit in the area
   that would let claude.ai create the initial session, so both are worth 20
   minutes before conceding that limitation.
 - **Continuity has a half-life.** Context grows monotonically across a long
