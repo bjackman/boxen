@@ -7,6 +7,7 @@
 let
   cfg = config.services.forgejo;
   repos = config.bjackman.forgejoAgentRepos;
+  webhook = config.bjackman.forgejoAgentWebhook;
   apiUrl = "http://127.0.0.1:${toString config.bjackman.ports.forgejo.port}/api/v1";
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
 in
@@ -23,6 +24,28 @@ in
     '';
   };
 
+  options.bjackman.forgejoAgentWebhook = lib.mkOption {
+    type =
+      with lib.types;
+      nullOr (submodule {
+        options = {
+          host = lib.mkOption {
+            type = str;
+            description = "Host running the agent handler.";
+          };
+          port = lib.mkOption {
+            type = port;
+            description = "Port the agent handler serves the webhook on.";
+          };
+        };
+      });
+    default = null;
+    description = ''
+      Where to deliver review activity on agent pull requests. Null leaves no
+      webhook configured, so agent runs only happen when the handler sweeps.
+    '';
+  };
+
   config = lib.mkIf (repos != [ ]) {
     age.secrets = {
       slopbot-forgejo-password = {
@@ -35,7 +58,16 @@ in
         mode = "400";
         owner = cfg.user;
       };
+      slopbot-webhook-secret = {
+        file = ../secrets/slopbot-webhook-secret.age;
+        mode = "400";
+        owner = cfg.user;
+      };
     };
+
+    # Forgejo will only call public addresses by default, and the handler is on
+    # the tailnet.
+    services.forgejo.settings.webhook.ALLOWED_HOST_LIST = lib.mkIf (webhook != null) webhook.host;
 
     # Users and passwords are CLI-managed; collaborators, branch protection and
     # labels are API-only. The API needs an account that can authenticate to it,
@@ -50,6 +82,7 @@ in
       restartTriggers = [
         config.age.secrets.slopbot-forgejo-password.file
         config.age.secrets.forgejo-bootstrap-password.file
+        config.age.secrets.slopbot-webhook-secret.file
       ];
       path = [
         cfg.package
@@ -66,6 +99,10 @@ in
         bootstrap_pw=$(cat ${config.age.secrets.forgejo-bootstrap-password.path})
         slopbot_pw=$(cat ${config.age.secrets.slopbot-forgejo-password.path})
         slopbot_key=${lib.escapeShellArg slopbotKey}
+        ${lib.optionalString (webhook != null) ''
+          webhook_url=${lib.escapeShellArg "http://${webhook.host}:${toString webhook.port}/forgejo"}
+          webhook_secret=$(cat ${config.age.secrets.slopbot-webhook-secret.path})
+        ''}
 
         resp=$(mktemp)
         trap 'rm -f "$resp"' EXIT
@@ -137,6 +174,20 @@ in
             expect "$(req POST "/repos/brendan/$repo/labels" \
               '{"name": "agent", "color": "#5319e7", "description": "Comments here drive an agent"}')" 201
           fi
+
+          ${lib.optionalString (webhook != null) ''
+            expect "$(req GET "/repos/brendan/$repo/hooks")" 200
+            hook_id=$(jq -r --arg url "$webhook_url" '.[] | select(.config.url == $url) | .id' "$resp" | head -1)
+            hook=$(jq -n --arg url "$webhook_url" --arg secret "$webhook_secret" \
+              '{type: "forgejo", active: true, events: $ARGS.positional,
+                config: {url: $url, content_type: "json", secret: $secret}}' \
+              --args issue_comment pull_request_comment pull_request_review)
+            if [ -z "$hook_id" ]; then
+              expect "$(req POST "/repos/brendan/$repo/hooks" "$hook")" 201
+            else
+              expect "$(req PATCH "/repos/brendan/$repo/hooks/$hook_id" "$hook")" 200
+            fi
+          ''}
         done
       '';
       serviceConfig = {

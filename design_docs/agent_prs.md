@@ -558,3 +558,21 @@ but the pull request couldn't be finished (labelled, assigned). The shell
 version conflated those, and in practice that meant a successful push followed
 by a failed lookup left an unlabelled pull request that the P1 handler would
 ignore, reported as a plain failure.
+
+- **Forgejo won't call a tailnet address without being told to.**
+  `webhook.ALLOWED_HOST_LIST` defaults to `external`, meaning public addresses
+  only, so delivery to the handler fails with "webhook can only call allowed
+  HTTP servers" — and fails *silently* from the reviewer's point of view, since
+  the only evidence is in Forgejo's log. The sweep timer hides it by doing the
+  work a few minutes later, which makes this exactly the kind of breakage that
+  can sit unnoticed.
+- **Webhook event names are groups, not the stored values.** Asking for
+  `pull_request_review_approved` and friends leaves a hook subscribed to
+  nothing: the API accepts `pull_request_review`, then reports the expanded
+  list back. Unrecognised names are dropped without an error, so the create
+  call succeeds and the hook simply never fires.
+- **Claude Code needs a POSIX shell, and systemd hands it my login shell.**
+  With `User=brendan`, systemd sets `$SHELL` from passwd, which is fish, and
+  every Bash tool call fails with "No suitable shell found". The agent noticed,
+  fixed the file it was asked to fix, and reported that it couldn't commit -
+  which is the behaviour this design wants, but the unit has to set `SHELL`.

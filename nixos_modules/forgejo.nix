@@ -196,6 +196,11 @@ in
 
   bjackman.forgejoAgentRepos = [ "boxen" ];
 
+  bjackman.forgejoAgentWebhook = {
+    host = "slopbox";
+    port = 9100;
+  };
+
   bjackman.impermanence.extraPersistence.directories = [
     {
       directory = cfg.stateDir;

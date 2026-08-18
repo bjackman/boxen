@@ -94,6 +94,10 @@ in
   "slopbot-ssh-privkey.age".publicKeys = all ++ [ slopbox-host ];
   # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e slopbot-forgejo-password.age
   "slopbot-forgejo-password.age".publicKeys = all ++ [ slopbox-host ];
+  # Shared between the Forgejo webhook and the handler that receives it, so
+  # that only the forge can trigger an agent run.
+  # nix run nixpkgs#openssl -- rand -hex 32 | agenix -e slopbot-webhook-secret.age
+  "slopbot-webhook-secret.age".publicKeys = all ++ [ slopbox-host ];
   # Admin account used only by forgejo-bootstrap.service, which needs API calls
   # the CLI can't make. Never leaves pizza.
   # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e forgejo-bootstrap-password.age
