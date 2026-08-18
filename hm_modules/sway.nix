@@ -31,6 +31,7 @@ in
 
     programs.rofi.enable = true;
     home.packages = [
+      pkgs.signal-desktop
       pkgsUnstable.bzmenu
       pkgsUnstable.pwmenu
       pkgs.rofi-screenshot
@@ -67,6 +68,10 @@ in
     };
 
     services.mako.enable = true;
+
+    # Left out of the for_window focus rules below on purpose: this starts with
+    # the session, so focussing it would steal focus at login.
+    bjackman.wayland-services.signal-desktop = lib.getExe pkgs.signal-desktop;
 
     services.swayidle = {
       enable = true;
@@ -155,6 +160,7 @@ in
             { app_id = "google-chrome"; }
           ];
           "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
+          "messages" = [ { app_id = "signal"; } ];
           "editor" = [
             { app_id = "dev.zed.Zed"; }
             # Wayland-native VSCode; -url-handler is the window spawned when
@@ -232,6 +238,7 @@ in
               "b" = "browser";
               "n" = "terminal";
               "m" = "editor";
+              "s" = "messages";
               "1" = "number 1";
               "2" = "number 2";
               "3" = "number 3";
