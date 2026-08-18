@@ -75,8 +75,13 @@
     "Pictures"
     "Documents"
     "Videos"
+    "Maildir"
     "src"
     ".cache"
+    # notmuch tags (and the notmuch-git repo that syncs them between hosts)
+    # can't be reconstructed from the maildir: only a few of them map onto
+    # maildir flags.
+    ".local/share/notmuch"
     ".local/share/z"
     ".local/share/fish"
     ".local/share/zed"
