@@ -98,9 +98,12 @@ The facts the design leans on, all from `claude --help` and
    the PR — the only key that spans discussion, PR and versions. A PR number
    can't be it: sessions predate PRs.
 
-   Recovery is from `head.label`, which reads `<owner>/<topic>`, **not** from
-   `head.ref`, which is only ever `refs/pull/<n>/head` for an AGit PR. Verified
-   against the live instance; the handler strips the owner prefix.
+   Recovery is from `head.label`, which reads `<pusher>/<topic>` — the account
+   that pushed, *not* the repo owner — and **not** from `head.ref`, which is
+   only ever `refs/pull/<n>/head` for an AGit PR. Verified against the live
+   instance, where the same topic produced `brendan/...` pushed by me and
+   `slopbot/...` pushed by the agent. Consumers must strip the prefix rather
+   than assume a username.
 
    `session_id = uuid5(NS, "<repo>:<topic>")` means there is **no PR-to-session
    mapping to store**: the handler derives the id from the PR in front of it.
@@ -528,3 +531,8 @@ against an API it half-remembers.
 - **Patch currency is now a security property** (decision 12), and the design
   deliberately declines to solve it. If the systematic answer never materialises,
   this is the assumption that quietly stops holding.
+- **Pushing a head the pull request already has is rejected**, with "The new
+  commit is the same as the old commit". So a tool that pushes and then does
+  API work can't treat the push as unconditional: it has to compare the PR's
+  `head.sha` first, or a re-run aborts before the API work and leaves the PR
+  half-configured. Verified end-to-end.

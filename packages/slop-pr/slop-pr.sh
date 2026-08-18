@@ -11,29 +11,33 @@ api() {
         -X "$method" -H 'Content-Type: application/json' "$api_url$path" "$@"
 }
 
-# AGit pull requests carry their topic in head.label, as "<owner>/<topic>";
-# head.ref is always refs/pull/<n>/head and says nothing.
+# AGit pull requests carry their topic in head.label, prefixed by whoever
+# pushed rather than by the repo owner. head.ref is always refs/pull/<n>/head
+# and says nothing.
 pr_number() {
     api GET "/repos/$owner/$repo/pulls?state=open" \
-        | jq -r --arg label "$owner/$topic" \
-            '.[] | select(.head.label == $label) | .number' \
+        | jq -r --arg topic "$topic" \
+            '.[] | select((.head.label | sub("^[^/]+/"; "")) == $topic) | .number' \
         | head -1
 }
 
-push_args=(-o "topic=$topic" -o force-push=true)
-if [ -z "$(pr_number)" ]; then
-    # Only on creation: re-sending this on every update would clobber a title
+number=$(pr_number)
+
+if [ -z "$number" ]; then
+    # Only sent on creation: repeating it on every update would clobber a title
     # edited in the web UI.
     title=${1:-$(git log --format=%s "origin/master..HEAD" | tail -1)}
-    push_args+=(-o "title=$title")
-fi
-
-git push origin HEAD:refs/for/master "${push_args[@]}"
-
-number=$(pr_number)
-if [ -z "$number" ]; then
-    echo "pushed, but found no pull request for topic $topic" >&2
-    exit 1
+    git push origin HEAD:refs/for/master \
+        -o "topic=$topic" -o force-push=true -o "title=$title"
+    number=$(pr_number)
+    if [ -z "$number" ]; then
+        echo "pushed, but no pull request appeared for topic $topic" >&2
+        exit 1
+    fi
+elif [ "$(api GET "/repos/$owner/$repo/pulls/$number" | jq -r .head.sha)" != "$(git rev-parse HEAD)" ]; then
+    # Forgejo rejects a push whose head the pull request already has, so only
+    # push when there's something new to say.
+    git push origin HEAD:refs/for/master -o "topic=$topic" -o force-push=true
 fi
 
 if ! api GET "/repos/$owner/$repo/issues/$number/labels" \

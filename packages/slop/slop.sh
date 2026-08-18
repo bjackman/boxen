@@ -16,7 +16,10 @@ transcript="$HOME/.claude/projects/$(echo "$worktree" | tr '/.' '--')/$session_i
 
 if [ ! -e "$worktree" ]; then
     mkdir -p "$(dirname "$worktree")"
-    git clone -c "core.sshCommand=ssh -i $key_file -o IdentitiesOnly=yes" \
+    # accept-new rather than a pinned key: Forgejo generates its SSH host key
+    # at runtime, so pinning it in Nix would break every clone whenever the
+    # forge is rebuilt from the GitHub mirror. Both ends are on the tailnet.
+    git clone -c "core.sshCommand=ssh -i $key_file -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
         "$forgejo_ssh/$owner/$repo.git" "$worktree"
 fi
 
