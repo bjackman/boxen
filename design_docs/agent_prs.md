@@ -298,29 +298,30 @@ The facts the design leans on, all from `claude --help` and
    `ENABLE_REVERSE_PROXY_AUTHENTICATION`, which this deployment has always
    refused to use.
 
-   The honest residual is not the software but the operation: Codeberg patches
-   within hours of disclosure and this instance patches whenever I next run
-   `nix flake update` and deploy. Exposure makes flake currency a security
-   property rather than a tidiness one.
+   Patch latency is the other residual: Codeberg patches within hours of
+   disclosure and this instance patches whenever I next run `nix flake update`
+   and deploy. That is a real gap, but it is not a Forgejo problem — it applies
+   to every service behind the IAP — so it wants a systematic answer (something
+   that watches security news and tells me) rather than a Forgejo-shaped
+   exception. Explicitly out of scope here, and explicitly not a reason to
+   delay.
 
-   **This is not a free deletion of two lines.** `iap.nix` derives the Authelia
+   **Every Authelia user gets in, and that's accepted.** `iap.nix` derives the
    access-control rule from `forwardAuth`, so dropping it turns the rule into
-   `bypass`, and `allowedUsers = [ "brendan" ]` must go with it (there's an
+   `bypass` and `allowedUsers = [ "brendan" ]` must go with it (there's an
    assertion). With `ENABLE_AUTO_REGISTRATION` and `ACCOUNT_LINKING = "auto"`,
-   that would let every jellyfin-user in `users.json` log in and be auto-created
-   as a Forgejo user. The restriction has to move into the OIDC exchange, as an
-   Authelia custom authorization policy on the client (4.39 supports these):
+   every user in `users.json` can then log in and be auto-created as a
+   non-admin Forgejo user. These are friends and family, `boxen` is already
+   public on GitHub, and admin still follows the `admin` group — so the
+   confidentiality delta is approximately zero.
 
-   ```nix
-   identity_providers.oidc.authorization_policies.forgejo = {
-     default_policy = "deny";
-     rules = [ { policy = "one_factor"; subject = [ "user:brendan" ]; } ];
-   };
-   ```
-
-   with `authorization_policy = "forgejo"` in the client config. This is the
-   answer to the "(I dunno how)" in `iap.nix`'s assertion message, so that
-   assertion and its escape hatch are worth revisiting at the same time.
+   The consequence that does matter: **the trigger allowlist in decision 4 is
+   now the only thing standing between a logged-in user and a
+   `bypassPermissions` agent run.** It was always the authorization boundary;
+   with a wider user base it stops being theoretical. If it ever needs
+   narrowing, Authelia 4.39 supports per-client authorization policies
+   (`identity_providers.oidc.authorization_policies`), which is also the answer
+   to the "(I dunno how)" in `iap.nix`'s assertion message.
 
    Consequences beyond this document: `forgejo.nix`'s long comment argues for
    exactly the posture being abandoned and must be rewritten rather than left to
@@ -500,9 +501,6 @@ against an API it half-remembers.
   ever needs to drive an agent, decision 4's allowlist is the place it changes,
   and the blast radius of getting it wrong is `bypassPermissions` on a tailnet
   node.
-- **The Authelia custom authorization policy in decision 12 is unverified
-  against a live instance.** The schema exists in 4.39 (the deployed version is
-  4.39.20) but the exact spelling matters, and getting it wrong fails open into
-  "every jellyfin-user can create a Forgejo account" rather than into an error.
-  Check the rendered access decision for a non-`brendan` user before considering
-  the exposure change done.
+- **Patch currency is now a security property** (decision 12), and the design
+  deliberately declines to solve it. If the systematic answer never materialises,
+  this is the assumption that quietly stops holding.
