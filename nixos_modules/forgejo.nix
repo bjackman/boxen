@@ -54,20 +54,11 @@ in
       enable = true;
       inherit autheliaConfig;
     };
-    # Unusually, both. Forgejo holds the canonical copy of everything and has a
-    # busy CVE history - 2026 alone produced an unauthenticated arbitrary file
-    # read via the Org-mode renderer, and an admin impersonation via a forged
-    # proxy header - so its pre-auth surface shouldn't face the internet. An
-    # IP allowlist would do it but breaks working from arbitrary networks, so
-    # instead Authelia gates the whole vhost while Forgejo still authenticates
-    # over OIDC and trusts no headers.
-    #
-    # This also keeps the git-over-HTTP endpoint off the internet, which
-    # DISABLE_HTTP_GIT can't do without breaking Actions checkout. The runner
-    # will need /api/actions exempted; that's safe here precisely because
-    # Forgejo isn't trusting anything the proxy sets.
-    forwardAuth = true;
-    allowedUsers = [ "brendan" ];
+    # No forward_auth, unlike everything else behind the IAP: API clients and
+    # git-over-HTTP can't follow Authelia's login redirect, and both are needed
+    # from outside pizza. Forgejo authenticates every request itself and trusts
+    # no headers, so the exposed surface is the same one Codeberg runs.
+    # See design_docs/agent_prs.md.
   };
 
   services.forgejo = {
