@@ -1,0 +1,7 @@
+{
+  "model": "opus",
+  "effortLevel": "medium",
+  "agentPushNotifEnabled": true,
+  "tui": "fullscreen",
+  "respondToBashCommands": false
+}

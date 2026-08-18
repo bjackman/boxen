@@ -1,4 +1,9 @@
-{ pkgs, pkgsUnstable, ... }:
+{
+  config,
+  pkgs,
+  pkgsUnstable,
+  ...
+}:
 {
   imports = [
     ./common.nix
@@ -21,11 +26,6 @@
   };
 
   programs.agent-skills.targets.claude.enable = true;
-  home.file.".claude/settings.json".source = (pkgs.formats.json { }).generate "claude-settings.json" {
-    model = "opus";
-    effortLevel = "medium";
-    agentPushNotifEnabled = true;
-    tui = "fullscreen";
-    respondToBashCommands = false;
-  };
+  home.file.".claude/settings.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.bjackman.configCheckout}/hm_files/common/claude/settings.json";
 }
