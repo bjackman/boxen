@@ -1,10 +1,25 @@
 {
   config,
+  lib,
   pkgs,
   homelab,
   modulesPath,
   ...
 }:
+let
+  forgejo = homelab.servers.forgejo;
+  webhook = forgejo.bjackman.forgejoAgentWebhook;
+  slop = pkgs.bjackman.slop.override {
+    forgejoSsh = "ssh://forgejo@${forgejo.networking.hostName}:${toString forgejo.bjackman.ports.forgejo-ssh.port}";
+    keyFile = config.age.secrets.slopbot-ssh-privkey.path;
+  };
+  slopTools = pkgs.bjackman.slop-tools.override {
+    forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
+    repos = forgejo.bjackman.forgejoAgentRepos;
+    passwordFile = config.age.secrets.slopbot-forgejo-password.path;
+    secretFile = config.age.secrets.slopbot-webhook-secret.path;
+  };
+in
 {
   imports = [
     ./brendan.nix
@@ -73,20 +88,40 @@
     };
   };
 
-  environment.systemPackages =
-    let
-      forgejo = homelab.servers.forgejo;
-    in
-    [
-      (pkgs.bjackman.slop.override {
-        forgejoSsh = "ssh://forgejo@${forgejo.networking.hostName}:${toString forgejo.bjackman.ports.forgejo-ssh.port}";
-        keyFile = config.age.secrets.slopbot-ssh-privkey.path;
-      })
-      (pkgs.bjackman.slop-tools.override {
-        forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
-        passwordFile = config.age.secrets.slopbot-forgejo-password.path;
-      })
+  environment.systemPackages = [
+    slop
+    slopTools
+  ];
+
+  age.secrets.slopbot-webhook-secret = {
+    file = ../secrets/slopbot-webhook-secret.age;
+    mode = "400";
+    owner = "brendan";
+  };
+
+  # Runs as me rather than as a service user: it drives the same sessions I
+  # attach to interactively, and Claude Code keys those by home directory.
+  systemd.services.slop-handler = {
+    description = "Drive agent sessions from Forgejo review comments";
+    # Claude Code refuses to run its Bash tool without a POSIX shell, and
+    # systemd sets SHELL from passwd, where mine is fish. /run/current-system
+    # is on the path so that the agent sees the same tools I would.
+    environment.SHELL = lib.getExe pkgs.bashInteractive;
+    path = [
+      "/run/current-system/sw"
+      pkgs.bashInteractive
     ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart = "${slopTools}/bin/slop-handler --listen :${toString webhook.port}";
+      User = "brendan";
+      StateDirectory = "slop-handler";
+      Restart = "on-failure";
+      RestartSec = "30s";
+    };
+  };
 
   home-manager.users.brendan.imports = [ ../hm_modules/slopbox.nix ];
 
