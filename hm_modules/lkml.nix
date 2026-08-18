@@ -437,6 +437,11 @@
       systemd.user.services.get-lkml = {
         Unit = {
           Description = "Get LKML";
+          # Tags for mail that isn't indexed yet look to notmuch-git like tags
+          # for messages this host has never seen, so it leaves them alone and
+          # they stay missing once the mail does arrive. Sync only once the
+          # fetch that might have introduced them is done.
+          OnSuccess = [ "sync-lkml-tags.service" ];
         };
         Service = {
           # oneshot would hold the start job open for the whole fetch, which
@@ -477,7 +482,7 @@
           Description = "Timer for sync-lkml-tags";
         };
         Timer = {
-          OnStartupSec = "2m";
+          OnStartupSec = "20m";
           OnUnitActiveSec = "15m";
           RandomizedDelaySec = "60";
         };
