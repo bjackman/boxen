@@ -62,6 +62,10 @@ repo, commit liberally:
 - `homelab`: Stuff relating to homelab services. The distinction between this
   and `nixos`/`tf` is often fuzzy, just go on vibes.
 
+Before pushing a PR or anything, always fetch and rebase onto master. If there
+are nontrivial conflicts that require design decisions then stop and ask me
+about those decisions, otherwise resolve them autonomously.
+
 ### Comments
 
 Pay attention to these rules, I've had a hard time with this aspect of Claude's
