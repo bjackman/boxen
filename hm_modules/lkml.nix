@@ -439,7 +439,9 @@
           Description = "Get LKML";
         };
         Service = {
-          Type = "oneshot";
+          # oneshot would hold the start job open for the whole fetch, which
+          # blocks sd-switch, and hence home-manager activation, on it.
+          Type = "exec";
           ExecStart = "${get-lkml}/bin/get-lkml";
           Slice = "background.slice";
         };
