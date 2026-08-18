@@ -1,4 +1,10 @@
-{ config, modulesPath, ... }:
+{
+  config,
+  pkgs,
+  homelab,
+  modulesPath,
+  ...
+}:
 {
   imports = [
     ./brendan.nix
@@ -51,6 +57,36 @@
     # can't keep many generations around before it fills up.
     systemd-boot.configurationLimit = 4;
   };
+
+  age.secrets = {
+    slopbot-ssh-privkey = {
+      file = ../secrets/slopbot-ssh-privkey.age;
+      mode = "400";
+      owner = "brendan";
+    };
+    slopbot-forgejo-password = {
+      file = ../secrets/slopbot-forgejo-password.age;
+      mode = "400";
+      owner = "brendan";
+    };
+  };
+
+  environment.systemPackages =
+    let
+      forgejo = homelab.servers.forgejo;
+    in
+    [
+      (pkgs.bjackman.slop.override {
+        forgejoSsh = "ssh://forgejo@${forgejo.networking.hostName}:${toString forgejo.bjackman.ports.forgejo-ssh.port}";
+        keyFile = config.age.secrets.slopbot-ssh-privkey.path;
+      })
+      (pkgs.bjackman.slop-pr.override {
+        forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
+        passwordFile = config.age.secrets.slopbot-forgejo-password.path;
+      })
+    ];
+
+  home-manager.users.brendan.imports = [ ../hm_modules/slopbox.nix ];
 
   system.stateVersion = "25.11";
 }

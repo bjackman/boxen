@@ -40,5 +40,18 @@
     or anything I explicitly ask you to change. For other repos, check in with
     me before changing stuff in /mnt/src (unless you just cloned them there
     yourself, then it's definitely fine).
+
+    ## Proposing changes to boxen
+
+    Changes to `boxen` go through pull requests on my Forgejo instance rather
+    than the /mnt/src hack described above. Start a change with `slop <topic>`,
+    which clones the repo to `~/slop/boxen/<topic>` and opens a Claude session
+    tied to that topic. When the change is ready, run `slop-pr` from inside the
+    worktree: it pushes to `refs/for/master` using AGit, so no branch is
+    created, and prints the pull request URL.
+
+    Iterating is the same command again - the pull request gains a new version
+    and I can diff it against what I already reviewed. You cannot push to
+    master, and shouldn't try; that's what the pull request is for.
   '';
 }

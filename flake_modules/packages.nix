@@ -29,6 +29,8 @@
       spellcheck_commitmsg = final.callPackage ../packages/spellcheck_commitmsg { };
       spellcheck_commitmsgs = final.callPackage ../packages/spellcheck_commitmsgs { };
       slopclone = final.callPackage ../packages/slopclone { };
+      slop = final.callPackage ../packages/slop { };
+      slop-pr = final.callPackage ../packages/slop-pr { };
       tvheadend = final.callPackage ../packages/tvheadend { src = inputs.tvheadend; };
     };
   };
