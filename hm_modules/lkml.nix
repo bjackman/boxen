@@ -49,6 +49,56 @@
       account = config.accounts.email.accounts.${cfg.accountRef};
       allAddresses = [ account.address ] ++ cfg.extraAddresses;
 
+      # Dumb wrapper so I don't have to code args into the binds.conf
+      do-notmuch-propagate-mute = pkgs.writeShellApplication {
+        name = "do-notmuch-propagate-mute";
+        runtimeInputs = [ pkgs.bjackman.notmuch-propagate-mute ];
+        # Don't want errexit/pipefail as we'll be hiding the SIGABRT below.
+        bashOptions = [ "nounset" ];
+        text = ''
+          notmuch-propagate-mute --email ${account.address} --db-path ${config.accounts.email.maildirBasePath} "$@"
+          # Due to garbage Python bindings, the script always gets SIGABRT.
+          # Hide that from this script's exit code since this will
+          # eventually be used in a systemd service and it's annoying if
+          # that shows as failing.
+          exit 0
+        '';
+      };
+      get-lkml = pkgs.writeShellApplication {
+        name = "get-lkml";
+        # For lei
+        runtimeInputs = [
+          pkgs.public-inbox
+          pkgs.notmuch
+          do-notmuch-propagate-mute
+        ];
+        # lei q does undocumented fucked up things inserting quotes into its
+        # arguments. It's written in Perl. It seems not to shit the bed too
+        # badly if you provide each "term" of the search query as separate
+        # arguments. It also munges the date filter in a weird way that I
+        # don't understand and which is buggy.
+        text =
+          let
+            addressMatchers = map (addr: "a:${addr}") allAddresses;
+            # The quoting shit above is also why this quoting is such a
+            # mess, we want to send parens as individual arguments, need to
+            # put them in quotes so that they don't get interpreted as a
+            # subshell.
+            addressTerm = ''"(" ${lib.concatStringsSep " OR " addressMatchers} ")"'';
+          in
+          ''
+            lei q -I https://lore.kernel.org/all/ -o ${config.accounts.email.maildirBasePath}/lore \
+              --threads --dedupe=mid --augment \
+              ${addressTerm} 'AND' 'dt:20250204132159..'
+            notmuch new
+            do-notmuch-propagate-mute
+            # lei q leaves a lei-daemon in the cgroup. daemon-kill signals
+            # it in-process so it commits the store; otherwise the unit sits
+            # in stop-sigterm until systemd SIGKILLs it mid-index.
+            lei daemon-kill
+          '';
+      };
+
       filter-dead-addresses = pkgs.writeShellApplication {
         name = "filter-dead-addresses";
         runtimeInputs = [ pkgs.bjackman.notmuch-get-dead-addresses ];
@@ -243,21 +293,6 @@
       home.packages =
         let
           notmuchPython = pkgs.python3.withPackages (ps: [ ps.notmuch2 ]);
-          # Dumb wrapper so I don't have to code args into the binds.conf
-          do-notmuch-propagate-mute = pkgs.writeShellApplication {
-            name = "do-notmuch-propagate-mute";
-            runtimeInputs = [ pkgs.bjackman.notmuch-propagate-mute ];
-            # Don't want errexit/pipefail as we'll be hiding the SIGABRT below.
-            bashOptions = [ "nounset" ];
-            text = ''
-              notmuch-propagate-mute --email ${account.address} --db-path ${config.accounts.email.maildirBasePath} "$@"
-              # Due to garbage Python bindings, the script always gets SIGABRT.
-              # Hide that from this script's exit code since this will
-              # eventually be used in a systemd service and it's annoying if
-              # that shows as failing.
-              exit 0
-            '';
-          };
           copy-lore-url = pkgs.writeShellApplication {
             name = "copy-lore-url";
             runtimeInputs = [
@@ -396,40 +431,7 @@
           copy-lore-url
           pkgs.bjackman.notmuch-get-dead-addresses
           filter-dead-addresses
-          (pkgs.writeShellApplication {
-            name = "get-lkml";
-            # For lei
-            runtimeInputs = [
-              pkgs.public-inbox
-              pkgs.notmuch
-              do-notmuch-propagate-mute
-            ];
-            # lei q does undocumented fucked up things inserting quotes into its
-            # arguments. It's written in Perl. It seems not to shit the bed too
-            # badly if you provide each "term" of the search query as separate
-            # arguments. It also munges the date filter in a weird way that I
-            # don't understand and which is buggy.
-            text =
-              let
-                addressMatchers = map (addr: "a:${addr}") allAddresses;
-                # The quoting shit above is also why this quoting is such a
-                # mess, we want to send parens as individual arguments, need to
-                # put them in quotes so that they don't get interpreted as a
-                # subshell.
-                addressTerm = ''"(" ${lib.concatStringsSep " OR " addressMatchers} ")"'';
-              in
-              ''
-                lei q -I https://lore.kernel.org/all/ -o ${config.accounts.email.maildirBasePath}/lore \
-                  --threads --dedupe=mid --augment \
-                  ${addressTerm} 'AND' 'dt:20250204132159..'
-                notmuch new
-                do-notmuch-propagate-mute
-                # lei q leaves a lei-daemon in the cgroup. daemon-kill signals
-                # it in-process so it commits the store; otherwise the unit sits
-                # in stop-sigterm until systemd SIGKILLs it mid-index.
-                lei daemon-kill
-              '';
-          })
+          get-lkml
         ];
 
       systemd.user.services.get-lkml = {
@@ -438,7 +440,7 @@
         };
         Service = {
           Type = "oneshot";
-          ExecStart = "${config.home.path}/bin/get-lkml";
+          ExecStart = "${get-lkml}/bin/get-lkml";
           Slice = "background.slice";
         };
       };
