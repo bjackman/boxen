@@ -34,10 +34,16 @@
     # Code cribbed from:
     # https://github.com/nix-community/home-manager/issues/2085#issuecomment-2022239332
     bjackman.configCheckout = lib.mkOption {
-      type = lib.types.path;
-      apply = toString;
+      type = lib.types.nullOr lib.types.path;
+      apply = checkout: if checkout == null then null else toString checkout;
       default = "${config.xdg.configHome}/home-manager";
-      description = "Place where the home-manager configuration is checked out locally.";
+      description = ''
+        Place where the home-manager configuration is checked out locally.
+
+        Null on hosts that have no checkout: config that would otherwise be
+        symlinked out of the store into it, so that edits take effect without a
+        rebuild, is then deployed from the store instead.
+      '';
     };
   };
 
@@ -72,6 +78,8 @@
 
       sessionVariables = {
         EDITOR = "vim";
+      }
+      // lib.optionalAttrs (config.bjackman.configCheckout != null) {
         HOME_MANAGER_CONFIG_CHECKOUT = config.bjackman.configCheckout;
       };
     };

@@ -22,5 +22,8 @@
 
   programs.agent-skills.targets.claude.enable = true;
   home.file.".claude/settings.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.bjackman.configCheckout}/hm_files/common/claude/settings.json";
+    if config.bjackman.configCheckout == null then
+      ../hm_files/common/claude/settings.json
+    else
+      config.lib.file.mkOutOfStoreSymlink "${config.bjackman.configCheckout}/hm_files/common/claude/settings.json";
 }
