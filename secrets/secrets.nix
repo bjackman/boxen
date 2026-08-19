@@ -3,19 +3,15 @@
 # files are encrypted.
 let
   chungito = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMaakNfELyvjLLCRwH2U/yQ35HkEW+hEShAD7sn0mCmH brendan@chungito";
-  chungito-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBTTgMTKXqjE6Vdd5mYMqtU3CxHdTFLVW4TNg3K5dfpo root@chungito";
   fw13 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8GAbvAbJljzHXALqbG5t0oolXkwSE00r+2qfxubEEF brendan@fw13";
-  fw13-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHVBFKZzXD+YUcB83N+FfIHFH2rQpk060e1OjEWZMp59 root@nixos";
-  norte-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEwxzu2JNI7hdrKWlmqjkwNLRf7kMEcSlxE3nKUrbEp6 root@norte";
-  slopbox-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtq1hx4Z4uL/Hqjuz/d56uxFCpSuOAHiFOs8v0yMUaF root@slopbox";
-  pizza-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAmiVXunDkdw9EBJtfPshYvR3od5p00vbL9MqlaJZgGf root@pizza";
+  hostKeys = import ./host-keys.nix;
   all = [
     chungito
-    chungito-host
+    hostKeys.chungito
     fw13
-    fw13-host
-    pizza-host
-    norte-host
+    hostKeys.fw13
+    hostKeys.pizza
+    hostKeys.norte
   ];
 in
 {
@@ -42,7 +38,7 @@ in
   "transmission-password.age".publicKeys = all;
   # This is a weak password so encrypt it instead of just checking in the salted
   # hash. Ideally I'd prefer to limit this to only being available to
-  # chungito-host. However unfortunately agenix just has a single rekey
+  # hostKeys.chungito. However unfortunately agenix just has a single rekey
   # procedure that applies to all secrets, which means if there's a secret in
   # here that your current SSH key can't decrypt, the process fails.
   # I can't be bothered to figure out how to modularise the secrets just now
@@ -91,13 +87,13 @@ in
   # slopbot is the identity agents push and comment as. Both of these live in
   # the agent VM as well as on pizza, hence the extra recipient.
   # ssh-keygen -t ed25519 -C slopbot@forgejo -f key && agenix -e slopbot-ssh-privkey.age < key
-  "slopbot-ssh-privkey.age".publicKeys = all ++ [ slopbox-host ];
+  "slopbot-ssh-privkey.age".publicKeys = all ++ [ hostKeys.slopbox ];
   # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e slopbot-forgejo-password.age
-  "slopbot-forgejo-password.age".publicKeys = all ++ [ slopbox-host ];
+  "slopbot-forgejo-password.age".publicKeys = all ++ [ hostKeys.slopbox ];
   # Shared between the Forgejo webhook and the handler that receives it, so
   # that only the forge can trigger an agent run.
   # nix run nixpkgs#openssl -- rand -hex 32 | agenix -e slopbot-webhook-secret.age
-  "slopbot-webhook-secret.age".publicKeys = all ++ [ slopbox-host ];
+  "slopbot-webhook-secret.age".publicKeys = all ++ [ hostKeys.slopbox ];
   # Admin account used only by forgejo-bootstrap.service, which needs API calls
   # the CLI can't make. Never leaves pizza.
   # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e forgejo-bootstrap-password.age
