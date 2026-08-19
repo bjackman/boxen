@@ -34,13 +34,13 @@ import (
 
 // Set at build time.
 var (
-	forgejoURL   = "https://forgejo.home.yawn.io"
-	owner        = "brendan"
-	pusher       = "slopbot"
-	reviewer     = "brendan"
-	passwordFile = "/run/agenix/slopbot-forgejo-password"
-	secretFile   = "/run/agenix/slopbot-webhook-secret"
-	agentLabel   = "agent"
+	forgejoURL          = "https://forgejo.home.yawn.io"
+	owner               = "brendan"
+	pusher              = "slopbot"
+	reviewer            = "brendan"
+	forgejoPasswordFile = "/run/agenix/slopbot-forgejo-password"
+	secretFile          = "/run/agenix/slopbot-webhook-secret"
+	agentLabel          = "agent"
 	// Comma-separated, matching bjackman.forgejoAgentRepos.
 	repos = "boxen"
 )
@@ -62,7 +62,7 @@ func main() {
 }
 
 func run() error {
-	client, err := forgejo.NewClient(forgejoURL, pusher, passwordFile)
+	client, err := forgejo.NewClient(forgejoURL, pusher, forgejoPasswordFile)
 	if err != nil {
 		return err
 	}

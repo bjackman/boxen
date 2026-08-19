@@ -1,28 +1,33 @@
-// slop-pr proposes the current branch as a Forgejo pull request, using AGit so
-// that no branch is created and re-running adds a version to the existing
-// request. See design_docs/agent_prs.md.
+// slop-pr proposes the current branch as a Gerrit change, so that no branch is
+// created and re-running adds a patch set to the existing change.
+// See design_docs/gerrit.md.
 package main
 
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
-	"github.com/bjackman/boxen/slop-tools/internal/forgejo"
+	"github.com/bjackman/boxen/slop-tools/internal/gerrit"
 )
 
 // Set at build time; the defaults are only useful for `go run`.
 var (
-	forgejoURL   = "https://forgejo.home.yawn.io"
-	owner        = "brendan"
+	gerritHost   = "pizza"
+	gerritPort   = "29418"
+	gerritURL    = "https://gerrit.home.yawn.io"
 	pusher       = "slopbot"
-	passwordFile = "/run/agenix/slopbot-forgejo-password"
+	reviewer     = "brendan"
+	branch       = "master"
+	keyFile      = "/run/agenix/slopbot-ssh-privkey"
+	authUser     = "slopbot"
+	passwordFile = "/run/agenix/slopbot-authelia-password"
 )
-
-const agentLabel = "agent"
 
 // publishedError is a failure after the change reached the forge, where
 // reporting it as a plain failure would suggest nothing had been pushed.
@@ -35,7 +40,7 @@ func (e *publishedError) Error() string { return e.err.Error() }
 func (e *publishedError) Unwrap() error { return e.err }
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "slop-pr: %v\n", err)
 		var published *publishedError
 		if errors.As(err, &published) {
@@ -45,9 +50,8 @@ func main() {
 	}
 }
 
-// A failure after the push leaves a pull request behind that just needs
-// finishing, which is a different thing to fix than a failure to publish at
-// all.
+// A failure after the push leaves a change behind that just needs finishing,
+// which is a different thing to fix than a failure to publish at all.
 func exitCode(err error) int {
 	var published *publishedError
 	if errors.As(err, &published) {
@@ -56,129 +60,61 @@ func exitCode(err error) int {
 	return 1
 }
 
-func run(args []string) error {
-	if len(args) > 1 {
-		return fmt.Errorf("usage: slop-pr [title]")
-	}
-
+func run() error {
 	root, err := git("rev-parse", "--show-toplevel")
 	if err != nil {
 		return err
 	}
 	topic := filepath.Base(root)
-	repo := filepath.Base(filepath.Dir(root))
+	project := filepath.Base(filepath.Dir(root))
 
-	client, err := forgejo.NewClient(forgejoURL, pusher, passwordFile)
-	if err != nil {
+	if err := push(topic); err != nil {
 		return err
 	}
 
-	pr, err := client.FindPullByTopic(owner, repo, topic)
+	port, err := strconv.Atoi(gerritPort)
+	if err != nil {
+		return fmt.Errorf("bad gerritPort %q: %w", gerritPort, err)
+	}
+	client, err := gerrit.NewClient(gerrit.Config{
+		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFile,
+		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFile,
+	})
 	if err != nil {
 		return err
 	}
-
-	head, err := git("rev-parse", "HEAD")
+	changes, err := client.Query("status:open", "project:"+project, "topic:"+topic)
 	if err != nil {
 		return err
 	}
-
-	switch {
-	case pr == nil:
-		title, err := title(args)
-		if err != nil {
-			return err
-		}
-		if err := push(topic, title); err != nil {
-			return err
-		}
-		if pr, err = client.FindPullByTopic(owner, repo, topic); err != nil {
-			return err
-		}
-		if pr == nil {
-			return fmt.Errorf("pushed, but no pull request appeared for topic %q", topic)
-		}
-	case pr.Head.SHA != head:
-		// Forgejo rejects a push whose head the pull request already has, and
-		// the title is deliberately not resent: it may have been edited in the
-		// web UI.
-		if err := push(topic, ""); err != nil {
-			return err
-		}
-		if pr, err = client.Pull(owner, repo, pr.Number); err != nil {
-			return err
-		}
+	if len(changes) == 0 {
+		return fmt.Errorf("pushed, but no open change has topic %q in %s", topic, project)
 	}
-
-	url := fmt.Sprintf("%s/%s/%s/pulls/%d", forgejoURL, owner, repo, pr.Number)
-
-	if err := ensureLabel(client, repo, pr); err != nil {
-		return &publishedError{url: url, err: err}
+	for _, change := range changes {
+		fmt.Println(change.URL)
 	}
-	if err := ensureAssignee(client, repo, pr); err != nil {
-		return &publishedError{url: url, err: err}
-	}
-
-	fmt.Println(url)
 	return nil
 }
 
-// title defaults to the subject of the first commit of the change, which
-// describes it better than the most recent one does.
-func title(args []string) (string, error) {
-	if len(args) == 1 {
-		return args[0], nil
-	}
-	subjects, err := git("log", "--format=%s", "origin/master..HEAD")
-	if err != nil {
-		return "", err
-	}
-	lines := strings.Split(strings.TrimSpace(subjects), "\n")
-	if len(lines) == 0 || lines[0] == "" {
-		return "", fmt.Errorf("no commits on top of origin/master to describe")
-	}
-	return lines[len(lines)-1], nil
-}
-
-func ensureLabel(client *forgejo.Client, repo string, pr *forgejo.PullRequest) error {
-	if pr.HasLabel(agentLabel) {
-		return nil
-	}
-	labels, err := client.Labels(owner, repo)
-	if err != nil {
-		return err
-	}
-	for _, label := range labels {
-		if label.Name == agentLabel {
-			return client.AddLabel(owner, repo, pr.Number, label.ID)
-		}
-	}
-	return fmt.Errorf("no %q label in %s/%s; is forgejo-bootstrap.service healthy?", agentLabel, owner, repo)
-}
-
-func ensureAssignee(client *forgejo.Client, repo string, pr *forgejo.PullRequest) error {
-	logins := pr.AssigneeLogins()
-	for _, login := range logins {
-		if login == owner {
-			return nil
-		}
-	}
-	return client.SetAssignees(owner, repo, pr.Number, append(logins, owner))
-}
-
-func push(topic, title string) error {
+// push sends every commit not yet on the branch as one topic. Gerrit rejects a
+// push whose commits it already has, which is success as far as this is
+// concerned: the change is published either way.
+func push(topic string) error {
 	args := []string{
-		"push", "origin", "HEAD:refs/for/master",
+		"push", "origin", "HEAD:refs/for/" + branch,
 		"-o", "topic=" + topic,
-		"-o", "force-push=true",
-	}
-	if title != "" {
-		args = append(args, "-o", "title="+title)
+		"-o", "r=" + reviewer,
 	}
 	cmd := exec.Command("git", args...)
+	var stderr strings.Builder
+	// Gerrit reports the change URL on stderr, so let it through as well as
+	// capturing it.
 	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
 	if err := cmd.Run(); err != nil {
+		if strings.Contains(stderr.String(), "no new changes") {
+			return nil
+		}
 		return fmt.Errorf("git push: %w", err)
 	}
 	return nil

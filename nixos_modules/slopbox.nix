@@ -8,11 +8,14 @@
 }:
 let
   forgejo = homelab.servers.forgejo;
+  gerrit = homelab.servers.gerrit;
   webhook = forgejo.bjackman.forgejoAgentWebhook;
-  slop = pkgs.bjackman.slop.override {
-    forgejoSsh = "ssh://forgejo@${forgejo.networking.hostName}:${toString forgejo.bjackman.ports.forgejo-ssh.port}";
+  gerritArgs = {
+    gerritHost = gerrit.networking.hostName;
+    gerritPort = gerrit.bjackman.ports.gerrit-ssh.port;
     keyFile = config.age.secrets.slopbot-ssh-privkey.path;
   };
+  slop = pkgs.bjackman.slop.override gerritArgs;
   hostKeys = import ../secrets/host-keys.nix;
   probeHosts = builtins.attrNames homelab.nodes;
   slopProbe = pkgs.bjackman.slop-probe.override {
@@ -22,12 +25,18 @@ let
       lib.concatMapStrings (host: "${host} ${hostKeys.${host}}\n") probeHosts
     );
   };
-  slopTools = pkgs.bjackman.slop-tools.override {
-    forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
-    repos = forgejo.bjackman.forgejoAgentRepos;
-    passwordFile = config.age.secrets.slopbot-forgejo-password.path;
-    secretFile = config.age.secrets.slopbot-webhook-secret.path;
-  };
+  slopTools = pkgs.bjackman.slop-tools.override (
+    gerritArgs
+    // {
+      gerritUrl = gerrit.bjackman.iap.services.gerrit.url;
+      passwordFile = config.age.secrets.slopbot-authelia-password.path;
+      # Until the handler is ported.
+      forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
+      repos = forgejo.bjackman.forgejoAgentRepos;
+      forgejoPasswordFile = config.age.secrets.slopbot-forgejo-password.path;
+      secretFile = config.age.secrets.slopbot-webhook-secret.path;
+    }
+  );
 in
 {
   imports = [
@@ -107,6 +116,12 @@ in
     slopTools
     slopProbe
   ];
+
+  age.secrets.slopbot-authelia-password = {
+    file = ../secrets/slopbot-authelia-password.age;
+    mode = "400";
+    owner = "brendan";
+  };
 
   age.secrets.slopbot-webhook-secret = {
     file = ../secrets/slopbot-webhook-secret.age;

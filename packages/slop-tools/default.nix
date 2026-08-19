@@ -4,13 +4,22 @@
   git,
   lib,
   makeWrapper,
+  openssh,
   tmux,
-  forgejoUrl ? "https://forgejo.home.yawn.io",
-  owner ? "brendan",
+  gerritHost ? "pizza",
+  gerritPort ? 29418,
+  gerritUrl ? "https://gerrit.home.yawn.io",
+  branch ? "master",
   pusher ? "slopbot",
   reviewer ? "brendan",
+  keyFile ? "/run/agenix/slopbot-ssh-privkey",
+  authUser ? "slopbot",
+  passwordFile ? "/run/agenix/slopbot-authelia-password",
+  # Still Forgejo-shaped until the handler is ported.
+  forgejoUrl ? "https://forgejo.home.yawn.io",
+  owner ? "brendan",
   repos ? [ "boxen" ],
-  passwordFile ? "/run/agenix/slopbot-forgejo-password",
+  forgejoPasswordFile ? "/run/agenix/slopbot-forgejo-password",
   secretFile ? "/run/agenix/slopbot-webhook-secret",
 }:
 buildGoModule {
@@ -21,32 +30,39 @@ buildGoModule {
   # keep up to date.
   vendorHash = null;
 
-  # The probe tools share this Go module but ship from probe.nix, which builds
-  # them without the closure below. Building them here too would put a second,
-  # unconfigured copy of each on PATH.
-  subPackages = [
-    "cmd/slop-handler"
-    "cmd/slop-pr"
-  ];
-
   nativeBuildInputs = [ makeWrapper ];
 
+  # The linker ignores a -X for a variable a binary doesn't have, so both
+  # commands' settings can be passed together while the port is half done.
   ldflags = map (flag: "-X main.${flag}") [
-    "forgejoURL=${forgejoUrl}"
-    "owner=${owner}"
+    "gerritHost=${gerritHost}"
+    "gerritPort=${toString gerritPort}"
+    "gerritURL=${gerritUrl}"
+    "branch=${branch}"
     "pusher=${pusher}"
     "reviewer=${reviewer}"
-    "repos=${lib.concatStringsSep "," repos}"
+    "keyFile=${keyFile}"
+    "authUser=${authUser}"
     "passwordFile=${passwordFile}"
+    "forgejoURL=${forgejoUrl}"
+    "owner=${owner}"
+    "repos=${lib.concatStringsSep "," repos}"
+    "forgejoPasswordFile=${forgejoPasswordFile}"
     "secretFile=${secretFile}"
   ];
 
   postFixup = ''
-    wrapProgram $out/bin/slop-pr --prefix PATH : ${lib.makeBinPath [ git ]}
+    wrapProgram $out/bin/slop-pr --prefix PATH : ${
+      lib.makeBinPath [
+        git
+        openssh
+      ]
+    }
     wrapProgram $out/bin/slop-handler --prefix PATH : ${
       lib.makeBinPath [
         claude-code
         git
+        openssh
         tmux
       ]
     }

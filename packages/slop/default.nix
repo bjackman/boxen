@@ -1,22 +1,26 @@
 {
   writeShellApplication,
   git,
+  openssh,
   tmux,
   util-linux,
-  forgejoSsh ? "ssh://forgejo@pizza:9002",
-  owner ? "brendan",
+  gerritHost ? "pizza",
+  gerritPort ? 29418,
+  pusher ? "slopbot",
   keyFile ? "/run/agenix/slopbot-ssh-privkey",
 }:
 writeShellApplication {
   name = "slop";
   runtimeInputs = [
     git
+    openssh
     tmux
     util-linux
   ];
   text = ''
-    forgejo_ssh=${forgejoSsh}
-    owner=${owner}
+    gerrit_host=${gerritHost}
+    gerrit_port=${toString gerritPort}
+    pusher=${pusher}
     key_file=${keyFile}
   ''
   + builtins.readFile ./slop.sh;
