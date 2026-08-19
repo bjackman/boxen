@@ -82,9 +82,11 @@ in
           local method=$1 path=$2 data=''${3-}
           local args=(-sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies"
             "''${proxied[@]}" -H "X-Gerrit-Auth: $token"
-            -H 'Content-Type: application/json' -X "$method" "${apiUrl}$path")
+            -X "$method" "${apiUrl}$path")
+          # Only with a body: Gerrit rejects a JSON content type and nothing to
+          # parse, which is how several of its endpoints are called.
           if [ -n "$data" ]; then
-            args+=(-d "$data")
+            args+=(-H 'Content-Type: application/json' -d "$data")
           fi
           curl "''${args[@]}"
         }
