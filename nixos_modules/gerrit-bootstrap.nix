@@ -127,10 +127,19 @@ in
               groups: ["Service Users"]}')")" 201
         fi
 
+
+        # Gerrit's defaults let an administrator create a branch but not push
+        # commits to one: the mainline is only meant to advance by submitting a
+        # change. That's right for slopbot and wrong for me, and an import of
+        # existing history needs it.
+        expect "$(req GET /a/groups/Administrators)" 200
+        administrators=$(tail -c +6 "$resp" | jq -r .id)
         for project in ${lib.escapeShellArgs repos}; do
           if [ "$(req GET "/a/projects/$project")" = 404 ]; then
             expect "$(req PUT "/a/projects/$project" "{}")" 201
           fi
+          expect "$(req POST "/a/projects/$project/access" "$(jq -n --arg group "$administrators" \
+            '{add: {"refs/heads/*": {permissions: {push: {rules: {($group): {action: "ALLOW", force: false}}}}}}}')")" 200
         done
       '';
       # Runs as root: it only makes HTTP calls to loopback, and Gerrit itself
