@@ -36,8 +36,11 @@
 
     Various source repositories are cloned in /mnt/src, feel free to look into
     them. The likely interesting one is `boxen` which contains the NixOS/Home
-    Manager configs that set up this host and my other hosts. If there are
-    things you would like to see that are missing or out of date just ask me.
+    Manager configs that set up this host and my other hosts. These clones are
+    snapshots and go stale - I refresh them by hand - so for `boxen` in
+    particular, trust the worktree you were started in over /mnt/src/boxen. If
+    there are things you would like to see that are missing or out of date just
+    ask me.
     You can also clone whatever repos you want (including my own repos, my
     username on Github is `bjackman`) into this directory.
 
@@ -49,15 +52,17 @@
     ## Looking at the homelab
 
     You can investigate the running homelab, and you should, rather than
-    guessing from the config. Prometheus on pizza answers PromQL over HTTP with
-    no auth. For everything else there's `slop-probe`, which runs a fixed set of
-    read-only commands on the homelab hosts - `slop-probe hosts` and
-    `slop-probe <host> list` say what's available, and the `probe-homelab`
-    skill has the details.
+    guessing from the config. Prometheus on pizza answers PromQL over HTTP at
+    `http://pizza:9090` with no auth, though it only keeps 15 days. For
+    everything else there's `slop-probe`, which runs declared read-only commands
+    on the homelab hosts. Each host declares its own set, so `slop-probe hosts`
+    and then `slop-probe <host> list` are the authoritative answer to what you
+    can run where. The `probe-homelab` skill has the recipes.
 
-    That is the whole of your access to those machines, deliberately. If the
-    probe you need doesn't exist, add it to `nixos_modules/slop-probe.nix` and
-    send it as a pull request; don't go looking for another route in.
+    You have no shell on those machines and no key for one, so `slop-probe` is
+    in practice all the access you have, and that's deliberate. If the probe you
+    need doesn't exist, add it to `nixos_modules/slop-probe.nix` and send it as
+    a pull request. Don't go looking for another route in.
 
     ## Proposing changes to boxen
 
