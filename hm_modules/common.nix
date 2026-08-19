@@ -10,10 +10,7 @@
 }:
 {
   imports = [
-    ./chungito-ctrl.nix
     ./git.nix
-    ./vscode.nix
-    ./zed.nix
     ./scripts.nix
     ./nix-warmup.nix
     nix-index-database.homeModules.default
@@ -137,28 +134,7 @@
       '';
     };
 
-    programs.kitty = {
-      enable = true;
-      settings = {
-        enable_audio_bell = false;
-        allow_remote_control = true;
-        # This configures the separate scrollback buffer that is only accessible
-        # via the pager magic, not the "live" scrollback that you can interact
-        # with via the mouse. It's recommended to keep the latter small for perf.
-        # Megabytes.
-        scrollback_pager_history_size = 128;
-      };
-    };
-    # Allow creating new terminals on remote hosts (connected via kitten ssh).
-    programs.fish.shellAbbrs.klo = "kitty @ launch --type=os-window --cwd=current fish";
-
     nix.registry.nixpkgs-unstable.flake = nixpkgs-unstable;
-
-    bjackman.nix-warmups = [
-      "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
-      "github:bjackman/boxen/master#devShells.${pkgs.stdenv.hostPlatform.system}.default"
-      "github:sashiko-dev/sashiko#devShells.${pkgs.stdenv.hostPlatform.system}.default"
-    ];
 
     programs.agent-skills = {
       enable = true;
