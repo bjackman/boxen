@@ -18,6 +18,16 @@ let
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
 in
 {
+  options.bjackman.gerritSshPort = lib.mkOption {
+    type = lib.types.port;
+    readOnly = true;
+    # Not from bjackman.ports: those are allocated by position, so adding or
+    # removing any service shifts them - harmless for something reached through
+    # Caddy, and not for a port that ends up in every clone's remote URL.
+    # 29418 is Gerrit's conventional port.
+    default = 29418;
+    description = "Port Gerrit serves git and its command interface on.";
+  };
   options.bjackman.gerritProjects = lib.mkOption {
     type = with lib.types; listOf str;
     default = [ ];

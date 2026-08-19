@@ -45,6 +45,6 @@
       let
         gerrit = homelab.servers.gerrit;
       in
-      "ssh://brendan@${gerrit.networking.hostName}:${toString gerrit.bjackman.ports.gerrit-ssh.port}/lkml-tags";
+      "ssh://brendan@${gerrit.networking.hostName}:${toString gerrit.bjackman.gerritSshPort}/lkml-tags";
   };
 }

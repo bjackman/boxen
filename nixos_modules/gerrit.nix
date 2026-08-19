@@ -6,7 +6,7 @@
 }:
 let
   port = config.bjackman.ports.gerrit.port;
-  sshPort = config.bjackman.ports.gerrit-ssh.port;
+  sshPort = config.bjackman.gerritSshPort;
   url = config.bjackman.iap.services.gerrit.url;
   fqdn = config.bjackman.iap.services.gerrit.fqdn;
 in
@@ -19,10 +19,7 @@ in
     ./github-mirror.nix
   ];
 
-  bjackman.ports = {
-    gerrit = { };
-    gerrit-ssh = { };
-  };
+  bjackman.ports.gerrit = { };
 
   bjackman.iap.services.gerrit = {
     inherit port;

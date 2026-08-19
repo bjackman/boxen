@@ -10,7 +10,7 @@ let
   gerrit = homelab.servers.gerrit;
   gerritArgs = {
     gerritHost = gerrit.networking.hostName;
-    gerritPort = gerrit.bjackman.ports.gerrit-ssh.port;
+    gerritPort = gerrit.bjackman.gerritSshPort;
     keyFile = config.age.secrets.slopbot-ssh-privkey.path;
   };
   slop = pkgs.bjackman.slop.override gerritArgs;
