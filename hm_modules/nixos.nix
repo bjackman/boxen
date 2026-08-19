@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   osConfig,
   ...
 }:
@@ -10,7 +11,7 @@
   ];
 
   bjackman.appConfigDirs.fish = [ ../hm_files/nixos/config/fish ];
-  bjackman.configCheckout = "${config.home.homeDirectory}/src/boxen";
+  bjackman.configCheckout = lib.mkDefault "${config.home.homeDirectory}/src/boxen";
 
   bjackman.nix-warmups = [
     "github:bjackman/boxen/master#nixosConfigurations.${osConfig.networking.hostName}.config.system.build.toplevel"
