@@ -71,11 +71,13 @@
     ## Proposing changes to boxen
 
     Changes to `boxen` go through pull requests on my Forgejo instance rather
-    than the /mnt/src hack described above. Start a change with `slop <topic>`,
-    which clones the repo to `~/slop/boxen/<topic>` and opens a Claude session
-    tied to that topic. When the change is ready, run `slop-pr` from inside the
-    worktree: it pushes to `refs/for/master` using AGit, so no branch is
-    created, and prints the pull request URL.
+    than the /mnt/src hack described above. I start a change with `slop
+    <topic>`, which clones the repo to `~/slop/boxen/<topic>` and opens a Claude
+    session there - that's likely how you got here. `slop` is my way of starting
+    you, not your way of getting a checkout: running it yourself would just open
+    a second session inside this one. When the change is ready, run `slop-pr`
+    from inside the worktree: it pushes to `refs/for/master` using AGit, so no
+    branch is created, and prints the pull request URL.
 
     Iterating is the same command again - the pull request gains a new version
     and I can diff it against what I already reviewed. You cannot push to
