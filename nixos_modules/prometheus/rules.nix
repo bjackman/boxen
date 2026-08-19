@@ -210,6 +210,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "SMART device temperature warning (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "smart-device-temperature";
           };
           expr = ''
             (avg_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
@@ -227,6 +228,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "SMART device temperature critical (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "smart-device-temperature";
           };
           expr = ''
             (max_over_time(smartctl_device_temperature{temperature_type="current"} [5m])
@@ -244,6 +246,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "SMART device temperature over trip value (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "smart-device-temperature";
           };
           expr = ''
             max_over_time(smartctl_device_temperature{temperature_type="current"} [10m])
@@ -261,6 +264,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "SMART device temperature nearing trip value (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "smart-device-temperature";
           };
           expr = ''
             max_over_time(smartctl_device_temperature{temperature_type="current"} [10m])

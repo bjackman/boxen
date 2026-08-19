@@ -1,0 +1,123 @@
+### lsblk
+NAME   SIZE SERIAL       WWN                MODEL
+sda  931.5G 24442Y800583 0x5001b448c6fd1f2c WDC WDS100T1R0A-68A4W0
+sdb  931.5G 24442Y800473 0x5001b448c6fa7ab0 WDC WDS100T1R0A-68A4W0
+sdc  931.5G 24442Y800244 0x5001b448c6fe09a1 WDC WDS100T1R0A-68A4W0
+sdd  931.5G 24442Y800063 0x5001b448c6fe09b0 WDC WDS100T1R0A-68A4W0
+
+### /dev/disk/by-id -> sdX
+ata-WDC_WDS100T1R0A-68A4W0_24442Y800063 -> ../../sdd
+ata-WDC_WDS100T1R0A-68A4W0_24442Y800244 -> ../../sdc
+ata-WDC_WDS100T1R0A-68A4W0_24442Y800473 -> ../../sdb
+ata-WDC_WDS100T1R0A-68A4W0_24442Y800583 -> ../../sda
+wwn-0x5001b448c6fa7ab0 -> ../../sdb
+wwn-0x5001b448c6fd1f2c -> ../../sda
+wwn-0x5001b448c6fe09a1 -> ../../sdc
+wwn-0x5001b448c6fe09b0 -> ../../sdd
+
+### smartctl identity + temperature attrs
+---- sda
+Model Family:     WD Blue / Red / Green SSDs
+Device Model:     WDC  WDS100T1R0A-68A4W0
+Serial Number:    24442Y800583
+Firmware Version: 411010WR
+User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+Rotation Rate:    Solid State Device
+Form Factor:      2.5 inches
+194 Temperature_Celsius     0x0022   065   061   ---    Old_age   Always       -       35 (Min/Max 15/61)
+  [scttempsts]
+  smartctl 7.5 (build date Jan  1 1980) [aarch64-linux-6.12.87] (local build)
+  Copyright (C) 2002-25, Bruce Allen, Christian Franke, www.smartmontools.org
+  
+  === START OF READ SMART DATA SECTION ===
+  SCT Commands not supported
+  
+---- sdb
+Model Family:     WD Blue / Red / Green SSDs
+Device Model:     WDC  WDS100T1R0A-68A4W0
+Serial Number:    24442Y800473
+Firmware Version: 411010WR
+User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+Rotation Rate:    Solid State Device
+Form Factor:      2.5 inches
+194 Temperature_Celsius     0x0022   061   068   ---    Old_age   Always       -       39 (Min/Max 18/68)
+  [scttempsts]
+  smartctl 7.5 (build date Jan  1 1980) [aarch64-linux-6.12.87] (local build)
+  Copyright (C) 2002-25, Bruce Allen, Christian Franke, www.smartmontools.org
+  
+  === START OF READ SMART DATA SECTION ===
+  SCT Commands not supported
+  
+---- sdc
+Model Family:     WD Blue / Red / Green SSDs
+Device Model:     WDC  WDS100T1R0A-68A4W0
+Serial Number:    24442Y800244
+Firmware Version: 411010WR
+User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+Rotation Rate:    Solid State Device
+Form Factor:      2.5 inches
+194 Temperature_Celsius     0x0022   060   070   ---    Old_age   Always       -       40 (Min/Max 20/70)
+  [scttempsts]
+  smartctl 7.5 (build date Jan  1 1980) [aarch64-linux-6.12.87] (local build)
+  Copyright (C) 2002-25, Bruce Allen, Christian Franke, www.smartmontools.org
+  
+  === START OF READ SMART DATA SECTION ===
+  SCT Commands not supported
+  
+---- sdd
+Model Family:     WD Blue / Red / Green SSDs
+Device Model:     WDC  WDS100T1R0A-68A4W0
+Serial Number:    24442Y800063
+Firmware Version: 411010WR
+User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+Rotation Rate:    Solid State Device
+Form Factor:      2.5 inches
+194 Temperature_Celsius     0x0022   059   066   ---    Old_age   Always       -       41 (Min/Max 20/66)
+  [scttempsts]
+  smartctl 7.5 (build date Jan  1 1980) [aarch64-linux-6.12.87] (local build)
+  Copyright (C) 2002-25, Bruce Allen, Christian Franke, www.smartmontools.org
+  
+  === START OF READ SMART DATA SECTION ===
+  SCT Commands not supported
+  
+
+### zpool status nas
+  pool: nas
+ state: ONLINE
+status: One or more devices has experienced an unrecoverable error.  An
+	attempt was made to correct the error.  Applications are unaffected.
+action: Determine if the device needs to be replaced, and clear the errors
+	using 'zpool clear' or replace the device with 'zpool replace'.
+   see: https://openzfs.github.io/openzfs-docs/msg/ZFS-8000-9P
+  scan: scrub repaired 11K in 02:01:58 with 0 errors on Sat Aug  1 03:53:52 2026
+config:
+
+	NAME                        STATE     READ WRITE CKSUM
+	nas                         ONLINE       0     0     0
+	  raidz1-0                  ONLINE       0     0     0
+	    wwn-0x5001b448c6fd1f2c  ONLINE       0     0    73
+	    wwn-0x5001b448c6fa7ab0  ONLINE       0     0    28
+	    wwn-0x5001b448c6fe09a1  ONLINE       0     0    50
+	    wwn-0x5001b448c6fe09b0  ONLINE       0     0    21
+
+errors: No known data errors
+
+### hwmon chips
+/sys/class/hwmon/hwmon0 cpu_thermal
+/sys/class/hwmon/hwmon1 rp1_adc
+/sys/class/hwmon/hwmon2 rpi_volt
+
+### thermal / cooling devices
+thermal_zone0
+
+### pwm entries (fan control)
+(none)
+
+### model / kernel / uptime
+Raspberry Pi 5 Model B Rev 1.1
+6.12.87
+4627203.27 18180116.44
+
+### nixos generation
+lrwxrwxrwx 1 root root 15 2026-08-11 11:13:07.033098204 +0000 /nix/var/nix/profiles/system -> system-135-link
+/nix/store/6pwq926ypr7k1bd2c9jx1h15l3pkr7h3-nixos-system-norte-sd-card-26.05.20260724.597283a
