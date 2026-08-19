@@ -10,6 +10,8 @@ let
   fqdn = config.bjackman.iap.services.gerrit.fqdn;
   authHeader = config.services.gerrit.settings.auth.httpHeader;
   admin = "brendan";
+  agent = config.bjackman.homelab.users.slopbot;
+  adminUser = config.bjackman.homelab.users.${admin};
   # The same keys the hosts authorise, so pushing to a branch and administering
   # over SSH needs no separate registration step.
   adminKeys = config.users.users.${admin}.openssh.authorizedKeys.keys;
@@ -61,6 +63,8 @@ in
         # came through one. These are the headers Caddy sends.
         proxied=(
           -H "${authHeader}: ${admin}"
+          -H "Remote-Email: ${adminUser.email}"
+          -H "Remote-Name: ${adminUser.displayName}"
           -H "X-Forwarded-Proto: https"
           -H "X-Forwarded-Host: ${fqdn}"
         )
@@ -123,21 +127,21 @@ in
         # the "gerrit:" one that header authentication looks up, so the two
         # never link: the first login tries to create a second account, collides
         # on the username, and fails for good.
+        #
+        # The identity headers are the ones Authelia would send, so the account
+        # ends up with the address and name from users.json either way.
         if [ "$(req GET /a/accounts/slopbot)" = 404 ]; then
           slopbot_cookies=$(mktemp)
           curl -sS -c "$slopbot_cookies" -b "$slopbot_cookies" -o /dev/null \
             -H "${authHeader}: slopbot" \
+            -H "Remote-Email: ${agent.email}" \
+            -H "Remote-Name: ${agent.displayName}" \
             -H "X-Forwarded-Proto: https" -H "X-Forwarded-Host: ${fqdn}" \
             "${apiUrl}/login/%2F"
           rm -f "$slopbot_cookies"
           expect "$(req GET /a/accounts/slopbot)" 200
         fi
 
-        # The rest is set on whichever account that produced.
-        expect "$(req PUT "/a/accounts/slopbot/name" '{"name": "slopbot"}')" 200
-        # The address a push's committer has to match.
-        expect "$(req PUT "/a/accounts/slopbot/emails/slopbot%40yawn.io" \
-          '{"no_confirmation": true, "preferred": true}')" 201 409
         # Keeps the bot out of my attention set.
         expect "$(req PUT "/a/groups/Service%20Users/members/slopbot")" 201 200
 

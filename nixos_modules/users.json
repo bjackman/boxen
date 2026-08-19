@@ -50,6 +50,7 @@
     ]
   },
   "slopbot": {
+    "email": "slopbot@yawn.io",
     "serviceAccount": true
   }
 }

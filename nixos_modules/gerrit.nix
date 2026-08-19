@@ -51,10 +51,15 @@ in
       gerrit.canonicalWebUrl = "${url}/";
       auth = {
         # Same arrangement as miniflux: the proxy is the only thing that can
-        # set this header, so what it says is who you are. Only safe while
+        # set these headers, so what they say is who you are. Only safe while
         # Gerrit listens on loopback and Caddy is the sole way in.
         type = "HTTP";
         httpHeader = "Remote-User";
+        # An account's address decides whose commits it may push, so taking it
+        # from Authelia keeps users.json the one place identities are written
+        # down.
+        httpEmailHeader = "Remote-Email";
+        httpDisplaynameHeader = "Remote-Name";
       };
       httpd.listenUrl = "proxy-http://127.0.0.1:${toString port}/";
       sshd.listenAddress = "*:${toString sshPort}";

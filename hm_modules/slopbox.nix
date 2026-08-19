@@ -1,7 +1,22 @@
 {
+  lib,
+  homelab,
+  ...
+}:
+let
+  # Everything committed on this host is the agent's work, and Gerrit rejects a
+  # push whose committer isn't a registered address of the pushing account.
+  agent = homelab.servers.gerrit.bjackman.homelab.users.slopbot;
+in
+{
   imports = [
     ./agent-host-context.nix
   ];
+
+  programs.git.settings.user = {
+    name = agent.displayName;
+    email = lib.mkForce agent.email;
+  };
 
   # The worktrees under ~/slop are the only checkouts here; there's no
   # long-lived one for config to link into.
