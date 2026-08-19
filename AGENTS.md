@@ -101,9 +101,9 @@ commentary.
 
 ## Tips
 
-- I use Fish and most hosts have Fish set up as the login shell for my user. If
-  you're running commands you might want to explicitly prefix them with `bash -c`,
-  or just use Fish syntax.
+- I use Fish and most hosts have Fish set up as the login shell for my user, but
+  your Bash tool really does run Bash - write Bash syntax, and don't expect
+  Fish's `$status` and friends to work.
 
 - I tend not to install stuff globally, you'll find pretty standard stuff like
   `python` and `jq` absent from the `$PATH` (classic Unix coreutils like `awk`
