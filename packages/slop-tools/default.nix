@@ -15,12 +15,6 @@
   keyFile ? "/run/agenix/slopbot-ssh-privkey",
   authUser ? "slopbot",
   passwordFile ? "/run/agenix/slopbot-authelia-password",
-  # Still Forgejo-shaped until the handler is ported.
-  forgejoUrl ? "https://forgejo.home.yawn.io",
-  owner ? "brendan",
-  repos ? [ "boxen" ],
-  forgejoPasswordFile ? "/run/agenix/slopbot-forgejo-password",
-  secretFile ? "/run/agenix/slopbot-webhook-secret",
 }:
 buildGoModule {
   pname = "slop-tools";
@@ -32,8 +26,6 @@ buildGoModule {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  # The linker ignores a -X for a variable a binary doesn't have, so both
-  # commands' settings can be passed together while the port is half done.
   ldflags = map (flag: "-X main.${flag}") [
     "gerritHost=${gerritHost}"
     "gerritPort=${toString gerritPort}"
@@ -44,11 +36,6 @@ buildGoModule {
     "keyFile=${keyFile}"
     "authUser=${authUser}"
     "passwordFile=${passwordFile}"
-    "forgejoURL=${forgejoUrl}"
-    "owner=${owner}"
-    "repos=${lib.concatStringsSep "," repos}"
-    "forgejoPasswordFile=${forgejoPasswordFile}"
-    "secretFile=${secretFile}"
   ];
 
   postFixup = ''

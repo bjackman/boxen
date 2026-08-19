@@ -7,9 +7,7 @@
   ...
 }:
 let
-  forgejo = homelab.servers.forgejo;
   gerrit = homelab.servers.gerrit;
-  webhook = forgejo.bjackman.forgejoAgentWebhook;
   gerritArgs = {
     gerritHost = gerrit.networking.hostName;
     gerritPort = gerrit.bjackman.ports.gerrit-ssh.port;
@@ -30,11 +28,6 @@ let
     // {
       gerritUrl = gerrit.bjackman.iap.services.gerrit.url;
       passwordFile = config.age.secrets.slopbot-authelia-password.path;
-      # Until the handler is ported.
-      forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
-      repos = forgejo.bjackman.forgejoAgentRepos;
-      forgejoPasswordFile = config.age.secrets.slopbot-forgejo-password.path;
-      secretFile = config.age.secrets.slopbot-webhook-secret.path;
     }
   );
 in
@@ -99,11 +92,6 @@ in
       mode = "400";
       owner = "brendan";
     };
-    slopbot-forgejo-password = {
-      file = ../secrets/slopbot-forgejo-password.age;
-      mode = "400";
-      owner = "brendan";
-    };
     slopbot-probe-ssh-privkey = {
       file = ../secrets/slopbot-probe-ssh-privkey.age;
       mode = "400";
@@ -123,16 +111,10 @@ in
     owner = "brendan";
   };
 
-  age.secrets.slopbot-webhook-secret = {
-    file = ../secrets/slopbot-webhook-secret.age;
-    mode = "400";
-    owner = "brendan";
-  };
-
   # Runs as me rather than as a service user: it drives the same sessions I
   # attach to interactively, and Claude Code keys those by home directory.
   systemd.services.slop-handler = {
-    description = "Drive agent sessions from Forgejo review comments";
+    description = "Drive agent sessions from Gerrit review comments";
     # Claude Code refuses to run its Bash tool without a POSIX shell, and
     # systemd sets SHELL from passwd, where mine is fish. /run/current-system
     # is on the path so that the agent sees the same tools I would.
@@ -145,7 +127,7 @@ in
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      ExecStart = "${slopTools}/bin/slop-handler --listen :${toString webhook.port}";
+      ExecStart = "${slopTools}/bin/slop-handler";
       User = "brendan";
       StateDirectory = "slop-handler";
       Restart = "on-failure";

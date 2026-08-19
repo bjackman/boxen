@@ -6,8 +6,11 @@
 package gerrit
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -215,4 +218,64 @@ func truncate(s string, max int) string {
 		return s
 	}
 	return s[:max] + "..."
+}
+
+// Event is the part of a stream-events record this workflow reads. The stream
+// carries no comment bodies, so it's only ever a hint to go and look.
+type Event struct {
+	Type   string `json:"type"`
+	Change struct {
+		Number  int    `json:"number"`
+		Project string `json:"project"`
+		Topic   string `json:"topic"`
+	} `json:"change"`
+}
+
+// StreamEvents calls onEvent for each event until the connection drops or the
+// context is cancelled. It always returns an error: the stream ending is the
+// only way out.
+func (c *Client) StreamEvents(ctx context.Context, onEvent func(Event)) error {
+	cmd := exec.CommandContext(ctx, "ssh",
+		"-i", c.keyFile,
+		"-o", "IdentitiesOnly=yes",
+		"-o", "StrictHostKeyChecking=accept-new",
+		// Notice a dead connection rather than blocking on it forever.
+		"-o", "ServerAliveInterval=60",
+		"-o", "ServerAliveCountMax=3",
+		"-p", fmt.Sprint(c.port),
+		fmt.Sprintf("%s@%s", c.user, c.host),
+		"gerrit", "stream-events",
+	)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+	for scanner.Scan() {
+		var event Event
+		if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
+			// A record this doesn't understand is not a reason to tear the
+			// stream down.
+			continue
+		}
+		onEvent(event)
+	}
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	return errors.New("event stream closed")
+}
+
+// Gerrit reports times in UTC, without a zone, to nanosecond precision.
+const timeLayout = "2006-01-02 15:04:05.000000000"
+
+func ParseTime(value string) (time.Time, error) {
+	return time.Parse(timeLayout, strings.TrimSpace(value))
 }
