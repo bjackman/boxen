@@ -123,6 +123,38 @@ Not just familiar — structurally closer to what this design already reaches fo
    correct and the push channel is only an optimisation - so the sweep stays
    even though the stream is more reliable than a webhook.
 
+1. **Work is batched per topic, and held until the topic goes quiet for two
+   minutes.** Two separate problems, both arising from reviewing a series:
+
+   **Grouping.** A multi-commit series is several Gerrit changes sharing a
+   topic, and the topic is the session. Gathering pending comments per *change*
+   would run the agent once per reviewed commit, each run seeing a fraction of
+   the feedback and each producing its own patchset and reply - against one
+   conversation that would then contradict itself. So the unit of work is the
+   topic: every unhandled comment across every change in it goes into one run.
+
+   **Timing.** Publishing reviews on four changes takes a minute or two of
+   clicking, so grouping alone isn't enough - the first published review would
+   fire immediately and the rest would arrive mid-run. Hence a debounce: a topic
+   is eligible only when its newest unhandled comment is at least two minutes
+   old.
+
+   Expressed as *eligibility by age* rather than as a countdown timer, which
+   matters more than it sounds: it's stateless, it behaves identically whether
+   the wake came from `stream-events` or from a sweep, and a restart mid-window
+   loses nothing because the age is recomputed from the comment timestamps. A
+   timer would have to be persisted or forgotten.
+
+   The window slides: comments arriving during it push the deadline out, which
+   is the intended behaviour while I'm still working through a series. That does
+   mean a long unbroken stream of comments defers indefinitely. Left uncapped on
+   purpose - "still reviewing" is exactly when the agent should wait - but if it
+   ever feels wrong, a maximum hold is the escalation.
+
+   When a topic is deferred for freshness the handler schedules a wake for when
+   it will age out, rather than leaving it to the next sweep; otherwise the
+   effective latency is the sweep interval rather than the window.
+
 1. **Project configuration is reconciled from Nix, via `refs/meta/config`.**
    Gerrit keeps ACLs in a `project.config` file on a git ref, which is a better
    fit for this repo than Forgejo's database rows were: the bootstrap unit
@@ -215,9 +247,15 @@ Same structure, different transport:
   sweep on `comment-added` events. Reconnect with backoff; never treat a live
   stream as proof of health.
 - **Sweep:** `gerrit query --format=JSON status:open hashtag:agent --current-patch-set --comments`, comparing comment timestamps against the
-  handled state.
+  handled state, then grouping the pending comments by topic.
+- **Batch and hold:** a topic runs only once its newest unhandled comment is
+  older than `--debounce` (2m). Otherwise the handler schedules a wake for the
+  moment it ages out and moves on. Comments from several changes in one topic
+  arrive at the agent as one prompt, labelled by change and file.
 - **Reply:** `gerrit review <change>,<patchset> --message '...'`, optionally
-  with a label vote.
+  with a label vote. For a multi-change batch the reply goes on the change whose
+  comments prompted it - or on each of them, which is a decision to make when
+  it's built rather than now.
 - **Everything else unchanged:** adoption on first sighting, deferral while a
   tmux session is attached, the reply-is-the-agent's-final-message rule, and the
   exit-1/exit-2 split.
