@@ -107,6 +107,32 @@ Not just familiar — structurally closer to what this design already reaches fo
    `slopbot-webhook-secret` are deleted, along with the basic-auth machinery
    they justified.
 
+1. **The agent keeps a distinct account, and ownership replaces the label.**
+   `slopbot` is a Gerrit account with `Push` on `refs/for/refs/heads/*`, nothing
+   on `refs/heads/*` and no `Submit`, so "the agent cannot land its own changes"
+   is a grant rather than a rule applied per repo.
+
+   Because the uploader owns the change, `status:open owner:slopbot` is what the
+   handler queries to find its own work. That retires the `agent` label and its
+   Forgejo-shaped successor, a hashtag: ownership is intrinsic, so there's
+   nothing to apply at creation time, nothing to retrofit onto changes made
+   before the handler existed, and no way for a change to be agent-driven but
+   unmarked.
+
+   **Commit authorship is deliberately not part of this.** Whether `git log`
+   shows me or Claude as author doesn't matter; the durable marker is the
+   `Co-Authored-By` trailer, which identifies changes that came through this
+   system regardless of who Gerrit thinks uploaded them. Left as whatever the
+   VM's git does by default, which means the `Forge Author` permission may be
+   needed on `refs/for/*` - one of the things to check.
+
+   `slopbot` belongs in Gerrit's built-in **Service Users** group, which exists
+   for exactly this and keeps bot accounts out of attention-set bookkeeping.
+   That interacts oddly with `slopbot` also being the change *owner*, though: if
+   service-user semantics suppress the attention set on its own changes, they
+   won't surface in my dashboard, which defeats the purpose. Worth checking
+   before adopting.
+
 1. **Session identity stays keyed on the topic.** `uuid5("<repo>:<topic>")`,
    unchanged, so `slop` and the session-continuity property carry over
    untouched. Gerrit topics group a multi-commit series exactly as AGit topics
@@ -225,13 +251,12 @@ All of it over SSH, using an admin key held only on `pizza`. That replaces the
 ```
 git push origin HEAD:refs/for/master \
     -o topic=<topic> \
-    -o r=brendan \
-    -o hashtag=agent
+    -o r=brendan
 ```
 
 Push options replace three API calls: the reviewer is the assignee equivalent
-and puts the change in my dashboard, and the hashtag is the `agent` label
-equivalent that tells the handler this change is agent-driven. `--force` has no
+and puts the change in my dashboard, and nothing is needed in place of the
+`agent` label - see the identity decision. `--force` has no
 analogue and needs none - Gerrit accepts a new patchset for the same Change-Id
 as a matter of course, so the "same commit as the old commit" special case
 disappears.
@@ -246,7 +271,7 @@ Same structure, different transport:
 - **Trigger:** `ssh gerrit gerrit stream-events`, reading JSON lines, waking the
   sweep on `comment-added` events. Reconnect with backoff; never treat a live
   stream as proof of health.
-- **Sweep:** `gerrit query --format=JSON status:open hashtag:agent --current-patch-set --comments`, comparing comment timestamps against the
+- **Sweep:** `gerrit query --format=JSON status:open owner:slopbot --current-patch-set --comments`, comparing comment timestamps against the
   handled state, then grouping the pending comments by topic.
 - **Batch and hold:** a topic runs only once its newest unhandled comment is
   older than `--debounce` (2m). Otherwise the handler schedules a wake for the
@@ -289,14 +314,13 @@ Same structure, different transport:
   orphans review metadata. Generate once, commit it, never regenerate.
 - **First-login-becomes-admin is a bootstrapping trapdoor.** With `auth.type = HTTP`, whoever authenticates first is an administrator. That must be me,
   through Caddy, before anything else can reach the port.
-- **Review metadata lives in git, which changes the backup story for the
-  better.** Unlike Forgejo, where `refs/pull/*` couldn't be mirrored and the
-  review queue had no backup, Gerrit keeps changes and comments in
+- **Review metadata lives in git, which might make the backup story better for
+  free.** Not a goal - losing the review queue was accepted in `forgejo.md`
+  decision 7 and still is - but where Forgejo could not mirror `refs/pull/*` at
+  all, Gerrit keeps changes and comments in
   `refs/changes/*` and `refs/meta/*`. Whether GitHub will accept those refs is
   unverified - `refs/changes/*` isn't a hidden namespace there, so it may just
   work, which would mean the mirror finally covers reviews too.
 - **Losing Forgejo means losing the Actions plan.** If CI matters more than the
   review UX, that's an argument for staying. It doesn't, today, because the
   agent verifies its own work locally.
-- **The `agent` hashtag has the same retrofit problem the label did**: changes
-  created before the handler understands hashtags won't have one.
