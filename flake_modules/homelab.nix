@@ -17,7 +17,6 @@
       samba = nodes.norte;
       jellyfin = nodes.pizza;
       bitmagnet = nodes.pizza;
-      forgejo = nodes.pizza;
       gerrit = nodes.pizza;
       radarr = nodes.norte;
       sonarr = nodes.norte;

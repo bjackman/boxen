@@ -69,7 +69,12 @@ in
     };
   };
 
-  bjackman.gerritAgentRepos = [ "boxen" ];
+  bjackman.gerritProjects = [
+    "boxen"
+    # Notmuch tag sync for the LKML mail setup: not reviewed, just a place to
+    # push tags between machines.
+    "lkml-tags"
+  ];
 
   # Note there are no backups: the GitHub mirror is the copy of record, so a
   # repo missing from this list has no backup at all. See design_docs/gerrit.md.

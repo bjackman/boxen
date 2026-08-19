@@ -41,11 +41,10 @@
     extraAddresses = [ "jackmanb@google.com" ];
     tagsRepoUrl =
       # Not the iap fqdn: that resolves to the public IP, where only Caddy
-      # (HTTPS) is exposed - Forgejo's SSH server is tailnet-only. SSH_DOMAIN
-      # is whatever Forgejo itself advertises as its SSH clone address.
+      # (HTTPS) is exposed - Gerrit's SSH server is tailnet-only.
       let
-        forgejo = homelab.servers.forgejo.services.forgejo;
+        gerrit = homelab.servers.gerrit;
       in
-      "ssh://${forgejo.user}@${forgejo.settings.server.SSH_DOMAIN}:${toString forgejo.settings.server.SSH_PORT}/brendan/lkml-tags.git";
+      "ssh://brendan@${gerrit.networking.hostName}:${toString gerrit.bjackman.ports.gerrit-ssh.port}/lkml-tags";
   };
 }

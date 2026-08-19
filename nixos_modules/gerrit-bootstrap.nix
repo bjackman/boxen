@@ -5,7 +5,7 @@
   ...
 }:
 let
-  repos = config.bjackman.gerritAgentRepos;
+  projects = config.bjackman.gerritProjects;
   apiUrl = "http://127.0.0.1:${toString config.bjackman.ports.gerrit.port}";
   fqdn = config.bjackman.iap.services.gerrit.fqdn;
   authHeader = config.services.gerrit.settings.auth.httpHeader;
@@ -18,18 +18,18 @@ let
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
 in
 {
-  options.bjackman.gerritAgentRepos = lib.mkOption {
+  options.bjackman.gerritProjects = lib.mkOption {
     type = with lib.types; listOf str;
     default = [ ];
     description = ''
-      Projects agents may propose changes to. Gerrit's default access rules
-      already deny slopbot everything that matters - direct push to a branch,
-      voting Code-Review+2 on its own change, and submitting - so this only has
-      to create the projects.
+      Projects to create, and to grant myself push on. Nothing here is about
+      the agent: Gerrit's default rules already deny slopbot everything that
+      matters - direct push to a branch, voting Code-Review+2 on its own
+      change, and submitting - whichever projects exist.
     '';
   };
 
-  config = lib.mkIf (repos != [ ]) {
+  config = lib.mkIf (projects != [ ]) {
     # Everything here goes through the REST API on loopback, authenticated by
     # the header Gerrit is configured to trust. That's also how the admin
     # account comes into being: the first account to authenticate is made an
@@ -175,7 +175,7 @@ in
         # existing history needs it.
         expect "$(req GET /a/groups/Administrators)" 200
         administrators=$(tail -c +6 "$resp" | jq -r .id)
-        for project in ${lib.escapeShellArgs repos}; do
+        for project in ${lib.escapeShellArgs projects}; do
           if [ "$(req GET "/a/projects/$project")" = 404 ]; then
             expect "$(req PUT "/a/projects/$project" "{}")" 201
           fi
