@@ -28,7 +28,6 @@
       notmuch-propagate-mute = final.callPackage ../packages/notmuch-propagate-mute { };
       spellcheck_commitmsg = final.callPackage ../packages/spellcheck_commitmsg { };
       spellcheck_commitmsgs = final.callPackage ../packages/spellcheck_commitmsgs { };
-      slopclone = final.callPackage ../packages/slopclone { };
       slop = final.callPackage ../packages/slop { };
       slop-tools = final.callPackage ../packages/slop-tools { inherit (final.llm-agents) claude-code; };
       slop-probe = final.callPackage ../packages/slop-tools/probe.nix { };
