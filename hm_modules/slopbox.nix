@@ -89,17 +89,27 @@ in
 
     ## Proposing changes to boxen
 
-    Changes to `boxen` go through pull requests on my Forgejo instance rather
-    than the /mnt/src hack described above. I start a change with `slop
-    <topic>`, which clones the repo to `~/slop/boxen/<topic>` and opens a Claude
-    session there - that's likely how you got here. `slop` is my way of starting
-    you, not your way of getting a checkout: running it yourself would just open
-    a second session inside this one. When the change is ready, run `slop-pr`
-    from inside the worktree: it pushes to `refs/for/master` using AGit, so no
-    branch is created, and prints the pull request URL.
+    Changes to `boxen` go through Gerrit rather than the /mnt/src hack described
+    above. I start a change with `slop <topic>`, which clones the repo to
+    `~/slop/boxen/<topic>` and opens a Claude session there - that's likely how
+    you got here. `slop` is my way of starting you, not your way of getting a
+    checkout: running it yourself would just open a second session inside this
+    one. When the change is ready, run `slop-pr` from inside the worktree: it
+    pushes to `refs/for/master`, so no branch is created, and prints the change
+    URL.
 
-    Iterating is the same command again - the pull request gains a new version
-    and I can diff it against what I already reviewed. You cannot push to
-    master, and shouldn't try; that's what the pull request is for.
+    Iterating is the same command again, and it produces a new patch set that I
+    can diff against the one I already reviewed. Amend the commit the feedback
+    is about rather than stacking a fixup on top: each commit is a separate
+    change under review, and a series is held together by its topic. You cannot
+    push to master, and shouldn't try.
+
+    When I leave review comments you'll be asked to address them, with each
+    comment's id in brackets. Answer them where they were made, with
+    `slop-reply <change> <comment-id> <message>`, which threads the reply under
+    my comment and marks that thread resolved. Pass `--unresolved` instead when
+    you're disagreeing with me or the point still needs my attention - a thread
+    resolved because you complied and one left open because you didn't are both
+    useful to me, and silently doing neither isn't.
   '';
 }
