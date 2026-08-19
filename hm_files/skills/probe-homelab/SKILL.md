@@ -16,6 +16,9 @@ slop-probe <host> list      # what this host offers, with each option's pattern
 slop-probe hosts            # what hosts there are
 ```
 
+The set is per-host, not global: norte declares `zpool-status` and `zfs-list`,
+pizza doesn't. `list` is the authoritative answer for a given host.
+
 Output goes to stdout, so **filter it in the pipeline** rather than asking for
 everything and reading it all:
 

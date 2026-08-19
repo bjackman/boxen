@@ -3,6 +3,11 @@
     ./agent-host-context.nix
   ];
 
+  # The homelab probe recipes are useful in any session on this host, not just
+  # ones started in a boxen checkout, so they ship as a user skill rather than
+  # living in the repo's .agents/skills.
+  programs.agent-skills.skills.enable = [ "probe-homelab" ];
+
   bjackman.agentHostContext = ''
     # Operating on this host
 
