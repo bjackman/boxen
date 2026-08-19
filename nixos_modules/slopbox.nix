@@ -13,6 +13,15 @@ let
     forgejoSsh = "ssh://forgejo@${forgejo.networking.hostName}:${toString forgejo.bjackman.ports.forgejo-ssh.port}";
     keyFile = config.age.secrets.slopbot-ssh-privkey.path;
   };
+  hostKeys = import ../secrets/host-keys.nix;
+  probeHosts = builtins.attrNames homelab.nodes;
+  slopProbe = pkgs.bjackman.slop-probe.override {
+    hosts = probeHosts;
+    keyFile = config.age.secrets.slopbot-probe-ssh-privkey.path;
+    knownHostsFile = pkgs.writeText "slop-probe-known-hosts" (
+      lib.concatMapStrings (host: "${host} ${hostKeys.${host}}\n") probeHosts
+    );
+  };
   slopTools = pkgs.bjackman.slop-tools.override {
     forgejoUrl = forgejo.bjackman.iap.services.forgejo.url;
     repos = forgejo.bjackman.forgejoAgentRepos;
@@ -86,11 +95,17 @@ in
       mode = "400";
       owner = "brendan";
     };
+    slopbot-probe-ssh-privkey = {
+      file = ../secrets/slopbot-probe-ssh-privkey.age;
+      mode = "400";
+      owner = "brendan";
+    };
   };
 
   environment.systemPackages = [
     slop
     slopTools
+    slopProbe
   ];
 
   age.secrets.slopbot-webhook-secret = {

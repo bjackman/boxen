@@ -94,6 +94,15 @@ in
   # that only the forge can trigger an agent run.
   # nix run nixpkgs#openssl -- rand -hex 32 | agenix -e slopbot-webhook-secret.age
   "slopbot-webhook-secret.age".publicKeys = all ++ [ hostKeys.slopbox ];
+  # The key slop-probe connects to the homelab with. See
+  # design_docs/agent_prod_access.md. Only the agent VM uses it, and the hosts
+  # it reaches need nothing but the public half, so this doesn't go to `all`.
+  # ssh-keygen -t ed25519 -C slopbot@probe -f key && agenix -e slopbot-probe-ssh-privkey.age < key
+  "slopbot-probe-ssh-privkey.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.slopbox
+  ];
   # Admin account used only by forgejo-bootstrap.service, which needs API calls
   # the CLI can't make. Never leaves pizza.
   # nix run nixpkgs#openssl -- rand -base64 24 | agenix -e forgejo-bootstrap-password.age
