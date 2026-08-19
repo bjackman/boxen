@@ -87,34 +87,35 @@ Not just familiar — structurally closer to what this design already reaches fo
    Keep `/var/lib/forgejo` and the module for a grace period after cutover, so
    that "Gerrit turned out to be worse" is a revert rather than a recovery.
 
-1. **Authelia in front for browsers; the API reached directly, on the tailnet,
-   with its own credential.** `auth.type = HTTP`, `httpd.listenUrl` on loopback,
-   and two Caddy routes:
+1. **Everything goes through Authelia, including the agent.** `auth.type = HTTP`, `httpd.listenUrl` on loopback, and a single ordinary IAP service:
+   `forward_auth` with `allowedUsers = [ "brendan" "slopbot" ]`, exactly like
+   miniflux. Gerrit reads `Remote-User`, which `copy_headers` replaces on every
+   request, so a client cannot name itself.
 
-   - the web UI, behind `forward_auth` with `allowedUsers = [ "brendan" ]`, with
-     Caddy setting the auth header from Authelia's `Remote-User`;
-   - `/a/*`, **not** behind `forward_auth`, restricted to tailnet source
-     addresses, where Gerrit authenticates the request itself.
+   This works because **Authelia authenticates non-browser clients too**: an
+   `Authorization: Basic` header on the same forward-auth endpoint is checked
+   against its user database and answered with `Remote-User`. Verified against
+   4.39.20 - correct password 200, wrong password 401, and a user the
+   `access_control` rule doesn't cover 403, so the per-domain restriction
+   applies to the agent as much as to me. Note it is `Authorization` and not
+   `Proxy-Authorization`, which is silently ignored.
 
-   Both routes must **strip any client-supplied auth header** before proxying.
-   That single line is the whole security boundary: with `auth.type = HTTP`
-   Gerrit believes the header unconditionally, so a request that carries its own
-   is a request that picks its own identity. This is the failure mode
-   `forgejo.md` decision 4 rejected, and it's tolerable here only because the
-   header can never arrive from outside - which is a property of the Caddy
-   config, not of Gerrit.
+   **Rejected: a route that skips `forward_auth`** for `/a/*`, restricted by
+   source range, with Gerrit authenticating those requests itself. That was the
+   design until Authelia turned out to handle it, and it was worse in three
+   ways: it needed the identity headers stripped on that route or a client could
+   name itself, it made the Caddy config the only thing standing between the
+   internet and an admin session, and it put the agent's credential somewhere
+   the IAP couldn't reason about.
 
-   That makes `allowedSourceRanges` - proposed in `forgejo.md` and never built -
-   actually necessary now.
+   The residual risk is unchanged and worth restating: Gerrit believes
+   `Remote-User` unconditionally, so this is only safe while it listens on
+   loopback and Caddy is the sole way in. That is now the *whole* of the
+   argument, rather than one of three things to get right.
 
-   **Rejected: `auth.type = OAUTH` against Authelia**, which would remove header
-   trust entirely and is otherwise the nicer design. It needs the third-party
-   `gerrit-oauth-provider` plugin, which nixpkgs doesn't package, so it means
-   maintaining a plugin build against a moving Gerrit.
-
-1. **The agent needs two credentials, not one: an SSH key and an HTTP
-   password.** The original claim - that Gerrit's automation is entirely SSH -
-   is wrong, and it was the premise for most of this design.
+1. **The agent's credentials are an SSH key and an Authelia password.** The
+   original claim - that Gerrit's automation is entirely SSH - is wrong, and it
+   was the premise for most of this design.
 
    Verified against 3.13.8: SSH can *write* inline comments
    (`gerrit review --json` with a `comments` map works), but nothing over SSH
@@ -127,15 +128,21 @@ Not just familiar — structurally closer to what this design already reaches fo
    Since reading the reviewer's inline comments is the single most important
    thing the handler does, REST is not optional. So:
 
-   - **SSH** for git, for posting replies (`gerrit review`), and for
-     administration (`create-account`, `create-project`, `set-account`);
-   - **REST over HTTPS with basic auth** for reading comments, using an HTTP
-     password generated for `slopbot`.
+   - **SSH**, keyed by `slopbot-ssh-privkey`, for git, for posting replies
+     (`gerrit review`), and for administration;
+   - **REST over HTTPS**, authenticated to *Authelia* with basic auth, for
+     reading comments.
 
-   HTTP passwords work under `auth.type = HTTP` - verified, and not obvious,
-   since that auth type is otherwise entirely header-driven. The password is a
-   new agenix secret, so `slopbot-forgejo-password` is replaced rather than
-   deleted.
+   Gerrit has HTTP passwords of its own, and they do work under `auth.type = HTTP` - that was the earlier plan. Authelia is the better home for the
+   credential: it's where every other password already lives, it can express
+   "this identity may reach Gerrit and nothing else", and revoking it there
+   revokes it everywhere rather than in one service.
+
+   `slopbot` therefore becomes an entry in `users.json` like any other user,
+   with its password hash in `authelia/passwords.json` and the plaintext in
+   `slopbot-authelia-password.age` for the agent to use. It's marked
+   `serviceAccount`, which keeps it out of services that provision per-person
+   accounts.
 
 1. **The agent keeps a distinct account, and ownership replaces the label.**
    `slopbot` is a Gerrit account with `Push` on `refs/for/refs/heads/*`, nothing
@@ -357,6 +364,11 @@ that changed the design are in the decisions above; the rest:
 - **`-o topic=` and `-o r=brendan` work on push**, so `slop-pr` needs no API
   calls to set the topic or the reviewer, and `owner:slopbot` is queryable, so
   the handler needs no marker on the change.
+- **Authelia authenticates non-browser clients** with an `Authorization: Basic`
+  header on the forward-auth endpoint, answering with `Remote-User` and
+  applying the same `access_control` rules. `Proxy-Authorization` - the header
+  that looks like the right one - is ignored, which fails as a redirect to the
+  login page rather than as an error.
 - **The committer email must be a registered email of the pushing account**, or
   the push is rejected with "invalid committer". `slopbot` therefore needs an
   address registered via `gerrit set-account --add-email`, and the VM's git
