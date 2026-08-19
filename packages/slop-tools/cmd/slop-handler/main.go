@@ -424,10 +424,9 @@ func prompt(topic *pending, resuming bool) string {
 				where = fmt.Sprintf("%s:%d", comment.File, comment.Line)
 			}
 			if where == "/PATCHSET_LEVEL" || where == "" {
-				fmt.Fprintf(&b, "  %s\n", comment.Message)
-			} else {
-				fmt.Fprintf(&b, "  %s: %s\n", where, comment.Message)
+				where = "on the change as a whole"
 			}
+			fmt.Fprintf(&b, "  [%s] %s: %s\n", comment.ID, where, comment.Message)
 		}
 		b.WriteString("\n")
 	}
@@ -436,9 +435,12 @@ func prompt(topic *pending, resuming bool) string {
 		"the comment is about, rather than adding a fixup, since each commit is a separate " +
 		"change under review. If the feedback is a question rather than a request, answer it " +
 		"instead of changing code. When you have committed something, run `slop-pr` to publish " +
-		"a new patch set. Your reply to this message is posted as a review comment, so write it " +
-		"for the reviewer: say what you changed, or answer the question, and flag anything you " +
-		"disagreed with.")
+		"a new patch set.\n\n" +
+		"Answer each comment where it was made, with " +
+		"`slop-reply <change> <comment-id> <message>` - the id is in brackets above. That " +
+		"marks the thread resolved, so pass --unresolved instead when you are disagreeing or " +
+		"the point still needs the reviewer. Then reply to this message with a short summary " +
+		"for the change as a whole; it is posted as the cover message.")
 	return b.String()
 }
 

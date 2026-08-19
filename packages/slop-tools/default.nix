@@ -39,12 +39,14 @@ buildGoModule {
   ];
 
   postFixup = ''
-    wrapProgram $out/bin/slop-pr --prefix PATH : ${
-      lib.makeBinPath [
-        git
-        openssh
-      ]
-    }
+    for cmd in slop-pr slop-reply; do
+      wrapProgram $out/bin/$cmd --prefix PATH : ${
+        lib.makeBinPath [
+          git
+          openssh
+        ]
+      }
+    done
     wrapProgram $out/bin/slop-handler --prefix PATH : ${
       lib.makeBinPath [
         claude-code

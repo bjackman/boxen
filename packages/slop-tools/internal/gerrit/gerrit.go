@@ -99,6 +99,9 @@ type Comment struct {
 // ReviewInput is the subset of Gerrit's ReviewInput this workflow sets.
 type ReviewInput struct {
 	Message string `json:"message,omitempty"`
+	// Keyed by file path. A reply carries InReplyTo; the file and line have to
+	// match the comment being answered.
+	Comments map[string][]CommentInput `json:"comments,omitempty"`
 	// Without this nothing puts the reviewer back in the attention set: neither
 	// a reply nor a new patch set does it on its own.
 	AddToAttentionSet []AttentionSetInput `json:"add_to_attention_set,omitempty"`
@@ -278,4 +281,31 @@ const timeLayout = "2006-01-02 15:04:05.000000000"
 
 func ParseTime(value string) (time.Time, error) {
 	return time.Parse(timeLayout, strings.TrimSpace(value))
+}
+
+// CommentInput is a comment being written. Replying means setting InReplyTo to
+// the id of the comment being answered, which threads it in the UI.
+type CommentInput struct {
+	Line      int    `json:"line,omitempty"`
+	InReplyTo string `json:"in_reply_to,omitempty"`
+	Message   string `json:"message"`
+	// Whether the thread still needs the reviewer's attention. Resolving what
+	// has actually been addressed is what makes the unresolved count mean
+	// something.
+	Unresolved bool `json:"unresolved"`
+}
+
+// Comment finds a published comment by id, so a reply can reuse its file and
+// line. Gerrit has no endpoint for fetching one comment.
+func (c *Client) Comment(change int, id string) (*Comment, error) {
+	comments, err := c.Comments(change)
+	if err != nil {
+		return nil, err
+	}
+	for _, comment := range comments {
+		if comment.ID == id {
+			return &comment, nil
+		}
+	}
+	return nil, fmt.Errorf("change %d has no comment %q", change, id)
 }
