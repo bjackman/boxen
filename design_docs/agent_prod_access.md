@@ -1,8 +1,8 @@
 # Agent access to prod
 
-**Status: proposal, nothing here is implemented.** Sibling to
-[`agent_prs.md`](agent_prs.md): that document gets a change *out* of slopbox,
-this one gets evidence *in*.
+**Status: implemented, by the rest of the series this document opens.** Sibling
+to [`agent_prs.md`](agent_prs.md): that document gets a change *out* of
+slopbox, this one gets evidence *in*.
 
 ## Goals
 
