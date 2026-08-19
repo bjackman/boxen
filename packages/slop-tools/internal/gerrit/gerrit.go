@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,6 +32,7 @@ type Client struct {
 	authUser string
 	password string
 	http     *http.Client
+	loggedIn bool
 }
 
 type Config struct {
@@ -48,6 +50,10 @@ func NewClient(config Config) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("reading proxy password: %w", err)
 	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		host:     config.Host,
 		port:     config.Port,
@@ -56,7 +62,7 @@ func NewClient(config Config) (*Client, error) {
 		baseURL:  strings.TrimSuffix(config.BaseURL, "/"),
 		authUser: config.AuthUser,
 		password: strings.TrimSpace(string(password)),
-		http:     &http.Client{Timeout: 30 * time.Second},
+		http:     &http.Client{Timeout: 30 * time.Second, Jar: jar},
 	}, nil
 }
 
@@ -171,8 +177,36 @@ func (c *Client) Review(change int, patchSet int, review ReviewInput) error {
 // Comments returns the published inline comments on a change, newest patch set
 // included. No SSH command reports these: `gerrit query --comments` gives only
 // the patch-set-level messages.
+// login exchanges the proxy credential for a Gerrit session. The REST API under
+// /a/ wants a credential of Gerrit's own, which the proxy has already consumed,
+// and the plain paths are anonymous without a session - so this is the one way
+// an API client authenticates as itself here.
+func (c *Client) login() error {
+	req, err := http.NewRequest("GET", c.baseURL+"/login/%2F", nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.authUser, c.password)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return fmt.Errorf("logging in: %w", err)
+	}
+	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("logging in: %s", http.StatusText(resp.StatusCode))
+	}
+	c.loggedIn = true
+	return nil
+}
+
 func (c *Client) Comments(change int) ([]Comment, error) {
-	path := fmt.Sprintf("/a/changes/%d/comments", change)
+	if !c.loggedIn {
+		if err := c.login(); err != nil {
+			return nil, err
+		}
+	}
+	path := fmt.Sprintf("/changes/%d/comments", change)
 	req, err := http.NewRequest("GET", c.baseURL+path, nil)
 	if err != nil {
 		return nil, err

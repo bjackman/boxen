@@ -116,15 +116,37 @@ in
           fi
         done
 
-        # Creating the account registers the key, the address a push's committer
-        # must match, and the Service Users membership that keeps the bot out of
-        # my attention set. No password: the agent authenticates to Authelia,
-        # and Gerrit only ever sees the header that comes back.
+        # Created by logging in as it, the way my own account comes to exist.
+        # An account made through the API gets a "username:" external ID but not
+        # the "gerrit:" one that header authentication looks up, so the two
+        # never link: the first login tries to create a second account, collides
+        # on the username, and fails for good.
         if [ "$(req GET /a/accounts/slopbot)" = 404 ]; then
-          expect "$(req PUT /a/accounts/slopbot "$(jq -n \
-            --arg key ${lib.escapeShellArg slopbotKey} \
-            '{name: "slopbot", email: "slopbot@yawn.io", ssh_key: $key,
-              groups: ["Service Users"]}')")" 201
+          slopbot_cookies=$(mktemp)
+          curl -sS -c "$slopbot_cookies" -b "$slopbot_cookies" -o /dev/null \
+            -H "${authHeader}: slopbot" \
+            -H "X-Forwarded-Proto: https" -H "X-Forwarded-Host: ${fqdn}" \
+            "${apiUrl}/login/%2F"
+          rm -f "$slopbot_cookies"
+          expect "$(req GET /a/accounts/slopbot)" 200
+        fi
+
+        # The rest is set on whichever account that produced.
+        expect "$(req PUT "/a/accounts/slopbot/name" '{"name": "slopbot"}')" 200
+        # The address a push's committer has to match.
+        expect "$(req PUT "/a/accounts/slopbot/emails/slopbot%40yawn.io" \
+          '{"no_confirmation": true, "preferred": true}')" 201 409
+        # Keeps the bot out of my attention set.
+        expect "$(req PUT "/a/groups/Service%20Users/members/slopbot")" 201 200
+
+        expect "$(req GET /a/accounts/slopbot/sshkeys)" 200
+        tail -c +6 "$resp" > "$keys"
+        slopbot_key_encoded=$(echo ${lib.escapeShellArg slopbotKey} | awk '{ print $2 }')
+        if ! jq -e --arg key "$slopbot_key_encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
+          expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
+            "''${proxied[@]}" -H "X-Gerrit-Auth: $token" -H 'Content-Type: text/plain' \
+            -X POST --data-binary ${lib.escapeShellArg slopbotKey} \
+            "${apiUrl}/a/accounts/slopbot/sshkeys")" 201
         fi
 
 
