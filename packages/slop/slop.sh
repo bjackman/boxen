@@ -22,10 +22,11 @@ if [ ! -e "$worktree" ]; then
         git clone -c "core.sshCommand=$ssh_command" \
         "ssh://$pusher@$gerrit_host:$gerrit_port/$project" "$worktree"
     # Gerrit identifies a change by a Change-Id trailer, which this hook adds.
-    # Over SSH rather than /tools/hooks/commit-msg, which is behind the proxy's
-    # authentication.
-    $ssh_command -p "$gerrit_port" "$pusher@$gerrit_host" \
-        gerrit hook commit-msg > "$worktree/.git/hooks/commit-msg"
+    # It serves the hook over scp; the /tools/hooks/commit-msg URL is behind the
+    # proxy's authentication.
+    scp -q -O -i "$key_file" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+        -P "$gerrit_port" "$pusher@$gerrit_host:hooks/commit-msg" \
+        "$worktree/.git/hooks/commit-msg"
     chmod +x "$worktree/.git/hooks/commit-msg"
 fi
 
