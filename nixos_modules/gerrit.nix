@@ -16,6 +16,7 @@ in
     ./iap.nix
     ./impermanence.nix
     ./gerrit-bootstrap.nix
+    ./github-mirror.nix
   ];
 
   bjackman.ports = {
@@ -64,6 +65,10 @@ in
   };
 
   bjackman.gerritAgentRepos = [ "boxen" ];
+
+  # Note there are no backups: the GitHub mirror is the copy of record, so a
+  # repo missing from this list has no backup at all. See design_docs/gerrit.md.
+  bjackman.githubMirrors = [ "boxen" ];
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ sshPort ];
 

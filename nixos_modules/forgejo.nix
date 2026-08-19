@@ -40,7 +40,6 @@ in
     ./iap.nix
     ./postgres.nix
     ./impermanence.nix
-    ./forgejo-github-mirror.nix
     ./forgejo-bootstrap.nix
   ];
 
@@ -189,10 +188,6 @@ in
   };
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ sshPort ];
-
-  # Note there are no backups: the GitHub mirror is the copy of record, so a
-  # repo missing from this list has no backup at all. See design_docs/forgejo.md.
-  bjackman.forgejoGithubMirrors = [ "boxen" ];
 
   bjackman.forgejoAgentRepos = [ "boxen" ];
 
