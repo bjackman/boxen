@@ -208,7 +208,10 @@
       sources.my-skills = {
         path = ../hm_files/skills;
       };
-      skills.enable = [ "investigate-kernel-patch-history" ];
+      skills.enable = [
+        "investigate-alert"
+        "investigate-kernel-patch-history"
+      ];
     };
   };
 }

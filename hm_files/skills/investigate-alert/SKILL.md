@@ -10,6 +10,10 @@ The homelab runs Prometheus + Alertmanager on **pizza**, configured in
 Tailscale-connected host you can hit them without auth. Alertmanager only emails
 Gmail; the API below is the fast path.
 
+This skill's source is `hm_files/skills/investigate-alert/` in `boxen`; the
+copy you are reading is installed read-only. Adding a runbook means editing it
+there and sending a pull request.
+
 Follow this workflow. It is **read-only** — gather evidence and report. Do not
 deploy config or mutate hosts (see the repo's `CLAUDE.md`); if a fix needs a
 config change, propose it and let Brendan deploy.
