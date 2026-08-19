@@ -73,8 +73,10 @@ rejected the command line before connecting, e.g. an unknown host name).
 ## When the probe you want doesn't exist
 
 That is the expected way to hit a wall, and the answer is never to look for
-another way onto the host. Add the probe to `nixos_modules/slop-probe.nix` and
-send it as a pull request: a `command`, the `args` it always gets, and a
+another way onto the host. The probes live in `nixos_modules/slop-probe.nix` in
+the `boxen` repo. If you're working in a boxen worktree, add it there and
+propose it with `slop-pr`; if you aren't, say which probe you need and leave
+starting the change to Brendan. A probe is: a `command`, the `args` it always gets, and a
 `params` entry per option whose `regexpPattern` is tight enough that the option
 can't become a different command. Keep it read-only. Brendan deploys it and the
 capability is there for good.

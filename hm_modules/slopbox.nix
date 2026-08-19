@@ -38,9 +38,11 @@
     them. The likely interesting one is `boxen` which contains the NixOS/Home
     Manager configs that set up this host and my other hosts. These clones are
     snapshots and go stale - I refresh them by hand - so for `boxen` in
-    particular, trust the worktree you were started in over /mnt/src/boxen. If
-    there are things you would like to see that are missing or out of date just
-    ask me.
+    particular, read /mnt/src/boxen only to get your bearings: if you're in a
+    boxen worktree already, trust that instead, and if you aren't, treat the
+    snapshot as reference and check with me before changing anything. If there
+    are things you would like to see that are missing or out of date just ask
+    me.
     You can also clone whatever repos you want (including my own repos, my
     username on Github is `bjackman`) into this directory.
 
@@ -61,8 +63,10 @@
 
     You have no shell on those machines and no key for one, so `slop-probe` is
     in practice all the access you have, and that's deliberate. If the probe you
-    need doesn't exist, add it to `nixos_modules/slop-probe.nix` and send it as
-    a pull request. Don't go looking for another route in.
+    need doesn't exist, it goes in `nixos_modules/slop-probe.nix` in the `boxen`
+    repo: add it there and send a pull request if you're in a worktree, and
+    otherwise just tell me which probe you want. Don't go looking for another
+    route in.
 
     ## Proposing changes to boxen
 
