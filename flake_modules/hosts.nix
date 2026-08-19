@@ -91,7 +91,7 @@
         inherit pkgs;
         modules = [
           ../hm_modules/brendan.nix
-          ../hm_modules/workstation.nix
+          ../hm_modules/pc.nix
         ];
         extraSpecialArgs = inputs // {
           inherit pkgsUnstable;
