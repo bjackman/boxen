@@ -12,6 +12,7 @@
     ../common.nix
     ../brendan.nix
     ../server.nix
+    ../slop-probe.nix
     ../impermanence.nix
     ../transmission.nix
     ../filebrowser.nix

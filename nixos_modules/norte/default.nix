@@ -13,6 +13,7 @@
     nixos-raspberrypi.nixosModules.raspberry-pi-5.base
     ../brendan.nix
     ../server.nix
+    ../slop-probe.nix
     ../common.nix
     ../users.nix
     ../node-exporter.nix
