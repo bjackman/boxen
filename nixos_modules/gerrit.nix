@@ -62,7 +62,15 @@ in
         httpDisplaynameHeader = "Remote-Name";
       };
       httpd.listenUrl = "proxy-http://127.0.0.1:${toString port}/";
-      sshd.listenAddress = "*:${toString sshPort}";
+      sshd = {
+        listenAddress = "*:${toString sshPort}";
+        # Otherwise Gerrit advertises a clone URL built from the canonical web
+        # URL, which resolves to the public address where only Caddy listens.
+        advertisedAddress = "${config.networking.hostName}:${toString sshPort}";
+      };
+      # Only SSH works: git over HTTP needs a credential of Gerrit's own on
+      # /a/, and Authelia has already consumed the one the client sent.
+      download.scheme = "ssh";
       sendemail.enable = false;
       change.enableAttentionSet = true;
       receive.enableSignedPush = false;
