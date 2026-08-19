@@ -31,6 +31,7 @@
       slopclone = final.callPackage ../packages/slopclone { };
       slop = final.callPackage ../packages/slop { };
       slop-tools = final.callPackage ../packages/slop-tools { inherit (final.llm-agents) claude-code; };
+      slop-probe = final.callPackage ../packages/slop-tools/probe.nix { };
       tvheadend = final.callPackage ../packages/tvheadend { src = inputs.tvheadend; };
     };
   };
