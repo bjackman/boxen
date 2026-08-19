@@ -49,8 +49,9 @@ in
   config = lib.mkMerge [
     (lib.mkIf loginShellIsFish {
       bjackman.agentHostContext = lib.mkAfter ''
-        My default shell is Fish, you can just use Fish syntax if you like or for
-        nontrival commands you can just explicitly run them via `bash -c`.
+        My login shell is Fish, but your Bash tool really does run Bash. Write
+        Bash syntax: Fish's `$status` and friends expand to nothing, so an exit
+        status check written that way silently looks like it passed.
       '';
     })
     (lib.mkIf (cfg != "") {
