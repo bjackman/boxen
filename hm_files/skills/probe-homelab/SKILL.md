@@ -23,7 +23,7 @@ Output goes to stdout, so **filter it in the pipeline** rather than asking for
 everything and reading it all:
 
 ```bash
-slop-probe pizza journal --unit forgejo.service --since=-2h | grep -i error | tail -40
+slop-probe pizza journal --unit gerrit.service --since=-2h | grep -i error | tail -40
 slop-probe norte journal --priority 3 --since=-1d | wc -l
 ```
 

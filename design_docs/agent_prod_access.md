@@ -69,7 +69,7 @@ On ergonomics the CLI wins on the thing that matters most here:
   fact.**
 
   ```
-  slop-probe pizza journal --unit forgejo --since -1h | grep -i tls | tail -40
+  slop-probe pizza journal --unit gerrit --since -1h | grep -i tls | tail -40
   ```
 
   That costs the agent 40 lines. The same query as an MCP tool call puts the
@@ -187,7 +187,7 @@ does). Worth revisiting only if an agent ever runs somewhere shell-less.
 `services.journald.gateway.enable` exists and would be a two-line change per
 host, unauthenticated on the tailnet exactly like Prometheus. Rejected because
 its HTTP API filters by field match, boot and cursor byte-range — but not by
-time, and it has no `--grep`. "Errors from forgejo.service in the last hour"
+time, and it has no `--grep`. "Errors from gerrit.service in the last hour"
 becomes "fetch the last N thousand entries and filter client-side", which is the
 over-fetch that decision 5 and the whole CLI argument exist to avoid. Running
 real `journalctl` behind the probe mechanism costs one probe definition and

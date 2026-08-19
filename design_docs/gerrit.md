@@ -1,9 +1,13 @@
 # Gerrit
 
-**Status: proposal, nothing implemented.** Supersedes the review half of
-[`agent_prs.md`](agent_prs.md), which is implemented and working; the parts of
-it about sessions, workspaces and the handler's shape survive this change
-almost unaltered.
+**Status: implemented.** Gerrit runs on `pizza`, Forgejo is retired, and the
+review loop has run end to end: a comment produces a new patch set, threaded
+replies that resolve what was addressed, and the reviewer back in the attention
+set.
+
+Supersedes [`agent_prs.md`](agent_prs.md), whose forge is gone but whose shape
+survives almost unaltered - the session per change, the workspaces, the sweep,
+the deferral rule and the exit-code split all came through the port unchanged.
 
 ## Goals
 
@@ -133,10 +137,19 @@ Not just familiar — structurally closer to what this design already reaches fo
    - **REST over HTTPS**, authenticated to *Authelia* with basic auth, for
      reading comments.
 
-   Gerrit has HTTP passwords of its own, and they do work under `auth.type = HTTP` - that was the earlier plan. Authelia is the better home for the
-   credential: it's where every other password already lives, it can express
-   "this identity may reach Gerrit and nothing else", and revoking it there
-   revokes it everywhere rather than in one service.
+   "Authenticate to Gerrit" turns out to mean three different things, and only
+   one of them works here. The `/a/` paths want a credential of Gerrit's own,
+   which Authelia has already consumed from the `Authorization` header. The
+   plain paths answer, but anonymously - `/accounts/self` reports "requires
+   login" - so a read that depends on identity silently isn't one. What works
+   is asking for `/login/` with the proxy credential, which mints a Gerrit
+   session cookie, and then using the plain paths with it.
+
+   Gerrit has HTTP passwords of its own, and they do work under
+   `auth.type = HTTP` - that was the earlier plan. Authelia is the better home
+   for the credential: it's where every other password already lives, it can
+   express "this identity may reach Gerrit and nothing else", and revoking it
+   there revokes it everywhere rather than in one service.
 
    `slopbot` therefore becomes an entry in `users.json` like any other user,
    with its password hash in `authelia/passwords.json` and the plaintext in
@@ -191,6 +204,36 @@ Not just familiar — structurally closer to what this design already reaches fo
    this" is exactly what the group is for, the handler polls rather than
    watching its own attention, and the reply problem exists either way.
 
+1. **Accounts are created by logging in as them.** An account made through the
+   REST API gets a `username:` external ID but not the `gerrit:` one that
+   header authentication looks up. The two never link, so the account's first
+   real login tries to create a second account, collides on the username, and
+   fails for good - with the collision reported, and nothing saying the account
+   it already found is unusable.
+
+   So the bootstrap creates `slopbot` the way my own account comes to exist: by
+   asking for `/login/` with the identity headers set. Everything else - the
+   Service Users membership, the SSH key - is applied to whatever account that
+   produced.
+
+   Identity comes with it. `auth.httpEmailHeader` and
+   `auth.httpDisplaynameHeader` take the address and name from the same
+   Authelia response as the username, so `users.json` is the one place they're
+   written down. The address matters beyond bookkeeping: a push is rejected
+   unless its committer is registered on the pushing account, which is also why
+   the agent VM's git identity is set globally rather than per clone.
+
+1. **The SSH port is pinned, not allocated.** `bjackman.ports` assigns by
+   position, so adding or removing any service shifts the rest. That's
+   invisible for something reached through Caddy and breaks every existing
+   clone when it's the port in their remote URL - which is what happened the
+   moment Forgejo was retired. 29418, Gerrit's conventional port.
+
+   Gerrit also has to be told to advertise it: left alone it builds a clone URL
+   from the canonical web URL, which resolves to the public address where only
+   Caddy listens. The command the UI offers has to be one that works, or the
+   first thing anyone does with it hangs.
+
 1. **Session identity stays keyed on the topic.** `uuid5("<repo>:<topic>")`,
    unchanged, so `slop` and the session-continuity property carry over
    untouched. Gerrit topics group a multi-commit series exactly as AGit topics
@@ -239,15 +282,41 @@ Not just familiar — structurally closer to what this design already reaches fo
    it will age out, rather than leaving it to the next sweep; otherwise the
    effective latency is the sweep interval rather than the window.
 
-1. **Project configuration is reconciled from Nix, via `refs/meta/config`.**
-   Gerrit keeps ACLs in a `project.config` file on a git ref, which is a better
-   fit for this repo than Forgejo's database rows were: the bootstrap unit
-   fetches the ref, rewrites the file from a Nix-defined attrset, and pushes it
-   back only if it changed.
+1. **Nothing is dropped because the handler wasn't looking.** Two rules that
+   sound like housekeeping and are really the difference between a review being
+   answered and silently lost:
 
-   The grants that matter: I get `Push` on `refs/heads/*` and `Submit`;
-   `slopbot` gets `Push` on `refs/for/refs/heads/*` (create change) and nothing
-   on `refs/heads/*`.
+   **Adoption is a cold-start rule, not a per-change one.** Marking a change's
+   existing comments handled the first time it's seen stops a backlog being
+   replayed when the handler is switched on. Applied per change, it also eats
+   the first comment on any change created while the handler wasn't sweeping -
+   which is exactly when a review lands faster than a sweep, and is how a real
+   review went unanswered. So it adopts when there's no state at all, and acts
+   on everything after that.
+
+   **A missing checkout is recoverable.** A change proposed from another
+   machine, or whose worktree has been cleaned up, is still fully described by
+   the change itself: clone, fetch its newest patch set, check it out under the
+   topic. The session starts fresh, which is the fallback the design already
+   expects when there's no transcript. The alternative - what it did before -
+   was to give up, post nothing, and mark the comment handled, which loses the
+   review twice over.
+
+1. **Access control is reconciled through the REST API, and mostly isn't
+   needed.** Gerrit's defaults already refuse `slopbot` everything that
+   matters, on any project: pushing to a branch, voting Code-Review+2 on its
+   own change, and submitting. All three verified by trying them.
+
+   What the defaults *also* refuse is me pushing to a branch at all - the
+   mainline is only meant to advance by submitting a change - which is right
+   until you have to import an existing history. So the one grant reconciled
+   from Nix is `Push` on `refs/heads/*` for `Administrators`, non-force, so
+   history still can't be rewritten.
+
+   **Rejected: rewriting `refs/meta/config`.** ACLs live in a file on a git ref,
+   which sounds like the better fit for this repo, but the REST API edits the
+   same thing without fetching, rewriting and pushing a config file - and the
+   only rule that isn't a default is one line.
 
 1. **The GitHub mirror stays a systemd timer, repointed at Gerrit's repo path.**
    Gerrit's `replication` plugin would do it, but `forgejo-github-mirror.nix`'s

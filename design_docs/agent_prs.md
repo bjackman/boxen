@@ -1,9 +1,11 @@
 # Agent PRs
 
-**Status: proposal, nothing here is implemented.** Builds directly on
-[`forgejo.md`](forgejo.md), which is implemented as far as
-`nixos_modules/forgejo.nix` and `nixos_modules/forgejo-github-mirror.nix` go —
-but its "Agent workflow" section is not, and this document supersedes it.
+**Status: implemented, then superseded by [`gerrit.md`](gerrit.md).** Forgejo
+is retired; what survived the move is everything except the forge itself. Kept
+for the reasoning, and because several of its decisions are still in force.
+
+Built on [`forgejo.md`](forgejo.md), whose "Agent workflow" section this filled
+in.
 
 ## Goals
 
