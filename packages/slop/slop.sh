@@ -30,6 +30,16 @@ if [ ! -e "$worktree" ]; then
     chmod +x "$worktree/.git/hooks/commit-msg"
 fi
 
+# Every topic gets its own checkout, so otherwise each one opens by asking
+# whether this directory is trusted. Claude Code documents the config key as the
+# non-interactive answer to that question.
+config="$HOME/.claude.json"
+[ -e "$config" ] || (umask 077 && echo '{}' >"$config")
+tmp=$(mktemp "$config.slop.XXXXXX")
+jq --arg worktree "$worktree" '.projects[$worktree].hasTrustDialogAccepted = true' \
+    "$config" >"$tmp"
+mv "$tmp" "$config"
+
 # --session-id refuses to reuse an existing id, so which flag to pass depends on
 # whether this change has been worked on before.
 if [ -e "$transcript" ]; then

@@ -1,6 +1,7 @@
 {
   writeShellApplication,
   git,
+  jq,
   openssh,
   tmux,
   util-linux,
@@ -13,6 +14,7 @@ writeShellApplication {
   name = "slop";
   runtimeInputs = [
     git
+    jq
     openssh
     tmux
     util-linux
