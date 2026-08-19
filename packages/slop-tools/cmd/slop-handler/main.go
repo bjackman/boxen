@@ -167,7 +167,14 @@ func (h *handler) loadState() error {
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, &h.handled)
+	if err := json.Unmarshal(data, &h.handled); err != nil {
+		// Not worth dying over, and it happens legitimately when the state's
+		// shape changes. The next sweep adopts what it finds, marking existing
+		// comments handled rather than replaying them at the agent.
+		log.Printf("ignoring unreadable state at %s: %v", h.statePath, err)
+		h.handled = map[string][]string{}
+	}
+	return nil
 }
 
 func (h *handler) saveState() error {
