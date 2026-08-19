@@ -1,5 +1,6 @@
 {
   lib,
+  pkgs,
   homelab,
   ...
 }:
@@ -21,6 +22,17 @@ in
   # The worktrees under ~/slop are the only checkouts here; there's no
   # long-lived one for config to link into.
   bjackman.configCheckout = null;
+
+  # slop(1) starts every session in bypassPermissions mode, which is the whole
+  # point of this host, so the disclaimer has nothing to warn me about.
+  home.file.".claude/settings.json".source = lib.mkForce (
+    (pkgs.formats.json { }).generate "claude-settings.json" (
+      lib.importJSON ../hm_files/common/claude/settings.json
+      // {
+        skipDangerousModePermissionPrompt = true;
+      }
+    )
+  );
 
   # The homelab probe recipes are useful in any session on this host, not just
   # ones started in a boxen checkout, so they ship as a user skill rather than
