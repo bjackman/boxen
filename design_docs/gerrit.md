@@ -43,12 +43,14 @@ Not just familiar — structurally closer to what this design already reaches fo
 - **Reviews are batched by construction.** Comments are drafts until published
   as a review, so "six comments, one agent run" is what the event stream hands
   you, rather than something the handler has to coalesce with a timer.
-- **The automation interface is SSH.** `gerrit query`, `gerrit review`,
-  `gerrit set-topic` and friends run over the same SSH transport as git, keyed
-  by the same key. No API password, no basic auth.
+- **Most of the automation interface is SSH.** `gerrit query`, `gerrit review`
+  and the administrative commands run over the same SSH transport as git, keyed
+  by the same key - but not reading inline comments, which needs REST. See the
+  credentials decision.
 - **`stream-events` replaces the webhook**: a long-lived SSH connection
   emitting JSON. No HMAC secret, no inbound port on the agent VM, no
-  `ALLOWED_HOST_LIST` to get wrong.
+  `ALLOWED_HOST_LIST` to get wrong. It carries no comment bodies, so it is
+  purely a wake signal - which is all the design wanted from the webhook too.
 - **"Can't push to master" is native.** Gerrit's permission model grants push
   to `refs/for/*` separately from `refs/heads/*`, so the agent's inability to
   land its own changes is the default arrangement rather than a branch
@@ -85,27 +87,55 @@ Not just familiar — structurally closer to what this design already reaches fo
    Keep `/var/lib/forgejo` and the module for a grace period after cutover, so
    that "Gerrit turned out to be worse" is a revert rather than a recovery.
 
-1. **Authelia goes back in front, and Gerrit trusts the proxy.**
-   `auth.type = HTTP`, `httpd.listenUrl` on loopback only, Caddy `forward_auth`
-   with `allowedUsers = [ "brendan" ]`. This **reverses `agent_prs.md` decision
-   12**, which put Forgejo's own login on the public internet.
+1. **Authelia in front for browsers; the API reached directly, on the tailnet,
+   with its own credential.** `auth.type = HTTP`, `httpd.listenUrl` on loopback,
+   and two Caddy routes:
 
-   That decision existed for one reason: the agent needed the REST API from
-   outside `pizza`, and no API client can follow Authelia's login redirect.
-   Gerrit's automation is SSH, so the reason evaporates and the pre-auth surface
-   goes back behind Authelia. Strictly better than where we are now.
+   - the web UI, behind `forward_auth` with `allowedUsers = [ "brendan" ]`, with
+     Caddy setting the auth header from Authelia's `Remote-User`;
+   - `/a/*`, **not** behind `forward_auth`, restricted to tailnet source
+     addresses, where Gerrit authenticates the request itself.
 
-   The corollary is that header-trusted auth makes Gerrit's HTTP port
-   *equivalent to an admin session* for anything that can reach it - the exact
-   failure mode `forgejo.md` decision 4 rejected. It's acceptable here only
-   because the listener is on loopback and Caddy is the sole path. If that ever
-   stops being true, this decision is wrong.
+   Both routes must **strip any client-supplied auth header** before proxying.
+   That single line is the whole security boundary: with `auth.type = HTTP`
+   Gerrit believes the header unconditionally, so a request that carries its own
+   is a request that picks its own identity. This is the failure mode
+   `forgejo.md` decision 4 rejected, and it's tolerable here only because the
+   header can never arrive from outside - which is a property of the Caddy
+   config, not of Gerrit.
 
-1. **The agent authenticates with an SSH key and nothing else.** One credential
-   (`slopbot-ssh-privkey`, which already exists), used for git *and* for the
-   query/review commands. `slopbot-forgejo-password` and
-   `slopbot-webhook-secret` are deleted, along with the basic-auth machinery
-   they justified.
+   That makes `allowedSourceRanges` - proposed in `forgejo.md` and never built -
+   actually necessary now.
+
+   **Rejected: `auth.type = OAUTH` against Authelia**, which would remove header
+   trust entirely and is otherwise the nicer design. It needs the third-party
+   `gerrit-oauth-provider` plugin, which nixpkgs doesn't package, so it means
+   maintaining a plugin build against a moving Gerrit.
+
+1. **The agent needs two credentials, not one: an SSH key and an HTTP
+   password.** The original claim - that Gerrit's automation is entirely SSH -
+   is wrong, and it was the premise for most of this design.
+
+   Verified against 3.13.8: SSH can *write* inline comments
+   (`gerrit review --json` with a `comments` map works), but nothing over SSH
+   can *read* them back. `gerrit query --comments` returns only patchset-level
+   messages - "Patch Set 1: Code-Review-1 (2 comments)" - and the `comment-added`
+   event on `stream-events` carries the same summary text, not the comments. The
+   inline bodies, with file and line, come only from REST
+   `GET /a/changes/{id}/comments`.
+
+   Since reading the reviewer's inline comments is the single most important
+   thing the handler does, REST is not optional. So:
+
+   - **SSH** for git, for posting replies (`gerrit review`), and for
+     administration (`create-account`, `create-project`, `set-account`);
+   - **REST over HTTPS with basic auth** for reading comments, using an HTTP
+     password generated for `slopbot`.
+
+   HTTP passwords work under `auth.type = HTTP` - verified, and not obvious,
+   since that auth type is otherwise entirely header-driven. The password is a
+   new agenix secret, so `slopbot-forgejo-password` is replaced rather than
+   deleted.
 
 1. **The agent keeps a distinct account, and ownership replaces the label.**
    `slopbot` is a Gerrit account with `Push` on `refs/for/refs/heads/*`, nothing
@@ -297,15 +327,38 @@ Same structure, different transport:
 1. Disable Forgejo, keeping `/var/lib/forgejo` and the module for a grace
    period.
 
+## What the prototype established
+
+A throwaway 3.13.8 instance, `auth.type = HTTP`, driven headlessly. Findings
+that changed the design are in the decisions above; the rest:
+
+- **`-o topic=` and `-o r=brendan` work on push**, so `slop-pr` needs no API
+  calls to set the topic or the reviewer, and `owner:slopbot` is queryable, so
+  the handler needs no marker on the change.
+- **The committer email must be a registered email of the pushing account**, or
+  the push is rejected with "invalid committer". `slopbot` therefore needs an
+  address registered via `gerrit set-account --add-email`, and the VM's git
+  committer must match it. Gerrit also rejected `slopbot@invalid.example`
+  outright as an invalid address, so the address has to look ordinary -
+  `slopbot@yawn.io` was accepted.
+- **The commit author is a separate question from the committer** and wasn't
+  tested; if authored commits keep my name, `Forge Author Identity` may be
+  needed on `refs/for/*`.
+- **REST mutations from a script need the XSRF token** when authenticating by
+  session cookie (`X-Gerrit-Auth`, read from the `XSRF_TOKEN` cookie set by
+  `/login/`). Basic auth with an HTTP password avoids this entirely, which is
+  another reason the handler should use it.
+- **Idle footprint: 621 MB RSS** with `-Xmx1g`, and a 91 MB site directory with
+  no repositories in it. That's the floor on an instance that has never served
+  a request, not a working figure, but it does mean the JVM alone is roughly
+  three Forgejos before any work happens.
+
 ## Gotchas and open questions
 
-- **Whether `gerrit query --comments` returns inline file comments** with path
-  and line, or only patchset-level messages. The handler needs file anchoring to
-  give the agent useful context, and this determines whether SSH really is a
-  complete automation interface. If it isn't, the fallback is the REST API -
-  which under `auth.type = HTTP` means working out how a service account
-  authenticates without a browser, and that could unpick decision 2. **Verify
-  this first; it's the load-bearing unknown.**
+- **Whether the Service Users group breaks the attention set for changes the
+  service user owns.** Still the biggest unknown, and it decides whether agent
+  changes surface in my dashboard at all. Cheap to check on the next scratch
+  instance: put slopbot in the group, push a change, see whether it appears.
 - **JVM footprint on a 7 G box shared with Jellyfin.** 1 G heap is the default,
   not a measurement. Worth watching RSS under real use before trusting it, and
   worth knowing that Jellyfin transcoding and Gerrit indexing at the same time
