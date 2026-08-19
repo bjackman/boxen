@@ -19,6 +19,7 @@
     ../prometheus
     ../bitmagnet.nix
     ../forgejo.nix
+    ../gerrit.nix
     ../miniflux.nix
     ../silverbullet.nix
     ../iap.nix
