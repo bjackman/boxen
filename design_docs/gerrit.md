@@ -76,7 +76,8 @@ Not just familiar — structurally closer to what this design already reaches fo
   `chungito` runner. Gerrit has no built-in CI; the equivalent is a verifier
   that watches `stream-events`, runs `nix flake check` and votes `Verified`.
   That's more work, though a better shape - and the agent already builds
-  locally (P0 decision 7), so nothing regresses today.
+  locally (P0 decision 7), so nothing regresses today. Planned in
+  [`gerrit_ci.md`](gerrit_ci.md).
 - **Issues and the label/assignee vocabulary go away.** No issue tracker is in
   use, so the real loss is the `agent` label and the assignee, both of which
   have Gerrit equivalents (hashtag, reviewer) that fit better anyway.
