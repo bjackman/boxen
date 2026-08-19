@@ -156,12 +156,33 @@ Not just familiar — structurally closer to what this design already reaches fo
    VM's git does by default, which means the `Forge Author` permission may be
    needed on `refs/for/*` - one of the things to check.
 
-   `slopbot` belongs in Gerrit's built-in **Service Users** group, which exists
-   for exactly this and keeps bot accounts out of attention-set bookkeeping.
-   That interacts oddly with `slopbot` also being the change *owner*, though: if
-   service-user semantics suppress the attention set on its own changes, they
-   won't surface in my dashboard, which defeats the purpose. Worth checking
-   before adopting.
+   `slopbot` belongs in Gerrit's built-in **Service Users** group; see the
+   attention set decision below for what that does and does not change.
+
+1. **The handler puts me back in the attention set explicitly, every time it
+   replies.** Nothing Gerrit does on its own will: verified on 3.13.8 that
+   neither an agent reply nor a new patchset from the agent re-adds the
+   reviewer, on a clean change with no prior meddling. Left alone, a change
+   would arrive in "Your Turn" once, and then silently leave it forever - the
+   loop would look like it was working while I stopped being told about it.
+
+   The fix is one field, and it works over SSH: a `ReviewInput` with
+   `add_to_attention_set` naming me and a reason, which the UI displays. The
+   reason is worth writing properly - "agent addressed review comments" is what
+   I'll see when I'm deciding whether to look.
+
+   This is **not** caused by the Service Users group, which was the suspicion.
+   Membership only changes whether the *bot* is added when I comment:
+
+   | event | slopbot in Service Users | slopbot outside it |
+   | --- | --- | --- |
+   | agent pushes with `-o r=brendan` | brendan | brendan |
+   | I review | *(nobody)* | slopbot |
+   | agent replies | *(nobody)* | *(nobody)* |
+
+   So `slopbot` stays in Service Users: suppressing "the bot needs to look at
+   this" is exactly what the group is for, the handler polls rather than
+   watching its own attention, and the reply problem exists either way.
 
 1. **Session identity stays keyed on the topic.** `uuid5("<repo>:<topic>")`,
    unchanged, so `slop` and the session-continuity property carry over
@@ -307,10 +328,11 @@ Same structure, different transport:
   older than `--debounce` (2m). Otherwise the handler schedules a wake for the
   moment it ages out and moves on. Comments from several changes in one topic
   arrive at the agent as one prompt, labelled by change and file.
-- **Reply:** `gerrit review <change>,<patchset> --message '...'`, optionally
-  with a label vote. For a multi-change batch the reply goes on the change whose
-  comments prompted it - or on each of them, which is a decision to make when
-  it's built rather than now.
+- **Reply:** `gerrit review <change>,<patchset> --json`, with a `ReviewInput`
+  carrying the message and `add_to_attention_set` - never the bare `--message`
+  form, which leaves the change out of my "Your Turn". For a multi-change batch
+  the reply goes on the change whose comments prompted it - or on each of them,
+  which is a decision to make when it's built rather than now.
 - **Everything else unchanged:** adoption on first sighting, deferral while a
   tmux session is attached, the reply-is-the-agent's-final-message rule, and the
   exit-1/exit-2 split.
@@ -355,10 +377,6 @@ that changed the design are in the decisions above; the rest:
 
 ## Gotchas and open questions
 
-- **Whether the Service Users group breaks the attention set for changes the
-  service user owns.** Still the biggest unknown, and it decides whether agent
-  changes surface in my dashboard at all. Cheap to check on the next scratch
-  instance: put slopbot in the group, push a change, see whether it appears.
 - **JVM footprint on a 7 G box shared with Jellyfin.** 1 G heap is the default,
   not a measurement. Worth watching RSS under real use before trusting it, and
   worth knowing that Jellyfin transcoding and Gerrit indexing at the same time
