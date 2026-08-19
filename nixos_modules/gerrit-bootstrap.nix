@@ -10,6 +10,9 @@ let
   fqdn = config.bjackman.iap.services.gerrit.fqdn;
   authHeader = config.services.gerrit.settings.auth.httpHeader;
   admin = "brendan";
+  # The same keys the hosts authorise, so pushing to a branch and administering
+  # over SSH needs no separate registration step.
+  adminKeys = config.users.users.${admin}.openssh.authorizedKeys.keys;
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
 in
 {
@@ -42,7 +45,8 @@ in
       script = ''
         cookies=$(mktemp)
         resp=$(mktemp)
-        trap 'rm -f "$cookies" "$resp"' EXIT
+        keys=$(mktemp)
+        trap 'rm -f "$cookies" "$resp" "$keys"' EXIT
 
         for _ in $(seq 60); do
           if curl -sS -o /dev/null "${apiUrl}/"; then
@@ -96,6 +100,19 @@ in
           return 1
         }
 
+        # My own keys, so that pushing to a branch and administering over SSH
+        # need no separate registration step.
+        expect "$(req GET "/a/accounts/${admin}/sshkeys")" 200
+        cp "$resp" "$keys"
+        for key in ${lib.escapeShellArgs adminKeys}; do
+          encoded=$(echo "$key" | awk '{ print $2 }')
+          if ! jq -e --arg key "$encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
+            expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
+              "''${proxied[@]}" -H "X-Gerrit-Auth: $token" -H 'Content-Type: text/plain' \
+              -X POST --data-binary "$key" "${apiUrl}/a/accounts/${admin}/sshkeys")" 201
+          fi
+        done
+
         # Creating the account registers the key, the address a push's committer
         # must match, and the Service Users membership that keeps the bot out of
         # my attention set. No password: the agent authenticates to Authelia,
@@ -109,7 +126,7 @@ in
 
         for project in ${lib.escapeShellArgs repos}; do
           if [ "$(req GET "/a/projects/$project")" = 404 ]; then
-            expect "$(req PUT "/a/projects/$project" '{"create_empty_commit": true}')" 201
+            expect "$(req PUT "/a/projects/$project" "{}")" 201
           fi
         done
       '';
