@@ -89,7 +89,10 @@
     { pkgs, pkgsUnstable, ... }: {
       brendan = inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [ ../hm_modules/brendan.nix ];
+        modules = [
+          ../hm_modules/brendan.nix
+          ../hm_modules/workstation.nix
+        ];
         extraSpecialArgs = inputs // {
           inherit pkgsUnstable;
           inherit (config.bjackman) homelab;

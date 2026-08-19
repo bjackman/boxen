@@ -4,6 +4,7 @@
   imports = [
     ./sway.nix
     ./monitors.nix
+    ./workstation.nix
     ./agent-host-context.nix
   ];
 
