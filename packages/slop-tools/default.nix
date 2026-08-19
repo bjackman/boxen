@@ -21,6 +21,14 @@ buildGoModule {
   # keep up to date.
   vendorHash = null;
 
+  # The probe tools share this Go module but ship from probe.nix, which builds
+  # them without the closure below. Building them here too would put a second,
+  # unconfigured copy of each on PATH.
+  subPackages = [
+    "cmd/slop-handler"
+    "cmd/slop-pr"
+  ];
+
   nativeBuildInputs = [ makeWrapper ];
 
   ldflags = map (flag: "-X main.${flag}") [
