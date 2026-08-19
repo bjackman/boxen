@@ -39,6 +39,7 @@ in
       wantedBy = [ "multi-user.target" ];
       path = [
         pkgs.curl
+        pkgs.coreutils
         pkgs.gawk
         pkgs.jq
       ];
@@ -103,7 +104,9 @@ in
         # My own keys, so that pushing to a branch and administering over SSH
         # need no separate registration step.
         expect "$(req GET "/a/accounts/${admin}/sshkeys")" 200
-        cp "$resp" "$keys"
+        # Gerrit prefixes JSON responses with )]}' to break naive cross-site
+        # script inclusion, which jq will not parse.
+        tail -c +6 "$resp" > "$keys"
         for key in ${lib.escapeShellArgs adminKeys}; do
           encoded=$(echo "$key" | awk '{ print $2 }')
           if ! jq -e --arg key "$encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
