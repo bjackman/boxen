@@ -75,6 +75,8 @@ type Account struct {
 type PatchSet struct {
 	Number   int    `json:"number"`
 	Revision string `json:"revision"`
+	// The ref this patch set can be fetched from, as refs/changes/NN/change/N.
+	Ref string `json:"ref"`
 }
 
 type Change struct {

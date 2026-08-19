@@ -340,6 +340,11 @@ func (h *handler) act(ctx context.Context, topic *pending) error {
 		topic.project, topic.topic, count, len(topic.comments))
 
 	reply, runErr := h.runAgent(ctx, topic)
+	if strings.TrimSpace(reply) == "" {
+		// Every path should say something, but an empty review is rejected and
+		// a silent one is indistinguishable from a broken handler.
+		reply = fmt.Sprintf("The agent produced no reply. %v", runErr)
+	}
 
 	// Whatever happened, say so on the changes that prompted it: silence there
 	// looks identical to the handler being broken.
@@ -374,7 +379,13 @@ func (h *handler) act(ctx context.Context, topic *pending) error {
 func (h *handler) runAgent(ctx context.Context, topic *pending) (string, error) {
 	workspace := session.Workspace(h.home, topic.project, topic.topic)
 	if _, err := os.Stat(workspace); err != nil {
-		return "", fmt.Errorf("no workspace at %s; this change was proposed from somewhere else", workspace)
+		// Proposed from somewhere else, or the checkout has been lost. Either
+		// way the change itself is enough to work from, so rebuild one rather
+		// than leaving the review unanswered.
+		log.Printf("%s topic %s: no checkout at %s, making one", topic.project, topic.topic, workspace)
+		if err := h.createWorkspace(topic, workspace); err != nil {
+			return fmt.Sprintf("Couldn't make a checkout to work in: %v", err), err
+		}
 	}
 
 	id := session.ID(topic.project, topic.topic)
@@ -476,4 +487,60 @@ func truncate(s string, max int) string {
 
 func tmuxSessionExists(name string) bool {
 	return exec.Command("tmux", "has-session", "-t", "="+name).Run() == nil
+}
+
+// createWorkspace clones the project and checks out the topic's newest patch
+// set, so that a change whose checkout is gone - or which was never proposed
+// from this machine - can still be worked on. slop(1) does the same thing for
+// a change I start myself.
+func (h *handler) createWorkspace(topic *pending, workspace string) error {
+	sshCommand := fmt.Sprintf("ssh -i %s -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new",
+		keyFile)
+	remote := fmt.Sprintf("ssh://%s@%s:%s/%s", pusher, gerritHost, gerritPort, topic.project)
+
+	if err := os.MkdirAll(filepath.Dir(workspace), 0o755); err != nil {
+		return err
+	}
+	if err := runIn("", "git", "clone", "-c", "core.sshCommand="+sshCommand, remote, workspace); err != nil {
+		return err
+	}
+	// Without the hook an amended commit loses its Change-Id and becomes a new
+	// change rather than a patch set.
+	hook := filepath.Join(workspace, ".git", "hooks", "commit-msg")
+	if err := runIn(workspace, "scp", "-q", "-O", "-i", keyFile,
+		"-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=accept-new",
+		"-P", gerritPort, fmt.Sprintf("%s@%s:hooks/commit-msg", pusher, gerritHost), hook); err != nil {
+		return err
+	}
+	if err := os.Chmod(hook, 0o755); err != nil {
+		return err
+	}
+
+	// The newest change in the topic carries the rest of the series as
+	// ancestors, so fetching it is enough.
+	newest := topic.changes[0]
+	for _, change := range topic.changes {
+		if change.Number > newest.Number {
+			newest = change
+		}
+	}
+	if newest.CurrentPatchSet.Ref == "" {
+		return fmt.Errorf("change %d reports no ref to fetch", newest.Number)
+	}
+	if err := runIn(workspace, "git", "fetch", "origin", newest.CurrentPatchSet.Ref); err != nil {
+		return err
+	}
+	return runIn(workspace, "git", "checkout", "-B", topic.topic, "FETCH_HEAD")
+}
+
+func runIn(dir string, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s %s: %w: %s", name, strings.Join(args, " "), err,
+			truncate(strings.TrimSpace(stderr.String()), 500))
+	}
+	return nil
 }
