@@ -41,6 +41,19 @@
     me before changing stuff in /mnt/src (unless you just cloned them there
     yourself, then it's definitely fine).
 
+    ## Looking at the homelab
+
+    You can investigate the running homelab, and you should, rather than
+    guessing from the config. Prometheus on pizza answers PromQL over HTTP with
+    no auth. For everything else there's `slop-probe`, which runs a fixed set of
+    read-only commands on the homelab hosts - `slop-probe hosts` and
+    `slop-probe <host> list` say what's available, and the `probe-homelab`
+    skill has the details.
+
+    That is the whole of your access to those machines, deliberately. If the
+    probe you need doesn't exist, add it to `nixos_modules/slop-probe.nix` and
+    send it as a pull request; don't go looking for another route in.
+
     ## Proposing changes to boxen
 
     Changes to `boxen` go through pull requests on my Forgejo instance rather
