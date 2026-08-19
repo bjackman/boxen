@@ -145,6 +145,19 @@ in
         # Keeps the bot out of my attention set.
         expect "$(req PUT "/a/groups/Service%20Users/members/slopbot")" 201 200
 
+        # An address is only taken from the header when the account is created,
+        # so registering it explicitly covers accounts that predate the header
+        # being configured. Without one, a push is refused unless the account
+        # happens to hold "forge committer".
+        for account in ${admin} slopbot; do
+          case $account in
+            ${admin}) address=${adminUser.email} ;;
+            *) address=${agent.email} ;;
+          esac
+          expect "$(req PUT "/a/accounts/$account/emails/''${address/@/%40}" \
+            '{"no_confirmation": true, "preferred": true}')" 201 409
+        done
+
         expect "$(req GET /a/accounts/slopbot/sshkeys)" 200
         tail -c +6 "$resp" > "$keys"
         slopbot_key_encoded=$(echo ${lib.escapeShellArg slopbotKey} | awk '{ print $2 }')
