@@ -67,7 +67,8 @@ Retention is 15 days. Beyond that the journal is what's left.
 The probe's own, except **111** (the host refused the request - unknown probe,
 unknown option, or a value the option's pattern doesn't allow), **112** (the
 host stopped the probe for taking too long or producing too much - narrow the
-query and retry) and **255** (the connection failed).
+query and retry), **255** (the connection failed) and **1** (the client
+rejected the command line before connecting, e.g. an unknown host name).
 
 ## When the probe you want doesn't exist
 
