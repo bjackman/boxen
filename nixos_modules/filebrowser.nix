@@ -77,7 +77,9 @@
           ${filebrowser} config set --address="localhost";
 
           # Inject the generated user provisioning logic
-          ${lib.concatMapStringsSep "\n" mkUserCmds (lib.attrValues config.bjackman.homelab.users)}
+          ${lib.concatMapStringsSep "\n" mkUserCmds (
+            lib.filter (user: !user.serviceAccount) (lib.attrValues config.bjackman.homelab.users)
+          )}
         '';
       in
       "${script}";

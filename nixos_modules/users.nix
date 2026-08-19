@@ -41,6 +41,15 @@
                 readOnly = true;
                 description = "Whether the user is an administrator (calculated from groups).";
               };
+              serviceAccount = lib.mkOption {
+                type = lib.types.bool;
+                default = false;
+                description = ''
+                  Not a person. Gets an Authelia identity, so that automation
+                  can authenticate through the proxy, but no account in the
+                  services meant for people.
+                '';
+              };
               # Note for brendan, there is a special brendan-sftp user.
               enableSftp = lib.mkOption {
                 type = bool;

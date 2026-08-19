@@ -48,5 +48,8 @@
     "groups": [
       "jellyfin-users"
     ]
+  },
+  "slopbot": {
+    "serviceAccount": true
   }
 }
