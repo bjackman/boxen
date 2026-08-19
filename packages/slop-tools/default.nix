@@ -24,6 +24,13 @@ buildGoModule {
   # keep up to date.
   vendorHash = null;
 
+  # Built from probe.nix instead, configured for the probe key and host keys.
+  # Built from here they would be unconfigured and shadow those in the profile.
+  excludedPackages = [
+    "cmd/slop-probe"
+    "cmd/slop-probe-server"
+  ];
+
   nativeBuildInputs = [ makeWrapper ];
 
   ldflags = map (flag: "-X main.${flag}") [
