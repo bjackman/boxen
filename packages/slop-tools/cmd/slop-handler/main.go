@@ -156,12 +156,16 @@ type handler struct {
 	// Handled comment ids, keyed by "<project>~<change number>". Gerrit's
 	// comment ids are opaque strings.
 	handled map[string][]string
+	// Whether this is a cold start, with no state to say what has already been
+	// dealt with. Cleared after the first sweep.
+	adopting bool
 }
 
 func (h *handler) loadState() error {
 	h.handled = map[string][]string{}
 	data, err := os.ReadFile(h.statePath)
 	if errors.Is(err, os.ErrNotExist) {
+		h.adopting = true
 		return nil
 	}
 	if err != nil {
@@ -173,6 +177,7 @@ func (h *handler) loadState() error {
 		// comments handled rather than replaying them at the agent.
 		log.Printf("ignoring unreadable state at %s: %v", h.statePath, err)
 		h.handled = map[string][]string{}
+		h.adopting = true
 	}
 	return nil
 }
@@ -233,6 +238,10 @@ func (h *handler) sweep(ctx context.Context) (time.Duration, error) {
 		topics[key].changes = append(topics[key].changes, change)
 	}
 
+	if h.adopting {
+		log.Printf("cold start: marking existing comments handled rather than replaying them")
+	}
+
 	var soonest time.Duration
 	for _, topic := range topics {
 		if err := ctx.Err(); err != nil {
@@ -260,16 +269,21 @@ func (h *handler) sweep(ctx context.Context) (time.Duration, error) {
 			log.Printf("%s topic %s: %v", topic.project, topic.topic, err)
 		}
 	}
+	h.adopting = false
 	return soonest, nil
 }
 
-// collect gathers the reviewer's unhandled comments for a topic. A change seen
-// for the first time has its existing comments marked handled rather than
-// replayed, so adopting work in progress doesn't dump its history on the agent.
+// collect gathers the reviewer's unhandled comments for a topic.
+//
+// On a cold start every comment that already exists is marked handled rather
+// than replayed, so switching the handler on - or losing its state - doesn't
+// dump a backlog on the agent. That has to be a property of the handler and not
+// of each change: doing it per change swallows the first comment on any change
+// created while the handler wasn't looking, which is exactly when a review
+// arrives faster than a sweep.
 func (h *handler) collect(topic *pending) error {
 	for _, change := range topic.changes {
 		key := fmt.Sprintf("%s~%d", change.Project, change.Number)
-		_, seen := h.handled[key]
 
 		comments, err := h.client.Comments(change.Number)
 		if err != nil {
@@ -284,8 +298,10 @@ func (h *handler) collect(topic *pending) error {
 			fresh = append(fresh, comment)
 		}
 
-		if !seen {
-			h.handled[key] = []string{}
+		if h.adopting {
+			if h.handled[key] == nil {
+				h.handled[key] = []string{}
+			}
 			for _, comment := range fresh {
 				h.handled[key] = append(h.handled[key], comment.ID)
 			}
