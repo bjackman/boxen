@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bjackman/boxen/go-tools/internal/gerrit"
+	"github.com/bjackman/boxen/go-tools/gerrit"
 )
 
 // Set at build time; the defaults are only useful for `go run`.

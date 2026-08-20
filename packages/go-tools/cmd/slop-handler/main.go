@@ -24,7 +24,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bjackman/boxen/go-tools/internal/gerrit"
+	"github.com/bjackman/boxen/go-tools/gerrit"
 	"github.com/bjackman/boxen/go-tools/internal/session"
 )
 
