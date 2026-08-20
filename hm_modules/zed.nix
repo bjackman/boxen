@@ -8,11 +8,6 @@
   # https://github.com/zed-industries/zed/issues/40180
   # https://github.com/zed-industries/zed/issues/14203
 
-  # We don't set programs.zed-editor.enable here, this module is just
-  # configuring it, we leave it up to other modules to install it. This is
-  # because some of these configurations are used on non-NixOS systems where
-  # it's easier to just install it from Flatpak.
-
   # So that we can edit the settings via Zed's nice settings editor, we just
   # check in the raw files and link to them. This means that a) the
   # configuration is separated from the home-manager config lifecycle (fine?)

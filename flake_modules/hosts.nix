@@ -83,15 +83,15 @@
     };
 
   # This defines the configurations for machines using standalone
-  # home-manager, which in my case means machines not running NixOS.
-  # Otherwise the HM config is injected via the NixOS module.
+  # home-manager, which in my case means headless development VMs not running
+  # NixOS. Otherwise the HM config is injected via the NixOS module.
   flake.homeConfigurations = withSystem "x86_64-linux" (
     { pkgs, pkgsUnstable, ... }: {
       brendan = inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         modules = [
           ../hm_modules/brendan.nix
-          ../hm_modules/pc.nix
+          ../hm_modules/non-nixos.nix
         ];
         extraSpecialArgs = inputs // {
           inherit pkgsUnstable;
