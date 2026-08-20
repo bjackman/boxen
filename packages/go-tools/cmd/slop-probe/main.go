@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,13 +19,19 @@ import (
 	"github.com/bjackman/boxen/go-tools/internal/probe"
 )
 
-// Set at build time; the defaults are only useful for `go run`.
 var (
-	sshUser        = "slopbot"
-	keyFile        = "/run/agenix/slopbot-probe-ssh-privkey"
-	knownHostsFile = "/etc/ssh/ssh_known_hosts"
-	hosts          = "pizza,norte"
+	sshUser            string
+	keyFilePath        string
+	knownHostsFilePath string
+	hosts              string
 )
+
+func init() {
+	flag.StringVar(&sshUser, "ssh-user", "slopbot", "User to connect to probe servers as")
+	flag.StringVar(&keyFilePath, "key-file", "/run/agenix/slopbot-probe-ssh-privkey", "Path to the SSH private key")
+	flag.StringVar(&knownHostsFilePath, "known-hosts-file", "/etc/ssh/ssh_known_hosts", "Path to the known_hosts file")
+	flag.StringVar(&hosts, "hosts", "pizza,norte", "Comma-separated hosts that run a probe server")
+}
 
 const usage = `Usage:
   slop-probe <host> <probe> [--option=value | --option value | --switch]...
@@ -40,7 +47,8 @@ request, 112 if it stopped the probe for taking too long or saying too much,
 255 if the connection failed.`
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	flag.Parse()
+	if err := run(flag.Args()); err != nil {
 		// A status from the far end means it has already said what was wrong
 		// on stderr, and repeating it here just buries that.
 		var exit *exec.ExitError
@@ -98,8 +106,8 @@ func sshArgs(host string) []string {
 		"-o", "ConnectTimeout=10",
 		"-o", "IdentitiesOnly=yes",
 		"-o", "StrictHostKeyChecking=yes",
-		"-o", "UserKnownHostsFile=" + knownHostsFile,
-		"-i", keyFile,
+		"-o", "UserKnownHostsFile=" + knownHostsFilePath,
+		"-i", keyFilePath,
 		"-l", sshUser,
 		host,
 	}

@@ -15,16 +15,25 @@ import (
 	"github.com/bjackman/boxen/go-tools/gerrit"
 )
 
-// Set at build time.
 var (
-	gerritHost   = "pizza"
-	gerritPort   = "29418"
-	gerritURL    = "https://gerrit.home.yawn.io"
-	pusher       = "slopbot"
-	keyFile      = "/run/agenix/slopbot-ssh-privkey"
-	authUser     = "slopbot"
-	passwordFile = "/run/agenix/slopbot-authelia-password"
+	gerritHost       string
+	gerritPort       string
+	gerritURL        string
+	pusher           string
+	keyFilePath      string
+	authUser         string
+	passwordFilePath string
 )
+
+func init() {
+	flag.StringVar(&gerritHost, "gerrit-host", "pizza", "Gerrit host to talk to")
+	flag.StringVar(&gerritPort, "gerrit-port", "29418", "Gerrit SSH port")
+	flag.StringVar(&gerritURL, "gerrit-url", "https://gerrit.home.yawn.io", "Gerrit web base URL")
+	flag.StringVar(&pusher, "pusher", "slopbot", "Gerrit account to reply as")
+	flag.StringVar(&keyFilePath, "key-file", "/run/agenix/slopbot-ssh-privkey", "Path to the SSH private key")
+	flag.StringVar(&authUser, "auth-user", "slopbot", "User to authenticate to the proxy as")
+	flag.StringVar(&passwordFilePath, "password-file", "/run/agenix/slopbot-authelia-password", "Path to the file holding the proxy password")
+}
 
 var unresolved = flag.Bool("unresolved", false,
 	"leave the thread open, for a reply that doesn't settle it")
@@ -57,8 +66,8 @@ func run(args []string) error {
 		return fmt.Errorf("bad gerritPort %q: %w", gerritPort, err)
 	}
 	client, err := gerrit.NewClient(gerrit.Config{
-		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFile,
-		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFile,
+		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFilePath,
+		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFilePath,
 	})
 	if err != nil {
 		return err

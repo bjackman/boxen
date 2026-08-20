@@ -28,17 +28,27 @@ import (
 	"github.com/bjackman/boxen/go-tools/internal/session"
 )
 
-// Set at build time.
 var (
-	gerritHost   = "pizza"
-	gerritPort   = "29418"
-	gerritURL    = "https://gerrit.home.yawn.io"
-	pusher       = "slopbot"
-	reviewer     = "brendan"
-	keyFile      = "/run/agenix/slopbot-ssh-privkey"
-	authUser     = "slopbot"
-	passwordFile = "/run/agenix/slopbot-authelia-password"
+	gerritHost       string
+	gerritPort       string
+	gerritURL        string
+	pusher           string
+	reviewer         string
+	keyFilePath      string
+	authUser         string
+	passwordFilePath string
 )
+
+func init() {
+	flag.StringVar(&gerritHost, "gerrit-host", "pizza", "Gerrit host to talk to")
+	flag.StringVar(&gerritPort, "gerrit-port", "29418", "Gerrit SSH port")
+	flag.StringVar(&gerritURL, "gerrit-url", "https://gerrit.home.yawn.io", "Gerrit web base URL")
+	flag.StringVar(&pusher, "pusher", "slopbot", "Gerrit account the agent owns changes as")
+	flag.StringVar(&reviewer, "reviewer", "brendan", "Reviewer to put back in the attention set")
+	flag.StringVar(&keyFilePath, "key-file", "/run/agenix/slopbot-ssh-privkey", "Path to the SSH private key")
+	flag.StringVar(&authUser, "auth-user", "slopbot", "User to authenticate to the proxy as")
+	flag.StringVar(&passwordFilePath, "password-file", "/run/agenix/slopbot-authelia-password", "Path to the file holding the proxy password")
+}
 
 var (
 	stateDir = flag.String("state-dir", "/var/lib/slop-handler",
@@ -65,8 +75,8 @@ func run() error {
 		return fmt.Errorf("bad gerritPort %q: %w", gerritPort, err)
 	}
 	client, err := gerrit.NewClient(gerrit.Config{
-		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFile,
-		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFile,
+		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFilePath,
+		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFilePath,
 	})
 	if err != nil {
 		return err
@@ -495,7 +505,7 @@ func tmuxSessionExists(name string) bool {
 // a change I start myself.
 func (h *handler) createWorkspace(topic *pending, workspace string) error {
 	sshCommand := fmt.Sprintf("ssh -i %s -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new",
-		keyFile)
+		keyFilePath)
 	remote := fmt.Sprintf("ssh://%s@%s:%s/%s", pusher, gerritHost, gerritPort, topic.project)
 
 	if err := os.MkdirAll(filepath.Dir(workspace), 0o755); err != nil {
@@ -507,7 +517,7 @@ func (h *handler) createWorkspace(topic *pending, workspace string) error {
 	// Without the hook an amended commit loses its Change-Id and becomes a new
 	// change rather than a patch set.
 	hook := filepath.Join(workspace, ".git", "hooks", "commit-msg")
-	if err := runIn(workspace, "scp", "-q", "-O", "-i", keyFile,
+	if err := runIn(workspace, "scp", "-q", "-O", "-i", keyFilePath,
 		"-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=accept-new",
 		"-P", gerritPort, fmt.Sprintf("%s@%s:hooks/commit-msg", pusher, gerritHost), hook); err != nil {
 		return err

@@ -18,18 +18,29 @@ import (
 	"github.com/bjackman/boxen/go-tools/gerrit"
 )
 
-// Set at build time; the defaults are only useful for `go run`.
 var (
-	gerritHost   = "pizza"
-	gerritPort   = "29418"
-	gerritURL    = "https://gerrit.home.yawn.io"
-	pusher       = "slopbot"
-	reviewer     = "brendan"
-	branch       = "master"
-	keyFile      = "/run/agenix/slopbot-ssh-privkey"
-	authUser     = "slopbot"
-	passwordFile = "/run/agenix/slopbot-authelia-password"
+	gerritHost       string
+	gerritPort       string
+	gerritURL        string
+	pusher           string
+	reviewer         string
+	branch           string
+	keyFilePath      string
+	authUser         string
+	passwordFilePath string
 )
+
+func init() {
+	flag.StringVar(&gerritHost, "gerrit-host", "pizza", "Gerrit host to push to")
+	flag.StringVar(&gerritPort, "gerrit-port", "29418", "Gerrit SSH port")
+	flag.StringVar(&gerritURL, "gerrit-url", "https://gerrit.home.yawn.io", "Gerrit web base URL")
+	flag.StringVar(&pusher, "pusher", "slopbot", "Gerrit account to push as")
+	flag.StringVar(&reviewer, "reviewer", "brendan", "Reviewer to add to the change")
+	flag.StringVar(&branch, "branch", "master", "Branch changes are proposed against")
+	flag.StringVar(&keyFilePath, "key-file", "/run/agenix/slopbot-ssh-privkey", "Path to the SSH private key")
+	flag.StringVar(&authUser, "auth-user", "slopbot", "User to authenticate to the proxy as")
+	flag.StringVar(&passwordFilePath, "password-file", "/run/agenix/slopbot-authelia-password", "Path to the file holding the proxy password")
+}
 
 // publishedError is a failure after the change reached the forge, where
 // reporting it as a plain failure would suggest nothing had been pushed.
@@ -43,7 +54,8 @@ func (e *publishedError) Unwrap() error { return e.err }
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "usage: slop-pr\n\nPush HEAD's unmerged commits to Gerrit for review, topic named for the worktree.\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: slop-pr [flags]\n\nPush HEAD's unmerged commits to Gerrit for review, topic named for the worktree.\n\n")
+		flag.PrintDefaults()
 	}
 	// Exit status 2 is taken by exitCode.
 	flag.CommandLine.Init("slop-pr", flag.ContinueOnError)
@@ -102,8 +114,8 @@ func run() error {
 		return fmt.Errorf("bad gerritPort %q: %w", gerritPort, err)
 	}
 	client, err := gerrit.NewClient(gerrit.Config{
-		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFile,
-		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFile,
+		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFilePath,
+		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFilePath,
 	})
 	if err != nil {
 		return err
