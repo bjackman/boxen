@@ -16,6 +16,11 @@ let
   # over SSH needs no separate registration step.
   adminKeys = config.users.users.${admin}.openssh.authorizedKeys.keys;
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
+  ciBotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFy1m+rbpUHFBGKfEVI1pgMGZtOtqNyQc751D4BIuDCP ci-bot@gerrit";
+  ciBot = {
+    email = "ci-bot@yawn.io";
+    displayName = "CI";
+  };
 in
 {
   options.bjackman.gerritSshPort = lib.mkOption {
@@ -138,45 +143,63 @@ in
         # never link: the first login tries to create a second account, collides
         # on the username, and fails for good.
         #
-        # The identity headers are the ones Authelia would send, so the account
-        # ends up with the address and name from users.json either way.
-        if [ "$(req GET /a/accounts/slopbot)" = 404 ]; then
-          slopbot_cookies=$(mktemp)
-          curl -sS -c "$slopbot_cookies" -b "$slopbot_cookies" -o /dev/null \
-            -H "${authHeader}: slopbot" \
-            -H "Remote-Email: ${agent.email}" \
-            -H "Remote-Name: ${agent.displayName}" \
-            -H "X-Forwarded-Proto: https" -H "X-Forwarded-Host: ${fqdn}" \
-            "${apiUrl}/login/%2F"
-          rm -f "$slopbot_cookies"
-          expect "$(req GET /a/accounts/slopbot)" 200
-        fi
+        # The identity headers are the ones Authelia would send, so an account
+        # that also has an Authelia identity ends up agreeing with users.json.
+        bot_account() {
+          local user=$1 email=$2 name=$3 key=$4
+          if [ "$(req GET "/a/accounts/$user")" = 404 ]; then
+            local bot_cookies
+            bot_cookies=$(mktemp)
+            curl -sS -c "$bot_cookies" -b "$bot_cookies" -o /dev/null \
+              -H "${authHeader}: $user" \
+              -H "Remote-Email: $email" \
+              -H "Remote-Name: $name" \
+              -H "X-Forwarded-Proto: https" -H "X-Forwarded-Host: ${fqdn}" \
+              "${apiUrl}/login/%2F"
+            rm -f "$bot_cookies"
+            expect "$(req GET "/a/accounts/$user")" 200
+          fi
 
-        # Keeps the bot out of my attention set.
-        expect "$(req PUT "/a/groups/Service%20Users/members/slopbot")" 201 200
+          # Keeps the bot out of my attention set.
+          expect "$(req PUT "/a/groups/Service%20Users/members/$user")" 201 200
+
+          register_email "$user" "$email"
+
+          expect "$(req GET "/a/accounts/$user/sshkeys")" 200
+          tail -c +6 "$resp" > "$keys"
+          local encoded
+          encoded=$(echo "$key" | awk '{ print $2 }')
+          if ! jq -e --arg key "$encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
+            expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
+              "''${proxied[@]}" -H "X-Gerrit-Auth: $token" -H 'Content-Type: text/plain' \
+              -X POST --data-binary "$key" "${apiUrl}/a/accounts/$user/sshkeys")" 201
+          fi
+        }
 
         # An address is only taken from the header when the account is created,
         # so registering it explicitly covers accounts that predate the header
         # being configured. Without one, a push is refused unless the account
         # happens to hold "forge committer".
-        for account in ${admin} slopbot; do
-          case $account in
-            ${admin}) address=${adminUser.email} ;;
-            *) address=${agent.email} ;;
-          esac
-          expect "$(req PUT "/a/accounts/$account/emails/''${address/@/%40}" \
+        register_email() {
+          expect "$(req PUT "/a/accounts/$1/emails/''${2/@/%40}" \
             '{"no_confirmation": true, "preferred": true}')" 201 409
-        done
+        }
 
-        expect "$(req GET /a/accounts/slopbot/sshkeys)" 200
-        tail -c +6 "$resp" > "$keys"
-        slopbot_key_encoded=$(echo ${lib.escapeShellArg slopbotKey} | awk '{ print $2 }')
-        if ! jq -e --arg key "$slopbot_key_encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
-          expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
-            "''${proxied[@]}" -H "X-Gerrit-Auth: $token" -H 'Content-Type: text/plain' \
-            -X POST --data-binary ${lib.escapeShellArg slopbotKey} \
-            "${apiUrl}/a/accounts/slopbot/sshkeys")" 201
+        register_email ${admin} ${adminUser.email}
+        bot_account slopbot ${agent.email} ${lib.escapeShellArg agent.displayName} \
+          ${lib.escapeShellArg slopbotKey}
+        # ci-bot votes Verified and does nothing else. Unlike slopbot it never
+        # speaks REST, so it has no Authelia identity and its address and name
+        # are written here rather than in users.json - an entry there would mint
+        # an Authelia login that nothing would ever use.
+        bot_account ci-bot ${ciBot.email} ${lib.escapeShellArg ciBot.displayName} \
+          ${lib.escapeShellArg ciBotKey}
+
+        # Voting on a label is granted to a group, never to an account.
+        if [ "$(req GET /a/groups/ci)" = 404 ]; then
+          expect "$(req PUT /a/groups/ci '{"description": "Accounts that vote Verified."}')" 201
         fi
+        expect "$(req PUT /a/groups/ci/members/ci-bot)" 201 200
 
 
         # Gerrit's defaults let an administrator create a branch but not push
