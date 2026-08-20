@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgsUnstable, ... }:
 let
   ports = config.bjackman.ports;
   iap = config.bjackman.iap;
@@ -87,23 +87,33 @@ in
   services.recyclarr = {
     enable = true;
     group = "arr-api";
-    # I got this by running `recyclarr config create --template uhd-bluray-web`
-    # and then translating the generated YAMl file into Nix.
+    # 8.6.0 in stable doesn't understand the v8 schema below - it rejects
+    # trash_id on a quality profile.
+    package = pkgsUnstable.recyclarr;
+    # Transcribed from radarr/templates/uhd-bluray-web.yml and
+    # sonarr/templates/web-1080p.yml in recyclarr/config-templates. That repo
+    # is always tracked at master and has no versioning, so a schema change
+    # upstream breaks this with no deploy on our side; when it does, re-read
+    # the templates rather than patching the error away.
     configuration = {
       radarr.uhd-bluray-web = {
         base_url = "http://localhost:${toString ports.radarr.port}";
         api_key._secret = config.age.secrets.arr-api-key.path;
-        # I think that the Thing Recyclarr Actually Does is primarily about
-        # providing the templates that we instantiate here.
-        include = [
-          { template = "radarr-quality-definition-movie"; }
-          { template = "radarr-quality-profile-uhd-bluray-web"; }
-          { template = "radarr-custom-formats-uhd-bluray-web"; }
+        quality_definition.type = "movie";
+        quality_profiles = [
+          {
+            trash_id = "64fb5f9858489bdac2af690e27c8f42f"; # UHD Bluray + WEB
+            reset_unmatched_scores.enabled = true;
+          }
+        ];
+        custom_format_groups.add = [
+          { trash_id = "ff204bbcecdd487d1cefcefdbf0c278d"; } # [Optional] Golden Rule UHD
+          { trash_id = "a3ac6af01d78e4f21fcb75f601ac96df"; } # [Unwanted] Unwanted Formats
         ];
         custom_formats = [
           # IIUC this is about avoiding downloads of files that only contain Dolby
           # Video encoding. I don't understand how it does that.
-          { trash_ids = [ "9c38ebb7384dada637be8899efa68e6f" ]; }
+          { trash_ids = [ "9c38ebb7384dada637be8899efa68e6f" ]; } # SDR
         ];
       };
       # Hm, this defines a "Web-1080p" profile that is probably way higher
@@ -111,17 +121,25 @@ in
       # but it behaves pretty similar to the Radarr one above, i.e. downloads
       # very large files. Maybe I want
       # https://github.com/Dictionarry-Hub/profilarr not sure.
-      sonarr.web-1080p-v4 = {
+      sonarr.web-1080p = {
         base_url = "http://localhost:${toString ports.sonarr.port}";
         api_key._secret = config.age.secrets.arr-api-key.path;
-        include = [
-          { template = "sonarr-quality-definition-series"; }
-          { template = "sonarr-v4-quality-profile-web-1080p"; }
-          { template = "sonarr-v4-custom-formats-web-1080p"; }
+        quality_definition.type = "series";
+        quality_profiles = [
+          {
+            trash_id = "72dae194fc92bf828f32cde7744e51a1"; # WEB-1080p
+            reset_unmatched_scores.enabled = true;
+          }
         ];
-        # IIUC these are about allowing certain extra-compressed formats - this
-        # comes from the template (recyclarr config create --template
-        # web-1080p-v4)
+        custom_format_groups.add = [
+          { trash_id = "158188097a58d7687dee647e04af0da3"; } # [Optional] Golden Rule HD
+          { trash_id = "74aff4168620ed49dcc67e92b2c2a5b4"; } # [Optional] Language Profiles
+          { trash_id = "85fae4a2294965b75710ef2989c850eb"; } # [Streaming Services] HD/UHD boost
+          { trash_id = "59c3af66780d08332fdc64e68297098f"; } # [Unwanted] Unwanted Formats
+        ];
+        # IIUC these are about allowing certain extra-compressed formats. Golden
+        # Rule HD scores them way down; this wins because the first score for a
+        # format wins.
         custom_formats = [
           {
             trash_ids = [
