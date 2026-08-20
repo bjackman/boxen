@@ -15,7 +15,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/bjackman/boxen/slop-tools/internal/probe"
+	"github.com/bjackman/boxen/go-tools/internal/probe"
 )
 
 // Set at build time; the defaults are only useful for `go run`.

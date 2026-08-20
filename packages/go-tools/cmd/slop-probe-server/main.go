@@ -20,7 +20,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bjackman/boxen/slop-tools/internal/probe"
+	"github.com/bjackman/boxen/go-tools/internal/probe"
 )
 
 // Statuses of our own, above anything a probe produces and clear of ssh's own

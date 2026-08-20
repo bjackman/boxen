@@ -1,4 +1,4 @@
-# The probe client and server, built from the slop-tools module but packaged
+# The probe client and server, built from the go-tools module but packaged
 # separately: the server runs on homelab hosts, which have no business
 # depending on the closure of the tools that drive Claude Code.
 {

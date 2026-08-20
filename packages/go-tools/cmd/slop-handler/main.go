@@ -24,8 +24,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bjackman/boxen/slop-tools/internal/gerrit"
-	"github.com/bjackman/boxen/slop-tools/internal/session"
+	"github.com/bjackman/boxen/go-tools/internal/gerrit"
+	"github.com/bjackman/boxen/go-tools/internal/session"
 )
 
 // Set at build time.
