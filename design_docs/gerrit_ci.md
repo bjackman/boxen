@@ -1,6 +1,6 @@
 # Gerrit CI
 
-**Status: proposed.** [`gerrit.md`](gerrit.md) left CI as the one thing the
+**Status: implemented.** [`gerrit.md`](gerrit.md) left CI as the one thing the
 migration lost, on the grounds that the agent builds locally so nothing
 regressed. This is the plan to get it back.
 

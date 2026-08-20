@@ -16,6 +16,7 @@ in
     ./iap.nix
     ./impermanence.nix
     ./gerrit-bootstrap.nix
+    ./gerrit-ci.nix
     ./github-mirror.nix
   ];
 
@@ -73,6 +74,8 @@ in
       receive.enableSignedPush = false;
     };
   };
+
+  bjackman.gerritCi.enable = true;
 
   bjackman.gerritProjects = [
     "boxen"
