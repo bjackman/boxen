@@ -105,6 +105,13 @@ commentary.
   path should say so in its name: `keyFilePath`, not `keyFile`. Applies in
   every language.
 
+### Go
+
+- Add context when returning an error, describing what *this* function was
+  doing with the information only it has: `fmt.Errorf("fetching %s: %w", ref,
+  err)`. The point is that the message identifies which path through the code
+  produced it.
+
 ## Tips
 
 - I use Fish and most hosts have Fish set up as the login shell for my user, but
