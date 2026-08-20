@@ -290,6 +290,19 @@ func truncate(s string, max int) string {
 
 // Event is the part of a stream-events record this workflow reads. The stream
 // carries no comment bodies, so it's only ever a hint to go and look.
+// Event types delivered by stream-events. Gerrit emits more than these; these
+// are the ones anything here reacts to.
+const (
+	EventPatchSetCreated = "patchset-created"
+	EventCommentAdded    = "comment-added"
+	EventChangeMerged    = "change-merged"
+	EventChangeAbandoned = "change-abandoned"
+	EventChangeRestored  = "change-restored"
+	EventRefUpdated      = "ref-updated"
+	EventReviewerAdded   = "reviewer-added"
+	EventWipStateChanged = "wip-state-changed"
+)
+
 type Event struct {
 	Type   string `json:"type"`
 	Change struct {

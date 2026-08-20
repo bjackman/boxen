@@ -139,7 +139,7 @@ func run() error {
 func watch(ctx context.Context, client *gerrit.Client, wake chan<- struct{}) {
 	for ctx.Err() == nil {
 		err := client.StreamEvents(ctx, func(event gerrit.Event) {
-			if event.Type != "comment-added" {
+			if event.Type != gerrit.EventCommentAdded {
 				return
 			}
 			log.Printf("comment on change %d, sweeping", event.Change.Number)

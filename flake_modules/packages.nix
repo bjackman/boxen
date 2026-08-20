@@ -32,6 +32,7 @@
       slop = final.callPackage ../packages/slop { };
       slop-tools = final.callPackage ../packages/go-tools/slop-tools.nix { inherit (final.llm-agents) claude-code; };
       slop-probe = final.callPackage ../packages/go-tools/probe.nix { };
+      gerrit-ci = final.callPackage ../packages/go-tools/gerrit-ci.nix { };
       tvheadend = final.callPackage ../packages/tvheadend { src = inputs.tvheadend; };
     };
   };
