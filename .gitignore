@@ -1,5 +1,6 @@
 /.vscode
 result
 result.*
+result-*
 /.jetskicli
 .claude/settings/local.json
