@@ -12,3 +12,23 @@ func TestStripMagic(t *testing.T) {
 		t.Errorf("stripMagic() altered an unprefixed body: %q", got)
 	}
 }
+
+func TestPatchSetVoted(t *testing.T) {
+	ps := PatchSet{Approvals: []Approval{
+		{Type: "Code-Review", Value: "2", By: Account{Username: "brendan"}},
+		{Type: "Verified", Value: "-1", By: Account{Username: "ci-bot"}},
+	}}
+	for _, test := range []struct {
+		label, user string
+		want        bool
+	}{
+		{"Verified", "ci-bot", true},
+		{"Verified", "brendan", false},
+		{"Code-Review", "ci-bot", false},
+		{"Submit", "ci-bot", false},
+	} {
+		if got := ps.Voted(test.label, test.user); got != test.want {
+			t.Errorf("Voted(%q, %q) = %v, want %v", test.label, test.user, got, test.want)
+		}
+	}
+}
