@@ -3,8 +3,7 @@
   ...
 }:
 {
-  # Just like in zed.nix, we don't set programs.vscode.enable unless on NixOS,
-  # use the distro's version instead.
+  programs.vscode.enable = true;
 
   xdg.configFile = {
     "Code/User/settings.json" = {

@@ -59,7 +59,6 @@
     # Restore the previous session; pinned tabs are only restored as part of it.
     "browser.startup.page" = 3;
   };
-  programs.vscode.enable = true;
 
   bjackman.agentHostContext = ''
     # Operating on this host
