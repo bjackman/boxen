@@ -25,7 +25,7 @@ correlate against deploys and upstream changes.
 
 ## Triage
 
-Distinguish three shapes:
+Distinguish four shapes:
 
 - **Transient** — one failed run, later ones fine. The unit stays `failed` until
   something resets it, so the alert outlives the problem. Nothing to fix.
@@ -36,8 +36,13 @@ Distinguish three shapes:
   the internet on each run, so a **pinned package plus a moving upstream** breaks
   without any deploy on our side. Tell: the breakage date matches an upstream
   commit, not a `git log` entry here.
+- **Reverted fix** — the unit failed, was fixed, went quiet, and came back. A
+  gap of clean runs bracketed by the same failure is the tell. Usually the fix
+  was activated with `nixos-rebuild test` and never committed, so the next
+  `switch` rebuilt the host from `master` without it. See "Did a fix get lost?"
+  below.
 
-For that last case, compare the deployed version against what the flake would
+For upstream drift, compare the deployed version against what the flake would
 now build:
 
 ```bash
@@ -48,6 +53,24 @@ nix eval --raw .#nixosConfigurations.<host>.pkgs.<pkg>.version
 A gap means the host is simply behind and a redeploy may be the whole fix — but
 check the upstream break was a *version* incompatibility and not a *schema* one,
 or the redeploy will fail differently. See the log below for exactly that trap.
+
+## Did a fix get lost?
+
+`nixos-rebuild test` activates a configuration without writing a generation
+link, so it survives until the next `switch` or reboot and then vanishes. That
+makes it invisible to `git log` and to `generations`, and it is the usual reason
+a solved failure comes back.
+
+Line the journal's activation timestamps up against the generation links:
+
+```bash
+slop-probe <host> generations
+slop-probe <host> journal --since=-30d --grep='switch-to-configuration|nixos-rebuild|Reloading'
+```
+
+An activation with no generation link at that time was a `test`. Anything it
+fixed is gone, and the fix has to be found in the conversation that produced it,
+not in the repo.
 
 ## Resolution
 
@@ -89,3 +112,31 @@ transient.
     RECYCLARR_CONFIG_DIR=/tmp/rc-validate RECYCLARR_DATA_DIR=/tmp/rc-validate \
       nix run nixpkgs#recyclarr -- sync --config /tmp/rc-config.yml --preview"'
   ```
+
+- 2026-08-20: `recyclarr.service` on norte again, same root cause, because the
+  2026-08-11 fix was only ever `nixos-rebuild test`ed. Journal shows an
+  activation on Aug 11 10:43 with no matching generation link (`system-135-link`
+  Jun 13 -> `system-136-link` Aug 19), clean syncs Aug 12-18, then the Aug 19
+  `switch` rebuilt norte from `master` — which had never received the change —
+  and the Aug 20 run failed. The error text differed only because that switch
+  also took recyclarr 7.4.1 -> 8.6.0 with the 26.05 bump.
+
+  Upstream had moved on again by then: v8 templates now express custom formats
+  as `custom_format_groups`, not the flat `custom_formats` list transcribed in
+  August. Re-read the templates; don't replay an earlier transcription.
+
+  Validating without a live Radarr works better than the recipe above suggests.
+  Render the module's own config and feed it to the real binary with a dummy key:
+
+  ```bash
+  nix eval --json path:.#nixosConfigurations.norte.config.services.recyclarr.configuration \
+    | jq '(.radarr[].api_key, .sonarr[].api_key) = "0123456789abcdef0123456789abcdef"' > rc-config.yml
+  RECYCLARR_CONFIG_DIR=$PWD/rcdir RECYCLARR_DATA_DIR=$PWD/rcdir \
+    recyclarr sync --config $PWD/rc-config.yml --preview
+  ```
+
+  JSON is valid YAML, so no conversion is needed. Reaching `Connection refused`
+  means the config parsed and every template resolved. Custom format group ids
+  are only checked after connecting, so grep them out of the guides clone
+  recyclarr just made under `rcdir/resources/trash-guides/git/official/docs/json`.
+  Note `RECYCLARR_APP_DATA` is rejected outright by 8.x.
