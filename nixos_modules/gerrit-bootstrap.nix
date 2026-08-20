@@ -15,6 +15,7 @@ let
   # The same keys the hosts authorise, so pushing to a branch and administering
   # over SSH needs no separate registration step.
   adminKeys = config.users.users.${admin}.openssh.authorizedKeys.keys;
+  gerritConfig = ../gerrit_config;
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
   ciBotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFy1m+rbpUHFBGKfEVI1pgMGZtOtqNyQc751D4BIuDCP ci-bot@gerrit";
   ciBot = {
@@ -56,6 +57,8 @@ in
       wantedBy = [ "multi-user.target" ];
       path = [
         pkgs.curl
+        pkgs.git
+        pkgs.gnused
         pkgs.coreutils
         pkgs.gawk
         pkgs.jq
@@ -198,22 +201,96 @@ in
         # Voting on a label is granted to a group, never to an account.
         if [ "$(req GET /a/groups/ci)" = 404 ]; then
           expect "$(req PUT /a/groups/ci '{"description": "Accounts that vote Verified."}')" 201
+          # Gerrit makes whoever created the group its first member, and this
+          # group means "has actually run the checks", which I have not.
+          # Overriding a vote by hand is a separate grant, in project.config.
+          expect "$(req DELETE "/a/groups/ci/members/${admin}")" 204 404
         fi
         expect "$(req PUT /a/groups/ci/members/ci-bot)" 201 200
 
 
-        # Gerrit's defaults let an administrator create a branch but not push
-        # commits to one: the mainline is only meant to advance by submitting a
-        # change. That's right for slopbot and wrong for me, and an import of
-        # existing history needs it.
+        # A project's configuration - its ACLs, its labels and its submit
+        # requirements - is a file on refs/meta/config, so it's a file in the
+        # repo rather than a translation of one into API calls. Only these
+        # projects: All-Projects holds every default, and replacing its config
+        # wholesale would drop the lot.
+        #
+        # The groups file beside it maps each group the config names to a UUID
+        # that is generated per instance, so it can't be checked in and is
+        # written here instead.
+        configure_project() {
+          local project=$1 source=$2 work
+          work=$(mktemp -d)
+          git -C "$work" init -q
+          git -C "$work" fetch -q "${apiUrl}/a/$project" refs/meta/config
+          git -C "$work" checkout -q FETCH_HEAD
+          cp "$source" "$work/project.config"
+
+          # A rule is "<what> = [<range>] group <name>", and a name may contain
+          # spaces, so it runs to the end of the line.
+          local names uuid
+          names=$(sed -n '/^[[:space:]]*#/d; s/.* group \(.*\)$/\1/p' "$source" | sort -u)
+          # Fed in by here-string rather than a pipeline, so that a group that
+          # can't be looked up fails the unit instead of writing a groups file
+          # with a hole in it.
+          {
+            printf '# UUID\tGroup Name\n#\n'
+            while read -r name; do
+              [ -n "$name" ] || continue
+              expect "$(req GET "/a/groups/''${name// /+}")" 200
+              # Ids are URL-encoded, which matters for the system groups whose
+              # UUID is of the form global:Registered-Users.
+              uuid=$(tail -c +6 "$resp" | jq -re .id | sed 's/%3A/:/g')
+              printf '%s\t%s\n' "$uuid" "$name"
+            done <<< "$names"
+          } > "$work/groups"
+
+          if git -C "$work" diff --quiet; then
+            rm -rf "$work"
+            return
+          fi
+          # Never rewritten when nothing changed: this is the ref that says who
+          # may push, so a generation that turns out to be wrong should be one
+          # commit to look at rather than one per boot.
+          git -C "$work" add project.config groups
+          git -C "$work" -c user.name=gerrit-bootstrap -c user.email=${adminUser.email} \
+            commit -q -m "Configure $project from the boxen repo"
+          git -C "$work" push -q "${apiUrl}/a/$project" HEAD:refs/meta/config
+          rm -rf "$work"
+        }
+
+        # git over HTTP authenticates by the session cookie the login above
+        # already got, not by the identity header: under /a/ Gerrit asks for a
+        # credential of its own and answers 401 to the header alone, which is
+        # the same distinction the REST calls run into. The cookie jar curl
+        # keeps is already in the format git wants.
+        export GIT_CONFIG_COUNT=2
+        export GIT_CONFIG_KEY_0=http.cookieFile GIT_CONFIG_VALUE_0="$cookies"
+        export GIT_CONFIG_KEY_1=http.extraHeader GIT_CONFIG_VALUE_1="X-Forwarded-Proto: https"
+
         expect "$(req GET /a/groups/Administrators)" 200
         administrators=$(tail -c +6 "$resp" | jq -r .id)
+
         for project in ${lib.escapeShellArgs projects}; do
           if [ "$(req GET "/a/projects/$project")" = 404 ]; then
             expect "$(req PUT "/a/projects/$project" "{}")" 201
           fi
-          expect "$(req POST "/a/projects/$project/access" "$(jq -n --arg group "$administrators" \
-            '{add: {"refs/heads/*": {permissions: {push: {rules: {($group): {action: "ALLOW", force: false}}}}}}}')")" 200
+          # The one grant that can't come from the file, because it's the grant
+          # that permits the push: being an administrator is not enough on its
+          # own, refs/meta/config wants an owner who also holds Push. Granting
+          # it over REST breaks the circularity, and project.config carries the
+          # same rule so that replacing the file doesn't revoke it.
+          #
+          # Only when it's missing: the endpoint commits to refs/meta/config
+          # whether or not the rule is already there, so calling it every boot
+          # would rewrite the ref forever.
+          expect "$(req GET "/a/projects/$project/access")" 200
+          if ! tail -c +6 "$resp" | jq -e --arg group "$administrators" \
+            '.local["refs/meta/config"].permissions.push.rules[$group]' >/dev/null; then
+            expect "$(req POST "/a/projects/$project/access" "$(jq -n --arg group "$administrators" \
+              '{add: {"refs/meta/config": {permissions: {push: {rules: {($group): {action: "ALLOW", force: false}}}}}}}')")" 200
+          fi
+          configure_project "$project" "${gerritConfig}/$project/project.config"
         done
       '';
       # Runs as root: it only makes HTTP calls to loopback, and Gerrit itself
