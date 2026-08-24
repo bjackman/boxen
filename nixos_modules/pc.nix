@@ -86,6 +86,7 @@
     ".local/share/fish"
     ".local/share/zed"
     ".local/share/Steam"
+    ".local/share/Baba_Is_You"
     ".steam"
     # VSCode has a bunch of yucky stateful shit that leaks into .config and I
     # can't be bothered to figure it out, just persist the whole mess.
