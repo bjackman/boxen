@@ -213,7 +213,6 @@ in
           "${modifier}+b" = "splith";
           "${modifier}+v" = "splitv";
           "${modifier}+f" = "fullscreen toggle";
-          "${modifier}+a" = "focus parent";
 
           "${modifier}+s" = "layout stacking";
           "${modifier}+w" = "layout tabbed";
@@ -246,7 +245,7 @@ in
               "b" = "browser";
               "n" = "terminal";
               "m" = "editor";
-              "s" = "messages";
+              "a" = "messages";
               "g" = "games";
               "1" = "number 1";
               "2" = "number 2";
