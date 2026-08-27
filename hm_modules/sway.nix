@@ -141,8 +141,8 @@ in
         # is already the default when it opens on the current workspace. I can't
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
-        for_window [app_id="^(org\.wezfurlong\.wezterm|firefox|dev\.zed\.Zed|code(-url-handler)?)$"] focus
-        for_window [class="^(Code|Steam)$"] focus
+        for_window [app_id="^(org\.wezfurlong\.wezterm|firefox|dev\.zed\.Zed|code(-url-handler)?|gamescope)$"] focus
+        for_window [class="^(Code|Steam|steam_app_[0-9]+)$"] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
       '';
@@ -161,7 +161,14 @@ in
           ];
           "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
           "messages" = [ { app_id = "signal"; } ];
-          "games" = [ { class = "^Steam$"; } ];
+          "games" = [
+            { class = "^Steam$"; }
+            # Proton/Wine name their windows after the Steam app ID. Native
+            # Linux games get no such treatment, they'll need naming here
+            # individually.
+            { class = "^steam_app_[0-9]+$"; }
+            { app_id = "^gamescope$"; }
+          ];
           "editor" = [
             { app_id = "dev.zed.Zed"; }
             # Wayland-native VSCode; -url-handler is the window spawned when
