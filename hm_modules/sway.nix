@@ -142,7 +142,7 @@ in
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
         for_window [app_id="^(org\.wezfurlong\.wezterm|firefox|dev\.zed\.Zed|code(-url-handler)?)$"] focus
-        for_window [class="^Code$"] focus
+        for_window [class="^(Code|Steam)$"] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
       '';
@@ -161,6 +161,7 @@ in
           ];
           "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
           "messages" = [ { app_id = "signal"; } ];
+          "games" = [ { class = "^Steam$"; } ];
           "editor" = [
             { app_id = "dev.zed.Zed"; }
             # Wayland-native VSCode; -url-handler is the window spawned when
@@ -239,6 +240,7 @@ in
               "n" = "terminal";
               "m" = "editor";
               "s" = "messages";
+              "g" = "games";
               "1" = "number 1";
               "2" = "number 2";
               "3" = "number 3";
