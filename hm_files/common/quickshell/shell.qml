@@ -26,6 +26,13 @@ ShellRoot {
             Bar {
                 screenInfo: modelData
 
+                leftContent: [
+                    Workspaces {
+                        screenInfo: modelData
+                        height: parent.height
+                    }
+                ]
+
                 rightContent: [
                     BarItem {
                         BarText {
