@@ -39,8 +39,25 @@ in
     # then doesn't work properly when restarting hyprland.
     wayland.systemd.target = "sway-session.target";
 
+    bjackman.wayland-services = {
+      # Figured this out from https://www.reddit.com/r/hyprland/comments/14dj80q/comment/joq52rg/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+      nm-applet = "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
+      # This is kinda yucky and ugly but whatever, need something that works.
+      blueman-applet = "${pkgs.blueman}/bin/blueman-applet";
+    };
+
     programs.rofi.enable = true;
     home.packages = [
+      # Supplies the bar's icon glyphs.
+      pkgs.font-awesome
+      pkgs.brightnessctl
+      pkgs.pavucontrol
+      # Installing these packages explicitly (instead of just referring to the
+      # binary from the systemd service definition) seems to make sure the
+      # nm-applet icons are available for the tray, I haven't looked into why nor
+      # even proven this hypothesis properly.
+      pkgs.networkmanagerapplet
+      pkgs.blueman
       pkgs.signal-desktop
       pkgsUnstable.bzmenu
       pkgsUnstable.pwmenu
