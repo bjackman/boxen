@@ -11,6 +11,7 @@ let
 in
 {
   imports = [
+    ./quickshell.nix
     ./wayland-services.nix
     ./waybar.nix
     ./wezterm.nix
