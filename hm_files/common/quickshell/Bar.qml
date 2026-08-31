@@ -6,12 +6,9 @@ Bevel {
 
     required property var screenInfo
 
-    property alias leftContent: left.data
-    property alias centerContent: center.data
-    property alias rightContent: right.data
+    readonly property int contentMargin: Theme.bevelWidth + Theme.margin
 
     anchors.fill: parent
-    bevelWidth: Theme.bevelWidth
 
     Row {
         id: left
@@ -20,24 +17,16 @@ Bevel {
             left: parent.left
             leftMargin: Theme.margin
             top: parent.top
-            topMargin: Theme.bevelWidth + Theme.margin
+            topMargin: root.contentMargin
             bottom: parent.bottom
-            bottomMargin: Theme.bevelWidth + Theme.margin
+            bottomMargin: root.contentMargin
         }
         spacing: Theme.spacing
-    }
 
-    Row {
-        id: center
-
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            top: parent.top
-            topMargin: Theme.bevelWidth + Theme.margin
-            bottom: parent.bottom
-            bottomMargin: Theme.bevelWidth + Theme.margin
+        Workspaces {
+            height: parent.height
+            screenInfo: root.screenInfo
         }
-        spacing: Theme.spacing
     }
 
     Row {
@@ -47,10 +36,14 @@ Bevel {
             right: parent.right
             rightMargin: Theme.margin
             top: parent.top
-            topMargin: Theme.bevelWidth + Theme.margin
+            topMargin: root.contentMargin
             bottom: parent.bottom
-            bottomMargin: Theme.bevelWidth + Theme.margin
+            bottomMargin: root.contentMargin
         }
         spacing: Theme.spacing
+
+        Clock {
+            height: parent.height
+        }
     }
 }
