@@ -22,6 +22,16 @@ BarItem {
         }
     }
 
+    Process {
+        id: setter
+    }
+
+    onScrolled: direction => {
+        setter.command = ["brightnessctl", "set", direction > 0 ? "5%+" : "5%-"];
+        setter.running = true;
+        query.running = true;
+    }
+
     Timer {
         interval: 2000
         running: true

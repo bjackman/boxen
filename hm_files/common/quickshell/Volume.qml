@@ -46,6 +46,13 @@ BarItem {
 
     onClicked: pavucontrol.running = true
 
+    onScrolled: direction => {
+        if (!sink?.audio)
+            return;
+        sink.audio.muted = false;
+        sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + direction * 0.05));
+    }
+
     Process {
         id: pavucontrol
 
