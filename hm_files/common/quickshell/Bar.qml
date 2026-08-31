@@ -53,6 +53,22 @@ Bevel {
         }
         spacing: Theme.spacing
 
+        Cpu {
+            height: parent.height
+        }
+
+        Memory {
+            height: parent.height
+        }
+
+        Temperature {
+            height: parent.height
+        }
+
+        Backlight {
+            height: parent.height
+        }
+
         Clock {
             height: parent.height
         }
