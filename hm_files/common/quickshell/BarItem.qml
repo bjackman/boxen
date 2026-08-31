@@ -8,6 +8,8 @@ Bevel {
     property int padding: Theme.itemPadding
 
     signal clicked
+    // +1 for scroll up, -1 for down.
+    signal scrolled(int direction)
 
     sunken: true
     color: Theme.sunkenFace
@@ -22,8 +24,12 @@ Bevel {
     }
 
     MouseArea {
+        // Below the content row, so items like the tray that handle their own
+        // clicks get them first.
+        z: -1
         parent: root
         anchors.fill: root
         onClicked: root.clicked()
+        onWheel: wheel => root.scrolled(wheel.angleDelta.y > 0 ? 1 : -1)
     }
 }
