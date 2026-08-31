@@ -89,6 +89,10 @@ Bevel {
             height: parent.height
         }
 
+        KeyboardLayout {
+            height: parent.height
+        }
+
         Network {
             height: parent.height
         }
