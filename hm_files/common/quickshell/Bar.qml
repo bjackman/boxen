@@ -35,13 +35,16 @@ Bevel {
 
     WindowTitle {
         anchors {
-            horizontalCenter: parent.horizontalCenter
+            left: left.right
+            leftMargin: Theme.spacing
+            right: right.left
+            rightMargin: Theme.spacing
             top: parent.top
             topMargin: root.contentMargin
             bottom: parent.bottom
             bottomMargin: root.contentMargin
         }
-        width: Math.min(implicitWidth, root.width / 3)
+        horizontalAlignment: Text.AlignHCenter
     }
 
     Row {
