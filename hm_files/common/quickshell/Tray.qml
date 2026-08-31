@@ -31,15 +31,11 @@ BarItem {
                 fillMode: Image.PreserveAspectFit
             }
 
-            QsMenuAnchor {
+            Menu {
                 id: menu
 
-                menu: entry.modelData.menu
-                anchor {
-                    item: entry
-                    edges: Edges.Top
-                    gravity: Edges.Top
-                }
+                handle: entry.modelData.menu
+                anchorItem: entry
             }
 
             MouseArea {
@@ -53,7 +49,7 @@ BarItem {
                     // These applets ignore the SNI Activate call and expect
                     // their menu to be opened instead.
                     if (entry.modelData.hasMenu)
-                        menu.open();
+                        menu.visible = !menu.visible;
                     else
                         entry.modelData.activate();
                 }
