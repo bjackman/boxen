@@ -53,7 +53,9 @@ Row {
 
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: button.modelData.activate()
+                // activate() dispatches "workspace number", which fails for
+                // the named workspaces this config uses.
+                onClicked: I3.dispatch(`workspace "${button.modelData.name}"`)
             }
         }
     }
