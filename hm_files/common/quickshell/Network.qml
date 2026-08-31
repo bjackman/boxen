@@ -22,7 +22,7 @@ BarItem {
 
     BarText {
         icon: true
-        visible: root.wifi || root.wired
+        visible: !!(root.wifi || root.wired)
         text: root.wifi ? Icons.wifi : Icons.ethernet
     }
 }
