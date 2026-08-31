@@ -48,8 +48,12 @@ PopupWindow {
     // submenus anchor to a marker item at the parent row's edge instead.
     anchor {
         item: root.anchorItem
-        edges: root.submenu ? Edges.Right : Edges.Top
-        gravity: root.submenu ? Edges.Right : Edges.Top | Edges.Right
+        edges: root.submenu ? Edges.Top | Edges.Right : Edges.Top
+        gravity: root.submenu ? Edges.Bottom | Edges.Right : Edges.Top | Edges.Right
+        // The tray sits at the right of the screen, so a submenu almost never
+        // fits beside its parent. Flip it to the other side rather than
+        // sliding it back over the top.
+        adjustment: root.submenu ? PopupAdjustment.FlipX | PopupAdjustment.SlideY : PopupAdjustment.SlideX
     }
 
     QsMenuOpener {
@@ -57,6 +61,7 @@ PopupWindow {
 
         menu: root.handle
     }
+
 
 
     Bevel {

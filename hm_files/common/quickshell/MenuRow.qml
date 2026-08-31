@@ -69,17 +69,6 @@ Item {
         }
     }
 
-    Item {
-        id: submenuAnchor
-
-        anchors {
-            right: parent.right
-            verticalCenter: parent.verticalCenter
-        }
-        width: 1
-        height: 1
-    }
-
     // Loaded by name so the recursion doesn't have to resolve at compile time.
     Loader {
         id: submenu
@@ -89,7 +78,9 @@ Item {
 
         onLoaded: {
             item.handle = root.entry;
-            item.anchorItem = submenuAnchor;
+            // The whole row, so that flipping the popup to the other side
+            // lands it beside the menu rather than on top of it.
+            item.anchorItem = root;
             item.submenu = true;
             item.visible = true;
         }
