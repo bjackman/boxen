@@ -89,6 +89,10 @@ Bevel {
             height: parent.height
         }
 
+        Tray {
+            height: parent.height
+        }
+
         Clock {
             height: parent.height
         }
