@@ -4,28 +4,29 @@ import QtQuick
 BarItem {
     id: root
 
-    property string ledPath: ""
+    property bool available: false
     property bool locked: false
 
-    // The input device number isn't stable across boots.
+    visible: available
+    color: locked ? Theme.locked : Theme.sunkenFace
+
     Process {
-        command: ["sh", "-c", "ls -d /sys/class/leds/*::capslock 2>/dev/null | head -1"]
+        id: watcher
+
+        command: [Paths.capslockWatch]
         running: true
 
-        stdout: StdioCollector {
-            onStreamFinished: root.ledPath = text.trim()
+        stdout: SplitParser {
+            onRead: data => {
+                root.available = true;
+                root.locked = data.trim() === "1";
+            }
         }
+
+        // It exits if the LED disappears with the keyboard; keep the indicator
+        // hidden rather than showing a stale state.
+        onExited: root.available = false
     }
-
-    PolledFile {
-        path: root.ledPath === "" ? "" : `${root.ledPath}/brightness`
-        interval: 100
-
-        onLoaded: root.locked = parseInt(text()) > 0
-    }
-
-    visible: ledPath !== ""
-    color: locked ? Theme.locked : Theme.sunkenFace
 
     BarText {
         // Same width in both states so the bar doesn't reflow.

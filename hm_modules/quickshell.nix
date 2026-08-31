@@ -4,12 +4,23 @@
   lib,
   ...
 }:
+let
+  # The helpers the config shells out to are only needed by quickshell, so
+  # bake their paths in rather than putting them on the user's PATH.
+  configDir = pkgs.runCommand "quickshell-config" { } ''
+    cp -r ${../hm_files/common/quickshell} $out
+    chmod -R u+w $out
+    substituteInPlace $out/Paths.qml \
+      --replace-fail '"capslock-watch"' \
+        '"${pkgs.bjackman.capslock-watch}/bin/capslock-watch"'
+  '';
+in
 {
   config = lib.mkIf (config.bjackman.bar == "quickshell") {
     programs.quickshell = {
       enable = true;
       package = pkgs.quickshell;
-      configs.bjackman = ../hm_files/common/quickshell;
+      configs.bjackman = configDir;
       activeConfig = "bjackman";
       systemd = {
         enable = true;
