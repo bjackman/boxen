@@ -19,7 +19,7 @@ BarItem {
 
     PolledFile {
         path: root.ledPath === "" ? "" : `${root.ledPath}/brightness`
-        interval: 500
+        interval: 100
 
         onLoaded: root.locked = parseInt(text()) > 0
     }
