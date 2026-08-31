@@ -27,6 +27,11 @@ Bevel {
             height: parent.height
         }
 
+        Item {
+            width: Theme.groupSpacing
+            height: 1
+        }
+
         Workspaces {
             height: parent.height
             screenInfo: root.screenInfo

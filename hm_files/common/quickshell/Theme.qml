@@ -27,4 +27,8 @@ Singleton {
     readonly property string fontFamily: "Sans Serif"
     readonly property string iconFontFamily: "Font Awesome 7 Free Solid"
     readonly property int fontSize: 15
+    readonly property int startFontSize: 17
+
+    // Separates the start button from the workspace buttons.
+    readonly property int groupSpacing: 10
 }

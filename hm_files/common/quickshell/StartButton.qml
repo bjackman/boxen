@@ -20,14 +20,16 @@ Bevel {
         Image {
             anchors.verticalCenter: parent.verticalCenter
             source: "start.png"
-            sourceSize.width: 20
-            sourceSize.height: 20
+            sourceSize.width: root.height - 6
+            sourceSize.height: root.height - 6
+            fillMode: Image.PreserveAspectFit
         }
 
         BarText {
             anchors.verticalCenter: parent.verticalCenter
             text: "Start"
             font.bold: true
+            font.pixelSize: Theme.startFontSize
         }
     }
 
