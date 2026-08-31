@@ -5,11 +5,15 @@ BarItem {
     id: root
 
     property string devicePath: ""
+    property string adapterPath: ""
     property int percent: 0
     property string status: ""
+    property bool online: false
 
     readonly property bool charging: status === "Charging"
-    readonly property bool full: status === "Full"
+    // Plugged in but not drawing: either full, or held at a charge threshold,
+    // which this laptop reports as "Discharging".
+    readonly property bool full: online && !charging
 
     visible: devicePath !== ""
     color: {
@@ -22,7 +26,8 @@ BarItem {
         return Theme.sunkenFace;
     }
 
-    // The battery is BAT0 on some machines and BAT1 on others.
+    // The battery is BAT0 on some machines and BAT1 on others, and the mains
+    // adapter's name varies too.
     Process {
         command: ["sh", "-c", "ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -1"]
         running: true
@@ -30,6 +35,26 @@ BarItem {
         stdout: StdioCollector {
             onStreamFinished: root.devicePath = text.trim()
         }
+    }
+
+    Process {
+        command: ["sh", "-c", "grep -lx Mains /sys/class/power_supply/*/type 2>/dev/null | head -1"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const type = text.trim();
+                if (type)
+                    root.adapterPath = type.replace(/\/type$/, "");
+            }
+        }
+    }
+
+    PolledFile {
+        path: root.adapterPath === "" ? "" : `${root.adapterPath}/online`
+        interval: 5000
+
+        onLoaded: root.online = text().trim() === "1"
     }
 
     PolledFile {
