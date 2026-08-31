@@ -59,10 +59,7 @@ Item {
 
             anchors.fill: parent
             hoverEnabled: true
-            onEntered: {
-                if (root.entry.hasChildren)
-                    submenu.active = true;
-            }
+            onEntered: root.menu.openSubmenu = root.entry.hasChildren ? root.entry : null
             onClicked: {
                 if (root.entry.hasChildren || !root.entry.enabled)
                     return;
@@ -87,7 +84,7 @@ Item {
     Loader {
         id: submenu
 
-        active: false
+        active: root.menu.openSubmenu === root.entry && root.menu.visible
         source: "Menu.qml"
 
         onLoaded: {

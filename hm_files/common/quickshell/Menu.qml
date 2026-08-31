@@ -11,6 +11,15 @@ PopupWindow {
     property Item anchorItem: null
     property bool submenu: false
 
+    // Only one submenu of a given menu is open at a time, and none while the
+    // menu itself is hidden.
+    property QsMenuEntry openSubmenu: null
+
+    onVisibleChanged: {
+        if (!visible)
+            openSubmenu = null;
+    }
+
     readonly property int padding: Theme.bevelWidth + 2
 
     function close(): void {

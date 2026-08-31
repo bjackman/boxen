@@ -38,7 +38,7 @@ Bevel {
 
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: menu.visible = !menu.visible
+        onClicked: MenuState.toggle(menu)
     }
 
     StartMenu {

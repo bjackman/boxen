@@ -49,7 +49,7 @@ BarItem {
                     // These applets ignore the SNI Activate call and expect
                     // their menu to be opened instead.
                     if (entry.modelData.hasMenu)
-                        menu.visible = !menu.visible;
+                        MenuState.toggle(menu);
                     else
                         entry.modelData.activate();
                 }
