@@ -23,6 +23,7 @@
     # Put all the packages defined this way under the "bjackman" key so it's
     # obvious at the usage site that they come from an overlay.
     bjackman = {
+      capslock-watch = final.callPackage ../packages/capslock-watch { };
       homepage = final.callPackage ../packages/homepage { src = ../packages/homepage; };
       notmuch-get-dead-addresses = final.callPackage ../packages/notmuch-get-dead-addresses { };
       notmuch-propagate-mute = final.callPackage ../packages/notmuch-propagate-mute { };
