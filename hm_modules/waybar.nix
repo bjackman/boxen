@@ -7,7 +7,7 @@
 {
   options.bjackman.waybar.showKeyboardLayout = lib.mkEnableOption "keyboard layout indicator in waybar";
 
-  config = {
+  config = lib.mkIf (config.bjackman.bar == "waybar") {
     programs.waybar = {
       enable = true;
       # Note: this is kinda flaky, hmm:

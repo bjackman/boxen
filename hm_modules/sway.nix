@@ -16,6 +16,15 @@ in
     ./wezterm.nix
   ];
 
+  options.bjackman.bar = lib.mkOption {
+    type = lib.types.enum [
+      "waybar"
+      "quickshell"
+    ];
+    default = "waybar";
+    description = "Which status bar to run as part of the Wayland session.";
+  };
+
   config = {
     assertions = lib.optionals isNixOS [
       {
