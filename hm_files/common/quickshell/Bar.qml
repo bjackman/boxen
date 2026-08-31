@@ -53,6 +53,10 @@ Bevel {
         }
         spacing: Theme.spacing
 
+        PowerProfile {
+            height: parent.height
+        }
+
         Cpu {
             height: parent.height
         }
@@ -66,6 +70,10 @@ Bevel {
         }
 
         Backlight {
+            height: parent.height
+        }
+
+        Battery {
             height: parent.height
         }
 
