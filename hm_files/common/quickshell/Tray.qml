@@ -13,6 +13,8 @@ BarItem {
         model: SystemTray.items
 
         Item {
+            id: entry
+
             required property SystemTrayItem modelData
 
             readonly property int size: 16
@@ -23,20 +25,37 @@ BarItem {
 
             Image {
                 anchors.fill: parent
-                source: parent.modelData.icon
-                sourceSize.width: parent.size
-                sourceSize.height: parent.size
+                source: entry.modelData.icon
+                sourceSize.width: entry.size
+                sourceSize.height: entry.size
                 fillMode: Image.PreserveAspectFit
+            }
+
+            QsMenuAnchor {
+                id: menu
+
+                menu: entry.modelData.menu
+                anchor {
+                    item: entry
+                    edges: Edges.Top
+                    gravity: Edges.Top
+                }
             }
 
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                 onClicked: event => {
-                    if (event.button === Qt.MiddleButton)
-                        parent.modelData.secondaryActivate();
+                    if (event.button === Qt.MiddleButton) {
+                        entry.modelData.secondaryActivate();
+                        return;
+                    }
+                    // These applets ignore the SNI Activate call and expect
+                    // their menu to be opened instead.
+                    if (entry.modelData.hasMenu)
+                        menu.open();
                     else
-                        parent.modelData.activate();
+                        entry.modelData.activate();
                 }
             }
         }
