@@ -53,6 +53,10 @@ Bevel {
         }
         spacing: Theme.spacing
 
+        Volume {
+            height: parent.height
+        }
+
         PowerProfile {
             height: parent.height
         }

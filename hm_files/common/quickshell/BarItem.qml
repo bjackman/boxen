@@ -7,6 +7,8 @@ Bevel {
     property alias spacing: row.spacing
     property int padding: Theme.itemPadding
 
+    signal clicked
+
     sunken: true
     color: Theme.sunkenFace
     implicitWidth: row.implicitWidth + (bevelWidth + padding) * 2
@@ -17,5 +19,11 @@ Bevel {
 
         anchors.centerIn: parent
         spacing: Theme.spacing
+    }
+
+    MouseArea {
+        parent: root
+        anchors.fill: root
+        onClicked: root.clicked()
     }
 }
