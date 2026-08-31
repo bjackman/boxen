@@ -85,6 +85,10 @@ Bevel {
             height: parent.height
         }
 
+        Network {
+            height: parent.height
+        }
+
         Clock {
             height: parent.height
         }
