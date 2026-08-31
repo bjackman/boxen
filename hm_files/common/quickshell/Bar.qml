@@ -81,6 +81,10 @@ Bevel {
             height: parent.height
         }
 
+        CapsLock {
+            height: parent.height
+        }
+
         Clock {
             height: parent.height
         }
