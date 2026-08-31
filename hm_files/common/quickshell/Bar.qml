@@ -23,6 +23,10 @@ Bevel {
         }
         spacing: Theme.spacing
 
+        StartButton {
+            height: parent.height
+        }
+
         Workspaces {
             height: parent.height
             screenInfo: root.screenInfo
