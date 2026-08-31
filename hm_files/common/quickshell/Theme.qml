@@ -18,13 +18,13 @@ Singleton {
     readonly property color critical: "#cc0000"
     readonly property color locked: "#bb4454"
 
-    readonly property int barHeight: 30
+    readonly property int barHeight: 42
     readonly property int bevelWidth: 2
     readonly property int itemPadding: 4
     readonly property int spacing: 4
-    readonly property int margin: 3
+    readonly property int margin: 1
 
     readonly property string fontFamily: "Sans Serif"
     readonly property string iconFontFamily: "Font Awesome 7 Free Solid"
-    readonly property int fontSize: 13
+    readonly property int fontSize: 15
 }
