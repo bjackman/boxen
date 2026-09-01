@@ -14,6 +14,9 @@ Singleton {
     readonly property color pressed: "#a0a0a0"
     readonly property color focused: "#d0d0d0"
 
+    readonly property color highlight: "#000080"
+    readonly property color highlightText: "#ffffff"
+
     readonly property color warning: "#cc8833"
     readonly property color critical: "#cc0000"
     readonly property color locked: "#bb4454"
