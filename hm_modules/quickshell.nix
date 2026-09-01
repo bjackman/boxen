@@ -12,7 +12,8 @@ let
     chmod -R u+w $out
     substituteInPlace $out/Paths.qml \
       --replace-fail '"capslock-watch"' \
-        '"${pkgs.bjackman.capslock-watch}/bin/capslock-watch"'
+        '"${pkgs.bjackman.capslock-watch}/bin/capslock-watch"' \
+      --replace-fail '"wl-copy"' '"${pkgs.wl-clipboard}/bin/wl-copy"'
   '';
 in
 {

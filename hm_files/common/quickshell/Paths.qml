@@ -7,4 +7,5 @@ import Quickshell
 // run straight out of a checkout, where they come from PATH.
 Singleton {
     readonly property string capslockWatch: "capslock-watch"
+    readonly property string wlCopy: "wl-copy"
 }
