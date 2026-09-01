@@ -1,7 +1,9 @@
 import QtQuick
 
-// A Win95 3D border: two tones per side rather than one, so the edges read as
-// a bevel catching the light rather than as a plain outline.
+// A Win95 3D border. Raised edges are two tones a side, drawn brightest
+// first so the darker bands win the corners they reach. Sunken edges are the
+// taskbar's inlay: one tone a side, drawn as a single band, since splitting
+// it would leave a step at the corners.
 Rectangle {
     id: root
 
@@ -11,71 +13,79 @@ Rectangle {
 
     readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
 
-    // Raised edges run bright to dark outwards. Sunken ones are the taskbar's
-    // inlay rather than a text field, so they're a single tone a side.
-    readonly property color outerTopLeft: sunken ? Theme.shadow : Theme.light
-    readonly property color innerTopLeft: sunken ? Theme.shadow : Theme.lightFace
-    readonly property color outerBottomRight: sunken ? Theme.light : Theme.darkShadow
-    readonly property color innerBottomRight: sunken ? Theme.light : Theme.shadow
+    readonly property list<var> bands: sunken ? [
+        {
+            offset: 0,
+            size: bevelWidth,
+            topLeft: true,
+            tone: Theme.shadow
+        },
+        {
+            offset: 0,
+            size: bevelWidth,
+            topLeft: false,
+            tone: Theme.light
+        }
+    ] : [
+        {
+            offset: 0,
+            size: outerEdgeWidth,
+            topLeft: true,
+            tone: Theme.light
+        },
+        {
+            offset: outerEdgeWidth,
+            size: innerEdgeWidth,
+            topLeft: true,
+            tone: Theme.lightFace
+        },
+        {
+            offset: outerEdgeWidth,
+            size: innerEdgeWidth,
+            topLeft: false,
+            tone: Theme.shadow
+        },
+        {
+            offset: 0,
+            size: outerEdgeWidth,
+            topLeft: false,
+            tone: Theme.darkShadow
+        }
+    ]
 
     color: Theme.face
 
     Repeater {
-        model: [
-            {
-                ring: 0,
-                topLeft: true
-            },
-            {
-                ring: 1,
-                topLeft: true
-            },
-            {
-                ring: 0,
-                topLeft: false
-            },
-            {
-                ring: 1,
-                topLeft: false
-            }
-        ]
+        model: root.bands
 
         Item {
-            id: edge
+            id: band
 
             required property var modelData
 
-            readonly property int thickness: modelData.ring === 0 ? root.outerEdgeWidth : root.innerEdgeWidth
-
-            readonly property color tone: {
-                if (modelData.topLeft)
-                    return modelData.ring === 0 ? root.outerTopLeft : root.innerTopLeft;
-                return modelData.ring === 0 ? root.outerBottomRight : root.innerBottomRight;
-            }
-
             anchors.fill: parent
-            anchors.margins: modelData.ring === 0 ? 0 : root.outerEdgeWidth
+            anchors.margins: modelData.offset
 
             Rectangle {
                 anchors {
                     left: parent.left
                     right: parent.right
-                    top: edge.modelData.topLeft ? parent.top : undefined
-                    bottom: edge.modelData.topLeft ? undefined : parent.bottom
+                    top: band.modelData.topLeft ? parent.top : undefined
+                    bottom: band.modelData.topLeft ? undefined : parent.bottom
                 }
-                height: edge.thickness
-                color: edge.tone
+                height: band.modelData.size
+                color: band.modelData.tone
             }
 
             Rectangle {
                 anchors {
                     top: parent.top
                     bottom: parent.bottom
-                    left: edge.modelData.topLeft ? parent.left : undefined
-                    right: edge.modelData.topLeft ? undefined : parent.right
+                    left: band.modelData.topLeft ? parent.left : undefined
+                    right: band.modelData.topLeft ? undefined : parent.right
                 }
-                width: edge.thickness
-                color: edge.tone
+                width: band.modelData.size
+                color: band.modelData.tone
             }
         }
     }
