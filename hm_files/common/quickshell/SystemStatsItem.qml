@@ -6,12 +6,12 @@ BarItem {
     onClicked: MenuState.toggle(popup)
 
     BarText {
-        text: `${SystemStats.cpuUsage}%`
-    }
-
-    BarText {
         icon: true
         text: Icons.cpu
+    }
+
+    BarMeter {
+        value: SystemStats.cpuUsage / 100
     }
 
     SystemStatsPopup {

@@ -11,15 +11,22 @@ BarItem {
     readonly property bool sinkMuted: sink?.audio?.muted ?? false
     readonly property int sinkPercent: Math.round((sink?.audio?.volume ?? 0) * 100)
     readonly property bool sourceMuted: source?.audio?.muted ?? false
-    readonly property int sourcePercent: Math.round((source?.audio?.volume ?? 0) * 100)
+
+    onSinkPercentChanged: osd.flash(`Volume ${sinkPercent}%`)
+    onSinkMutedChanged: osd.flash(sinkMuted ? "Muted" : `Volume ${sinkPercent}%`)
+
+    onClicked: pavucontrol.running = true
+
+    onScrolled: direction => {
+        if (!sink?.audio)
+            return;
+        sink.audio.muted = false;
+        sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + direction * 0.05));
+    }
 
     // Without tracking, the nodes' audio properties never update.
     PwObjectTracker {
         objects: [root.sink, root.source]
-    }
-
-    BarText {
-        text: root.sinkMuted ? "" : `${root.sinkPercent}%`
     }
 
     BarText {
@@ -33,9 +40,9 @@ BarItem {
         }
     }
 
-    BarText {
-        visible: root.source !== null
-        text: root.sourceMuted ? "" : `${root.sourcePercent}%`
+    BarMeter {
+        opacity: root.sinkMuted ? 0.4 : 1
+        value: root.sinkPercent / 100
     }
 
     BarText {
@@ -44,13 +51,10 @@ BarItem {
         text: root.sourceMuted ? Icons.microphoneMuted : Icons.microphone
     }
 
-    onClicked: pavucontrol.running = true
+    ValueOsd {
+        id: osd
 
-    onScrolled: direction => {
-        if (!sink?.audio)
-            return;
-        sink.audio.muted = false;
-        sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + direction * 0.05));
+        anchorItem: root
     }
 
     Process {

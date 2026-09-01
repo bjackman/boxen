@@ -39,12 +39,20 @@ BarItem {
         onTriggered: query.running = true
     }
 
-    BarText {
-        text: `${root.percent}%`
-    }
+    onPercentChanged: osd.flash(`Brightness ${percent}%`)
 
     BarText {
         icon: true
         text: Icons.backlight
+    }
+
+    BarMeter {
+        value: root.percent / 100
+    }
+
+    ValueOsd {
+        id: osd
+
+        anchorItem: root
     }
 }

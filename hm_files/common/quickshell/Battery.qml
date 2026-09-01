@@ -71,9 +71,7 @@ BarItem {
         onLoaded: root.status = text().trim()
     }
 
-    BarText {
-        text: `${root.percent}%`
-    }
+    onOnlineChanged: osd.flash(online ? `Plugged in, ${percent}%` : `On battery, ${percent}%`)
 
     BarText {
         icon: true
@@ -86,5 +84,15 @@ BarItem {
             const index = Math.min(steps - 1, Math.floor(root.percent / (100 / steps)));
             return Icons.battery[index];
         }
+    }
+
+    BarMeter {
+        value: root.percent / 100
+    }
+
+    ValueOsd {
+        id: osd
+
+        anchorItem: root
     }
 }
