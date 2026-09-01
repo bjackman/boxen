@@ -6,9 +6,11 @@ import QtQuick
 Singleton {
     readonly property color face: "#c0c0c0"
     readonly property color sunkenFace: "#b0b0b0"
+    // The four edge tones of a Win95 3D border, brightest first.
     readonly property color light: "#ffffff"
+    readonly property color lightFace: "#dfdfdf"
     readonly property color shadow: "#808080"
-    readonly property color darkShadow: "#404040"
+    readonly property color darkShadow: "#000000"
     readonly property color text: "#000000"
     readonly property color hover: "#e0e0e0"
     readonly property color pressed: "#a0a0a0"
