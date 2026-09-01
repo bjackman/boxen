@@ -6,7 +6,10 @@ Rectangle {
     id: root
 
     property bool sunken: false
-    property int bevelWidth: Theme.bevelWidth
+    property int outerEdgeWidth: Theme.outerEdgeWidth
+    property int innerEdgeWidth: Theme.innerEdgeWidth
+
+    readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
 
     readonly property color outerTopLeft: sunken ? Theme.shadow : Theme.lightFace
     readonly property color innerTopLeft: sunken ? Theme.darkShadow : Theme.light
@@ -40,6 +43,8 @@ Rectangle {
 
             required property var modelData
 
+            readonly property int thickness: modelData.ring === 0 ? root.outerEdgeWidth : root.innerEdgeWidth
+
             readonly property color tone: {
                 if (modelData.topLeft)
                     return modelData.ring === 0 ? root.outerTopLeft : root.innerTopLeft;
@@ -47,7 +52,7 @@ Rectangle {
             }
 
             anchors.fill: parent
-            anchors.margins: modelData.ring
+            anchors.margins: modelData.ring === 0 ? 0 : root.outerEdgeWidth
 
             Rectangle {
                 anchors {
@@ -56,7 +61,7 @@ Rectangle {
                     top: edge.modelData.topLeft ? parent.top : undefined
                     bottom: edge.modelData.topLeft ? undefined : parent.bottom
                 }
-                height: 1
+                height: edge.thickness
                 color: edge.tone
             }
 
@@ -67,7 +72,7 @@ Rectangle {
                     left: edge.modelData.topLeft ? parent.left : undefined
                     right: edge.modelData.topLeft ? undefined : parent.right
                 }
-                width: 1
+                width: edge.thickness
                 color: edge.tone
             }
         }

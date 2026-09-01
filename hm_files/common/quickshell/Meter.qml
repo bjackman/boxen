@@ -7,6 +7,8 @@ Bevel {
     property real value: 0
 
     sunken: true
+    outerEdgeWidth: 1
+    innerEdgeWidth: 1
     color: Theme.sunkenFace
     implicitWidth: 120
     implicitHeight: 12

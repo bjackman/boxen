@@ -24,7 +24,11 @@ Singleton {
     readonly property color locked: "#bb4454"
 
     readonly property int barHeight: 42
-    readonly property int bevelWidth: 2
+    // The two tones making up a 3D edge. The inner one carries the weight;
+    // the outer stays a hairline.
+    readonly property int outerEdgeWidth: 1
+    readonly property int innerEdgeWidth: 2
+    readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
     readonly property int itemPadding: 4
     readonly property int spacing: 4
     readonly property int margin: 1
