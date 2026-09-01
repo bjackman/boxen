@@ -46,6 +46,10 @@ in
       blueman-applet = "${pkgs.blueman}/bin/blueman-applet";
     };
 
+    # Disable the "exit" button in the blueman-applet menu, which I clicked by
+    # accident once and then my Bluetooth menu was gone.
+    dconf.settings."org/blueman/general".plugin-list = [ "!ExitItem" ];
+
     programs.rofi.enable = true;
     home.packages = [
       # Supplies the bar's icon glyphs.
