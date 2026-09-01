@@ -10,8 +10,9 @@ Rectangle {
     property bool sunken: false
     property int outerEdgeWidth: Theme.outerEdgeWidth
     property int innerEdgeWidth: Theme.innerEdgeWidth
+    property int sunkenEdgeWidth: Theme.sunkenEdgeWidth
 
-    readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
+    readonly property int bevelWidth: sunken ? sunkenEdgeWidth : outerEdgeWidth + innerEdgeWidth
 
     readonly property list<var> bands: sunken ? [
         {

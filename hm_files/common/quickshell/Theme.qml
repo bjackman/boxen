@@ -24,10 +24,11 @@ Singleton {
     readonly property color locked: "#bb4454"
 
     readonly property int barHeight: 42
-    // The two tones making up a 3D edge. The inner one carries the weight;
-    // the outer stays a hairline.
+    // A two tone edge is a tone apiece; a single tone one is half as wide
+    // overall, as in Win95 itself.
     readonly property int outerEdgeWidth: 2
     readonly property int innerEdgeWidth: 2
+    readonly property int sunkenEdgeWidth: 2
     readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
     readonly property int itemPadding: 4
     readonly property int spacing: 4
