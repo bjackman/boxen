@@ -1,5 +1,7 @@
 import Quickshell
+import Quickshell.Widgets
 import QtQuick
+import QtQuick.Layouts
 
 // Renders a QsMenuHandle (a tray icon's DBus menu) in the Win95 style.
 PopupWindow {
@@ -28,21 +30,8 @@ PopupWindow {
 
     color: "transparent"
     visible: false
-    // Measured from the rows' implicit widths rather than taken from the
-    // column: the rows are stretched to the column's width, so deriving it
-    // from their laid-out geometry would be circular and stick at zero.
-    readonly property real contentWidth: {
-        rowCount;
-        let widest = 0;
-        for (let i = 0; i < column.children.length; i++)
-            widest = Math.max(widest, column.children[i].implicitWidth);
-        return widest;
-    }
-
-    property int rowCount: 0
-
-    implicitWidth: contentWidth + padding * 2
-    implicitHeight: column.implicitHeight + padding * 2
+    implicitWidth: wrapper.implicitWidth
+    implicitHeight: wrapper.implicitHeight
 
     // Setting both anchor.item and anchor.window crashes quickshell, so
     // submenus anchor to a marker item at the parent row's edge instead.
@@ -67,28 +56,27 @@ PopupWindow {
     Bevel {
         anchors.fill: parent
 
-        // Not anchored to fill: the window sizes itself to this column, so
-        // filling would be a loop and Qt would leave the implicit size at 0.
-        Column {
-            id: column
+        WrapperItem {
+            id: wrapper
 
-            x: root.padding
-            y: root.padding
-            width: root.contentWidth
+            anchors.fill: parent
+            margin: root.padding
 
-            Repeater {
-                id: rep
+            // A Column would derive its implicit width from the rows' laid out
+            // widths, which is circular once the rows are stretched to it.
+            ColumnLayout {
+                spacing: 0
 
-                onCountChanged: root.rowCount = rep.count
+                Repeater {
+                    model: opener.children
 
-                model: opener.children
+                    MenuRow {
+                        required property QsMenuEntry modelData
 
-                MenuRow {
-                    required property QsMenuEntry modelData
-
-                    entry: modelData
-                    menu: root
-                    width: column.width
+                        entry: modelData
+                        menu: root
+                        Layout.fillWidth: true
+                    }
                 }
             }
         }
