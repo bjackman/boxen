@@ -73,15 +73,7 @@ Bevel {
             height: parent.height
         }
 
-        Cpu {
-            height: parent.height
-        }
-
-        Memory {
-            height: parent.height
-        }
-
-        Temperature {
+        SystemStatsItem {
             height: parent.height
         }
 

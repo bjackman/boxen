@@ -53,9 +53,11 @@ Singleton {
         if (usage.cpu !== undefined)
             root.cpuUsage = usage.cpu;
 
+        // Sized from the cpuN lines rather than from usage, which is empty
+        // until there are two samples to subtract.
         const cores = [];
-        for (let i = 0; usage[`cpu${i}`] !== undefined; i++)
-            cores.push(usage[`cpu${i}`]);
+        for (let i = 0; `cpu${i}` in root.previousCpu; i++)
+            cores.push(usage[`cpu${i}`] ?? 0);
         if (cores.length > 0)
             root.coreUsage = cores;
     }
