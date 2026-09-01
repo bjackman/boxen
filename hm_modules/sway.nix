@@ -22,7 +22,7 @@ in
       "waybar"
       "quickshell"
     ];
-    default = "waybar";
+    default = "quickshell";
     description = "Which status bar to run as part of the Wayland session.";
   };
 
