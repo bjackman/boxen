@@ -38,20 +38,6 @@ Bevel {
         }
     }
 
-    WindowTitle {
-        anchors {
-            left: left.right
-            leftMargin: Theme.spacing
-            right: right.left
-            rightMargin: Theme.spacing
-            top: parent.top
-            topMargin: root.contentMargin
-            bottom: parent.bottom
-            bottomMargin: root.contentMargin
-        }
-        horizontalAlignment: Text.AlignHCenter
-    }
-
     Row {
         id: right
 
