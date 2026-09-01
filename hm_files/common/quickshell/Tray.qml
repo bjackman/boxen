@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Services.SystemTray
+import Quickshell.Widgets
 import QtQuick
 
 BarItem {
@@ -12,24 +13,14 @@ BarItem {
     Repeater {
         model: SystemTray.items
 
-        Item {
+        IconImage {
             id: entry
 
             required property SystemTrayItem modelData
 
-            readonly property int size: 16
-
-            implicitWidth: size
-            implicitHeight: size
+            source: modelData.icon
+            implicitSize: 16
             anchors.verticalCenter: parent.verticalCenter
-
-            Image {
-                anchors.fill: parent
-                source: entry.modelData.icon
-                sourceSize.width: entry.size
-                sourceSize.height: entry.size
-                fillMode: Image.PreserveAspectFit
-            }
 
             Menu {
                 id: menu

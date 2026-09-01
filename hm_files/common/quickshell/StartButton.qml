@@ -1,3 +1,4 @@
+import Quickshell.Widgets
 import QtQuick
 
 Bevel {
@@ -17,12 +18,12 @@ Bevel {
         anchors.centerIn: parent
         spacing: 4
 
-        Image {
+        IconImage {
             anchors.verticalCenter: parent.verticalCenter
-            source: "start.png"
-            sourceSize.width: root.height - 6
-            sourceSize.height: root.height - 6
-            fillMode: Image.PreserveAspectFit
+            // IconImage's source alias resolves relative URLs against its own
+            // directory, not this one.
+            source: Qt.resolvedUrl("start.png")
+            implicitSize: root.height - 6
         }
 
         BarText {
