@@ -18,12 +18,15 @@ Bevel {
         anchors.centerIn: parent
         spacing: 4
 
-        IconImage {
+        Image {
             anchors.verticalCenter: parent.verticalCenter
-            // IconImage's source alias resolves relative URLs against its own
-            // directory, not this one.
-            source: Qt.resolvedUrl("start.png")
-            implicitSize: root.height - 6
+            source: "start.png"
+            width: root.height - 6
+            height: root.height - 6
+            sourceSize.width: 24
+            sourceSize.height: 24
+            fillMode: Image.PreserveAspectFit
+            smooth: false
         }
 
         BarText {
