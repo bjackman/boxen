@@ -93,10 +93,6 @@ Bevel {
             height: parent.height
         }
 
-        Network {
-            height: parent.height
-        }
-
         Tray {
             height: parent.height
         }

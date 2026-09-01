@@ -18,9 +18,6 @@ Singleton {
     readonly property string balanced: "\uf24e"
     readonly property string powerSaver: "\uf06c"
 
-    readonly property string wifi: "\uf1eb"
-    readonly property string ethernet: "\uf796"
-
     readonly property string muted: "\uf6a9"
     readonly property string headphone: "\uf025"
     readonly property string headset: "\uf590"
