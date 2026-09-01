@@ -11,10 +11,12 @@ Rectangle {
 
     readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
 
-    readonly property color outerTopLeft: sunken ? Theme.shadow : Theme.lightFace
-    readonly property color innerTopLeft: sunken ? Theme.darkShadow : Theme.light
+    // Raised edges run bright to dark outwards. Sunken ones are the taskbar's
+    // inlay rather than a text field, so they're a single tone a side.
+    readonly property color outerTopLeft: sunken ? Theme.shadow : Theme.light
+    readonly property color innerTopLeft: sunken ? Theme.shadow : Theme.lightFace
     readonly property color outerBottomRight: sunken ? Theme.light : Theme.darkShadow
-    readonly property color innerBottomRight: sunken ? Theme.lightFace : Theme.shadow
+    readonly property color innerBottomRight: sunken ? Theme.light : Theme.shadow
 
     color: Theme.face
 
