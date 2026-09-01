@@ -28,8 +28,24 @@ BarItem {
         onExited: root.available = false
     }
 
-    BarText {
-        // Same width in both states so the bar doesn't reflow.
-        text: root.locked ? "CAPS" : "caps"
+    // Reserve the wider of the two states so the bar doesn't reflow.
+    Item {
+        anchors.verticalCenter: parent.verticalCenter
+        implicitWidth: metrics.width
+        implicitHeight: label.implicitHeight
+
+        TextMetrics {
+            id: metrics
+
+            font: label.font
+            text: "CAPS"
+        }
+
+        BarText {
+            id: label
+
+            anchors.centerIn: parent
+            text: root.locked ? "CAPS" : "caps"
+        }
     }
 }
