@@ -26,7 +26,7 @@ Singleton {
     readonly property int barHeight: 42
     // The two tones making up a 3D edge. The inner one carries the weight;
     // the outer stays a hairline.
-    readonly property int outerEdgeWidth: 1
+    readonly property int outerEdgeWidth: 2
     readonly property int innerEdgeWidth: 2
     readonly property int bevelWidth: outerEdgeWidth + innerEdgeWidth
     readonly property int itemPadding: 4
