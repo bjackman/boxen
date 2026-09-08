@@ -173,7 +173,7 @@ in
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
         for_window [app_id="^(org\.wezfurlong\.wezterm|firefox|dev\.zed\.Zed|code(-url-handler)?|gamescope)$"] focus
-        for_window [class="^(Code|Steam|steam_app_[0-9]+)$"] focus
+        for_window [class="(?i)^(Code|Steam|steam_app_[0-9]+|Slay the Spire 2)$"] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
       '';
@@ -193,11 +193,13 @@ in
           "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
           "messages" = [ { app_id = "signal"; } ];
           "games" = [
-            { class = "^Steam$"; }
+            # The Steam client used to set a capitalised class.
+            { class = "(?i)^steam$"; }
             # Proton/Wine name their windows after the Steam app ID. Native
             # Linux games get no such treatment, they'll need naming here
             # individually.
             { class = "^steam_app_[0-9]+$"; }
+            { class = "^Slay the Spire 2$"; }
             { app_id = "^gamescope$"; }
           ];
           "editor" = [
