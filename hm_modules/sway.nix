@@ -98,7 +98,15 @@ in
       ];
     };
 
-    services.mako.enable = true;
+    services.mako = {
+      enable = true;
+      # Mako doesn't support notifications with actual buttons in them natively
+      # but Claude came up with this trick where if you click an "actionable"
+      # notification it gives you the options in a rofi menu instead.
+      # -auto-select skips the menu when there's only the default action.
+      settings."actionable=true".on-button-left =
+        "exec makoctl menu -n \"$id\" -- ${lib.getExe config.programs.rofi.finalPackage} -dmenu -auto-select -p Action";
+    };
 
     # Left out of the for_window focus rules below on purpose: this starts with
     # the session, so focussing it would steal focus at login.
