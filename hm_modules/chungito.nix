@@ -47,6 +47,7 @@
 
   wayland.windowManager.sway.config = {
     input."*".xkb_layout = "us,ch";
+    input."type:pointer".pointer_accel = "0.5";
     keybindings =
       let
         mod = config.wayland.windowManager.sway.config.modifier;
