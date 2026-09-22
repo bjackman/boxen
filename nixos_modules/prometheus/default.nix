@@ -24,6 +24,7 @@ in
     # Note we listen on all interfaces but the firewall setup below only exposes
     # the port on tailscale0.
     listenAddress = "0.0.0.0";
+    webExternalUrl = config.bjackman.iap.services.prometheus.url;
     scrapeConfigs =
       let
         # Given the name of an exporter configured via
@@ -106,6 +107,7 @@ in
     ];
     alertmanager = {
       enable = true;
+      webExternalUrl = config.bjackman.iap.services.alertmanager.url;
       # Copied from
       # https://github.com/bjackman/nas/blob/486592769ca3fa7e186438520e745c485b116ebd/templates/alertmanager.yaml.jinja2
       # I'd probably like to replace this with ntfy.sh - see the stash/ntfy
