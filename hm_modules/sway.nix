@@ -154,7 +154,7 @@ in
     programs.swaylock = {
       enable = true;
       settings = {
-        image = ../hm_files/common/clouds_95.png;
+        image = ../hm_files/common/clouds_95-4k.png;
         scaling = "fill";
         # Stop it from blocking suspend and stuff when called e.g. from swayidle before-sleep.
         daemonize = true;
