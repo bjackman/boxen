@@ -222,7 +222,7 @@ in
         # We can set global display settings here. Individual outputs will be
         # configured in per-machine modules.
         output."*" = {
-          background = "${../hm_files/common/clouds.png} fill";
+          background = "${../hm_files/common/clouds-4k.png} fill";
         };
         input."*".xkb_options = "compose:ralt";
         input."type:touchpad".natural_scroll = "enable";
