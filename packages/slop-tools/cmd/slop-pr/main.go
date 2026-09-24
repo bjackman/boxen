@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -66,7 +67,14 @@ func run() error {
 		return err
 	}
 	topic := filepath.Base(root)
-	project := filepath.Base(filepath.Dir(root))
+	remote, err := git("remote", "get-url", "origin")
+	if err != nil {
+		return err
+	}
+	project, err := projectFromURL(remote)
+	if err != nil {
+		return err
+	}
 
 	if err := push(topic); err != nil {
 		return err
@@ -94,6 +102,18 @@ func run() error {
 		fmt.Println(change.URL)
 	}
 	return nil
+}
+
+func projectFromURL(remote string) (string, error) {
+	parsed, err := url.Parse(remote)
+	if err != nil {
+		return "", fmt.Errorf("parsing remote URL %q: %w", remote, err)
+	}
+	project := strings.TrimSuffix(strings.Trim(parsed.Path, "/"), ".git")
+	if parsed.Host == "" || project == "" {
+		return "", fmt.Errorf("remote URL %q doesn't name a Gerrit project", remote)
+	}
+	return project, nil
 }
 
 // push sends every commit not yet on the branch as one topic. Gerrit rejects a
