@@ -31,6 +31,16 @@ let
       width = 2560;
       height = 1440;
     };
+    dell-u3225qe-a = {
+      criteria = "Dell Inc. DELL U3225QE GZBTLJ4";
+      width = 3840;
+      height = 2160;
+    };
+    dell-u3225qe-b = {
+      criteria = "Dell Inc. DELL U3225QE J0CTLJ4";
+      width = 3840;
+      height = 2160;
+    };
   };
 
   # Safe integer division for common scales to avoid Nix float-to-string issues.
@@ -184,6 +194,16 @@ in
           ]
         ))
 
+        (makeProfile "chungito-desk" [
+          {
+            monitor = presets.dell-u3225qe-a;
+            name = "left";
+          }
+          {
+            monitor = presets.dell-u3225qe-b;
+            rightOf = "left";
+          }
+        ])
       ];
   };
 }
