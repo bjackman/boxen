@@ -194,14 +194,20 @@ in
           ]
         ))
 
+        # 4K120 exceeds the 3070 Ti's DP 1.4 bandwidth so this relies on DSC.
+        # Seemed to work fine when tested.
         (makeProfile "chungito-desk" [
           {
             monitor = presets.dell-u3225qe-a;
             name = "left";
+            mode = "3840x2160@119.999Hz";
+            scale = 1.25;
           }
           {
             monitor = presets.dell-u3225qe-b;
             rightOf = "left";
+            mode = "3840x2160@119.999Hz";
+            scale = 1.25;
           }
         ])
       ];
