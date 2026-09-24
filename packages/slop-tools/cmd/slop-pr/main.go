@@ -5,6 +5,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net/url"
@@ -41,6 +42,22 @@ func (e *publishedError) Error() string { return e.err.Error() }
 func (e *publishedError) Unwrap() error { return e.err }
 
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: slop-pr\n\nPush HEAD's unmerged commits to Gerrit for review, topic named for the worktree.\n")
+	}
+	// Exit status 2 is taken by exitCode.
+	flag.CommandLine.Init("slop-pr", flag.ContinueOnError)
+	err := flag.CommandLine.Parse(os.Args[1:])
+	if errors.Is(err, flag.ErrHelp) {
+		os.Exit(0)
+	}
+	if err != nil || flag.NArg() > 0 {
+		if err == nil {
+			flag.Usage()
+		}
+		os.Exit(1)
+	}
+
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "slop-pr: %v\n", err)
 		var published *publishedError
