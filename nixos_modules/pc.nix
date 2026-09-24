@@ -99,6 +99,10 @@
       mode = "0700";
     }
     {
+      directory = ".config/Signal";
+      mode = "0700";
+    }
+    {
       directory = ".local/share/keyrings";
       mode = "0700";
     }
