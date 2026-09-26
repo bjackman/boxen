@@ -14,7 +14,7 @@ in
     ./quickshell.nix
     ./wayland-services.nix
     ./waybar.nix
-    ./wezterm.nix
+    ./foot.nix
   ];
 
   options.bjackman.bar = lib.mkOption {
@@ -180,7 +180,7 @@ in
         # is already the default when it opens on the current workspace. I can't
         # figure out how to make this "focus workspace on open" the global
         # default, but I guess it's only an issue for these specific apps.
-        for_window [app_id="^(org\.wezfurlong\.wezterm|firefox|dev\.zed\.Zed|code(-url-handler)?|gamescope)$"] focus
+        for_window [app_id="^(foot|firefox|dev\.zed\.Zed|code(-url-handler)?|gamescope)$"] focus
         for_window [class="(?i)^(Code|Steam|steam_app_[0-9]+|Slay the Spire 2)$"] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
@@ -199,7 +199,7 @@ in
       config = rec {
         bars = [ ];
         modifier = "Mod4";
-        terminal = "wezterm start fish";
+        terminal = "foot fish";
         menu = "rofi -show drun";
         # Put my absolute boys on their home workspace by default. Update the
         # for_window above if you change this.
@@ -209,7 +209,7 @@ in
             { app_id = "firefox"; }
             { app_id = "google-chrome"; }
           ];
-          "terminal" = [ { app_id = "org.wezfurlong.wezterm"; } ];
+          "terminal" = [ { app_id = "foot"; } ];
           "messages" = [ { app_id = "signal"; } ];
           "games" = [
             # The Steam client used to set a capitalised class.
