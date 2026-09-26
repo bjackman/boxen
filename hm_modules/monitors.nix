@@ -147,6 +147,15 @@ let
   };
 in
 {
+  # Sway resets outputs to its own config on reload, trigger a Kanshi reload to
+  # override it.
+  wayland.windowManager.sway.config.startup = [
+    {
+      command = "${config.services.kanshi.package}/bin/kanshictl reload";
+      always = true;
+    }
+  ];
+
   services.kanshi = {
     enable = true;
     settings =
