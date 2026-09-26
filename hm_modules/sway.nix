@@ -184,6 +184,17 @@ in
         for_window [class="(?i)^(Code|Steam|steam_app_[0-9]+|Slay the Spire 2)$"] focus
         # This lets apps focus themselves unconditionally.
         focus_on_window_activation focus
+
+        # In Mac mode the Keychron sends Alt from the Super key.
+        ${lib.concatMapStrings
+          (key: ''
+            bindsym --input-device=13364:53296:Keychron__Keychron_Link__Keyboard Mod1+${key} exec ${pkgs.libnotify}/bin/notify-send --urgency=critical "Keychron is in Mac mode" "Flip the switch to Windows"
+          '')
+          [
+            "Return"
+            "d"
+          ]
+        }
       '';
       config = rec {
         bars = [ ];
