@@ -1,4 +1,4 @@
-import Quickshell.Widgets
+import Quickshell
 import QtQuick
 
 Bevel {
@@ -19,14 +19,18 @@ Bevel {
         spacing: 4
 
         Image {
+            // The artwork is drawn on a 32px grid, which only stays crisp
+            // at whole multiples of that in device pixels.
+            readonly property real dpr: QsWindow.window?.devicePixelRatio ?? 1
+            readonly property int pixelScale: Math.floor((root.height - 6) * dpr / 32)
+
             anchors.verticalCenter: parent.verticalCenter
             source: "start.png"
-            width: root.height - 6
-            height: root.height - 6
-            sourceSize.width: 24
-            sourceSize.height: 24
-            fillMode: Image.PreserveAspectFit
-            smooth: false
+            width: pixelScale > 0 ? pixelScale * 32 / dpr : root.height - 6
+            height: width
+            sourceSize.width: 32
+            sourceSize.height: 32
+            smooth: pixelScale === 0
         }
 
         BarText {
