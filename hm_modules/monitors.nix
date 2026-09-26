@@ -127,7 +127,8 @@ let
                 position = "${toString pos.x},${toString pos.y}";
               }
               // (if spec ? scale then { inherit scale; } else { })
-              // (if spec ? mode then { inherit (spec) mode; } else { });
+              // (if spec ? mode then { inherit (spec) mode; } else { })
+              // (if spec ? status then { inherit (spec) status; } else { });
             in
             {
               resolved = acc.resolved // {
@@ -159,6 +160,20 @@ in
             monitor = presets.dell-p2720dc;
             name = "right";
             rightOf = "left";
+          }
+        ];
+        chungitoDesk = right: [
+          {
+            monitor = presets.dell-u3225qe-a;
+            name = "left";
+            mode = "3840x2160@119.999Hz";
+            scale = 1.25;
+          }
+          {
+            monitor = right;
+            rightOf = "left";
+            mode = "3840x2160@119.999Hz";
+            scale = 1.25;
           }
         ];
       in
@@ -196,20 +211,21 @@ in
 
         # 4K120 exceeds the 3070 Ti's DP 1.4 bandwidth so this relies on DSC.
         # Seemed to work fine when tested.
-        (makeProfile "chungito-desk" [
-          {
-            monitor = presets.dell-u3225qe-a;
-            name = "left";
-            mode = "3840x2160@119.999Hz";
-            scale = 1.25;
-          }
-          {
-            monitor = presets.dell-u3225qe-b;
-            rightOf = "left";
-            mode = "3840x2160@119.999Hz";
-            scale = 1.25;
-          }
-        ])
+        (makeProfile "chungito-desk" (chungitoDesk presets.dell-u3225qe-b))
+
+        # The right monitor is also daisy-chained off the left one for the Mac.
+        # Both heads have the same description so match by connector name.
+        (makeProfile "chungito-desk-daisy-chain" (
+          chungitoDesk (presets.dell-u3225qe-b // { criteria = "DP-2"; })
+          ++ [
+            {
+              monitor = presets.dell-u3225qe-b // {
+                criteria = "DP-4";
+              };
+              status = "disable";
+            }
+          ]
+        ))
       ];
   };
 }
