@@ -1,3 +1,5 @@
+//@ pragma NativeTextRendering
+
 import Quickshell
 import QtQuick
 

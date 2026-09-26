@@ -23,7 +23,9 @@ Singleton {
     readonly property color critical: "#cc0000"
     readonly property color locked: "#bb4454"
 
-    readonly property int barHeight: 42
+    // A whole number of device pixels at 1.25x and 1.5x, otherwise the
+    // compositor resamples the bar.
+    readonly property int barHeight: 44
     // A two tone edge is a tone apiece; a single tone one is half as wide
     // overall, as in Win95 itself.
     readonly property int outerEdgeWidth: 2
