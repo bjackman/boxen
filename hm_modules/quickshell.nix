@@ -32,6 +32,10 @@ in
     # The upstream module's unit isn't PartOf the session target, so it
     # outlives the compositor. Same problem the waybar module has:
     # https://github.com/nix-community/home-manager/issues/7895
-    systemd.user.services.quickshell.Unit.PartOf = [ config.wayland.systemd.target ];
+    systemd.user.services.quickshell.Unit = {
+      PartOf = [ config.wayland.systemd.target ];
+      # Pragmas are only read at startup, so hot reload isn't enough.
+      X-Restart-Triggers = [ "${configDir}" ];
+    };
   };
 }
