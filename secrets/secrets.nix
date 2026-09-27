@@ -107,4 +107,9 @@ in
     chungito
     fw13
   ];
+  # ci-bot is the identity the CI runner votes Verified as. It only ever speaks
+  # SSH, so unlike slopbot it needs no Authelia credential, and it only runs on
+  # the Gerrit host.
+  # ssh-keygen -t ed25519 -C ci-bot@gerrit -f key && agenix -e ci-bot-ssh-privkey.age < key
+  "ci-bot-ssh-privkey.age".publicKeys = all;
 }

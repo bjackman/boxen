@@ -1,4 +1,4 @@
-# The probe client and server, built from the slop-tools module but packaged
+# The probe client and server, built from the go-tools module but packaged
 # separately: the server runs on homelab hosts, which have no business
 # depending on the closure of the tools that drive Claude Code.
 {
@@ -27,14 +27,16 @@ buildGoModule {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  ldflags = map (flag: "-X main.${flag}") [
-    "sshUser=${sshUser}"
-    "keyFile=${keyFile}"
-    "knownHostsFile=${knownHostsFile}"
-    "hosts=${lib.concatStringsSep "," hosts}"
+  # See slop-tools.nix on why these are flags and not ldflags.
+  flags = lib.escapeShellArgs [
+    "--ssh-user=${sshUser}"
+    "--key-file=${keyFile}"
+    "--known-hosts-file=${knownHostsFile}"
+    "--hosts=${lib.concatStringsSep "," hosts}"
   ];
 
   postFixup = ''
-    wrapProgram $out/bin/slop-probe --prefix PATH : ${lib.makeBinPath [ openssh ]}
+    wrapProgram $out/bin/slop-probe --add-flags "$flags" \
+      --prefix PATH : ${lib.makeBinPath [ openssh ]}
   '';
 }

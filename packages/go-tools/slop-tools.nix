@@ -24,37 +24,41 @@ buildGoModule {
   # keep up to date.
   vendorHash = null;
 
-  # Built from probe.nix instead, configured for the probe key and host keys.
-  # Built from here they would be unconfigured and shadow those in the profile.
+  # Built from probe.nix and gerrit-ci.nix instead, each configured for its own
+  # key and host. Built from here they would be unconfigured and shadow those
+  # in the profile.
   excludedPackages = [
     "cmd/slop-probe"
     "cmd/slop-probe-server"
+    "cmd/gerrit-ci"
   ];
 
   nativeBuildInputs = [ makeWrapper ];
 
-  ldflags = map (flag: "-X main.${flag}") [
-    "gerritHost=${gerritHost}"
-    "gerritPort=${toString gerritPort}"
-    "gerritURL=${gerritUrl}"
-    "branch=${branch}"
-    "pusher=${pusher}"
-    "reviewer=${reviewer}"
-    "keyFile=${keyFile}"
-    "authUser=${authUser}"
-    "passwordFile=${passwordFile}"
+  # Configuration is flags rather than ldflags: it stays visible in the
+  # wrapper, overridable for a one-off, and changing it doesn't rebuild Go.
+  flags = lib.escapeShellArgs [
+    "--gerrit-host=${gerritHost}"
+    "--gerrit-port=${toString gerritPort}"
+    "--gerrit-url=${gerritUrl}"
+    "--branch=${branch}"
+    "--pusher=${pusher}"
+    "--reviewer=${reviewer}"
+    "--key-file=${keyFile}"
+    "--auth-user=${authUser}"
+    "--password-file=${passwordFile}"
   ];
 
   postFixup = ''
     for cmd in slop-pr slop-reply; do
-      wrapProgram $out/bin/$cmd --prefix PATH : ${
+      wrapProgram $out/bin/$cmd --add-flags "$flags" --prefix PATH : ${
         lib.makeBinPath [
           git
           openssh
         ]
       }
     done
-    wrapProgram $out/bin/slop-handler --prefix PATH : ${
+    wrapProgram $out/bin/slop-handler --add-flags "$flags" --prefix PATH : ${
       lib.makeBinPath [
         claude-code
         git

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bjackman/boxen/slop-tools/internal/probe"
+	"github.com/bjackman/boxen/go-tools/internal/probe"
 )
 
 // The sandbox this runs in has /bin/sh and little else, so the probes here use

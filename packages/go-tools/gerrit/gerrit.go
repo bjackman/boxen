@@ -36,19 +36,25 @@ type Client struct {
 }
 
 type Config struct {
-	Host         string
-	Port         int
-	User         string
-	KeyFile      string
-	BaseURL      string
-	AuthUser     string
+	Host     string
+	Port     int
+	User     string
+	KeyFile  string
+	BaseURL  string
+	AuthUser string
+	// Leave empty for a client that only speaks SSH. Reading inline comments
+	// is then unavailable, and everything else works.
 	PasswordFile string
 }
 
 func NewClient(config Config) (*Client, error) {
-	password, err := os.ReadFile(config.PasswordFile)
-	if err != nil {
-		return nil, fmt.Errorf("reading proxy password: %w", err)
+	var password []byte
+	if config.PasswordFile != "" {
+		var err error
+		password, err = os.ReadFile(config.PasswordFile)
+		if err != nil {
+			return nil, fmt.Errorf("reading proxy password: %w", err)
+		}
 	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -76,7 +82,27 @@ type PatchSet struct {
 	Number   int    `json:"number"`
 	Revision string `json:"revision"`
 	// The ref this patch set can be fetched from, as refs/changes/NN/change/N.
-	Ref string `json:"ref"`
+	Ref       string     `json:"ref"`
+	Approvals []Approval `json:"approvals"`
+}
+
+// Approval is one label vote, as `gerrit query --current-patch-set` reports it.
+// Submitting a change adds one of type SUBM, which is not a label anyone votes.
+type Approval struct {
+	Type string `json:"type"`
+	// A string in the query output, sign included, even though it's a number.
+	Value string  `json:"value"`
+	By    Account `json:"by"`
+}
+
+// Voted reports whether user has voted on label in this patch set.
+func (p PatchSet) Voted(label, user string) bool {
+	for _, approval := range p.Approvals {
+		if approval.Type == label && approval.By.Username == user {
+			return true
+		}
+	}
+	return false
 }
 
 type Change struct {
@@ -184,6 +210,9 @@ func (c *Client) Review(change int, patchSet int, review ReviewInput) error {
 // and the plain paths are anonymous without a session - so this is the one way
 // an API client authenticates as itself here.
 func (c *Client) login() error {
+	if c.password == "" {
+		return errors.New("no proxy credential: this client only speaks SSH")
+	}
 	req, err := http.NewRequest("GET", c.baseURL+"/login/%2F", nil)
 	if err != nil {
 		return err
@@ -261,6 +290,19 @@ func truncate(s string, max int) string {
 
 // Event is the part of a stream-events record this workflow reads. The stream
 // carries no comment bodies, so it's only ever a hint to go and look.
+// Event types delivered by stream-events. Gerrit emits more than these; these
+// are the ones anything here reacts to.
+const (
+	EventPatchSetCreated = "patchset-created"
+	EventCommentAdded    = "comment-added"
+	EventChangeMerged    = "change-merged"
+	EventChangeAbandoned = "change-abandoned"
+	EventChangeRestored  = "change-restored"
+	EventRefUpdated      = "ref-updated"
+	EventReviewerAdded   = "reviewer-added"
+	EventWipStateChanged = "wip-state-changed"
+)
+
 type Event struct {
 	Type   string `json:"type"`
 	Change struct {

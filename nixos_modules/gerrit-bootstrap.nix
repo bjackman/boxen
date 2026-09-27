@@ -15,7 +15,13 @@ let
   # The same keys the hosts authorise, so pushing to a branch and administering
   # over SSH needs no separate registration step.
   adminKeys = config.users.users.${admin}.openssh.authorizedKeys.keys;
+  gerritConfig = ../gerrit_config;
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
+  ciBotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFy1m+rbpUHFBGKfEVI1pgMGZtOtqNyQc751D4BIuDCP ci-bot@gerrit";
+  ciBot = {
+    email = "ci-bot@yawn.io";
+    displayName = "CI";
+  };
 in
 {
   options.bjackman.gerritSshPort = lib.mkOption {
@@ -51,6 +57,8 @@ in
       wantedBy = [ "multi-user.target" ];
       path = [
         pkgs.curl
+        pkgs.git
+        pkgs.gnused
         pkgs.coreutils
         pkgs.gawk
         pkgs.jq
@@ -138,59 +146,151 @@ in
         # never link: the first login tries to create a second account, collides
         # on the username, and fails for good.
         #
-        # The identity headers are the ones Authelia would send, so the account
-        # ends up with the address and name from users.json either way.
-        if [ "$(req GET /a/accounts/slopbot)" = 404 ]; then
-          slopbot_cookies=$(mktemp)
-          curl -sS -c "$slopbot_cookies" -b "$slopbot_cookies" -o /dev/null \
-            -H "${authHeader}: slopbot" \
-            -H "Remote-Email: ${agent.email}" \
-            -H "Remote-Name: ${agent.displayName}" \
-            -H "X-Forwarded-Proto: https" -H "X-Forwarded-Host: ${fqdn}" \
-            "${apiUrl}/login/%2F"
-          rm -f "$slopbot_cookies"
-          expect "$(req GET /a/accounts/slopbot)" 200
-        fi
+        # The identity headers are the ones Authelia would send, so an account
+        # that also has an Authelia identity ends up agreeing with users.json.
+        bot_account() {
+          local user=$1 email=$2 name=$3 key=$4
+          if [ "$(req GET "/a/accounts/$user")" = 404 ]; then
+            local bot_cookies
+            bot_cookies=$(mktemp)
+            curl -sS -c "$bot_cookies" -b "$bot_cookies" -o /dev/null \
+              -H "${authHeader}: $user" \
+              -H "Remote-Email: $email" \
+              -H "Remote-Name: $name" \
+              -H "X-Forwarded-Proto: https" -H "X-Forwarded-Host: ${fqdn}" \
+              "${apiUrl}/login/%2F"
+            rm -f "$bot_cookies"
+            expect "$(req GET "/a/accounts/$user")" 200
+          fi
 
-        # Keeps the bot out of my attention set.
-        expect "$(req PUT "/a/groups/Service%20Users/members/slopbot")" 201 200
+          # Keeps the bot out of my attention set.
+          expect "$(req PUT "/a/groups/Service%20Users/members/$user")" 201 200
+
+          register_email "$user" "$email"
+
+          expect "$(req GET "/a/accounts/$user/sshkeys")" 200
+          tail -c +6 "$resp" > "$keys"
+          local encoded
+          encoded=$(echo "$key" | awk '{ print $2 }')
+          if ! jq -e --arg key "$encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
+            expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
+              "''${proxied[@]}" -H "X-Gerrit-Auth: $token" -H 'Content-Type: text/plain' \
+              -X POST --data-binary "$key" "${apiUrl}/a/accounts/$user/sshkeys")" 201
+          fi
+        }
 
         # An address is only taken from the header when the account is created,
         # so registering it explicitly covers accounts that predate the header
         # being configured. Without one, a push is refused unless the account
         # happens to hold "forge committer".
-        for account in ${admin} slopbot; do
-          case $account in
-            ${admin}) address=${adminUser.email} ;;
-            *) address=${agent.email} ;;
-          esac
-          expect "$(req PUT "/a/accounts/$account/emails/''${address/@/%40}" \
+        register_email() {
+          expect "$(req PUT "/a/accounts/$1/emails/''${2/@/%40}" \
             '{"no_confirmation": true, "preferred": true}')" 201 409
-        done
+        }
 
-        expect "$(req GET /a/accounts/slopbot/sshkeys)" 200
-        tail -c +6 "$resp" > "$keys"
-        slopbot_key_encoded=$(echo ${lib.escapeShellArg slopbotKey} | awk '{ print $2 }')
-        if ! jq -e --arg key "$slopbot_key_encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
-          expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
-            "''${proxied[@]}" -H "X-Gerrit-Auth: $token" -H 'Content-Type: text/plain' \
-            -X POST --data-binary ${lib.escapeShellArg slopbotKey} \
-            "${apiUrl}/a/accounts/slopbot/sshkeys")" 201
+        register_email ${admin} ${adminUser.email}
+        bot_account slopbot ${agent.email} ${lib.escapeShellArg agent.displayName} \
+          ${lib.escapeShellArg slopbotKey}
+        # ci-bot votes Verified and does nothing else. Unlike slopbot it never
+        # speaks REST, so it has no Authelia identity and its address and name
+        # are written here rather than in users.json - an entry there would mint
+        # an Authelia login that nothing would ever use.
+        bot_account ci-bot ${ciBot.email} ${lib.escapeShellArg ciBot.displayName} \
+          ${lib.escapeShellArg ciBotKey}
+
+        # Voting on a label is granted to a group, never to an account.
+        if [ "$(req GET /a/groups/ci)" = 404 ]; then
+          expect "$(req PUT /a/groups/ci '{"description": "Accounts that vote Verified."}')" 201
+          # Gerrit makes whoever created the group its first member, and this
+          # group means "has actually run the checks", which I have not.
+          # Overriding a vote by hand is a separate grant, in project.config.
+          expect "$(req DELETE "/a/groups/ci/members/${admin}")" 204 404
         fi
+        expect "$(req PUT /a/groups/ci/members/ci-bot)" 201 200
 
 
-        # Gerrit's defaults let an administrator create a branch but not push
-        # commits to one: the mainline is only meant to advance by submitting a
-        # change. That's right for slopbot and wrong for me, and an import of
-        # existing history needs it.
+        # A project's configuration - its ACLs, its labels and its submit
+        # requirements - is a file on refs/meta/config, so it's a file in the
+        # repo rather than a translation of one into API calls. Only these
+        # projects: All-Projects holds every default, and replacing its config
+        # wholesale would drop the lot.
+        #
+        # The groups file beside it maps each group the config names to a UUID
+        # that is generated per instance, so it can't be checked in and is
+        # written here instead.
+        configure_project() {
+          local project=$1 source=$2 work
+          work=$(mktemp -d)
+          git -C "$work" init -q
+          git -C "$work" fetch -q "${apiUrl}/a/$project" refs/meta/config
+          git -C "$work" checkout -q FETCH_HEAD
+          cp "$source" "$work/project.config"
+
+          # A rule is "<what> = [<range>] group <name>", and a name may contain
+          # spaces, so it runs to the end of the line.
+          local names uuid
+          names=$(sed -n '/^[[:space:]]*#/d; s/.* group \(.*\)$/\1/p' "$source" | sort -u)
+          # Fed in by here-string rather than a pipeline, so that a group that
+          # can't be looked up fails the unit instead of writing a groups file
+          # with a hole in it.
+          {
+            printf '# UUID\tGroup Name\n#\n'
+            while read -r name; do
+              [ -n "$name" ] || continue
+              expect "$(req GET "/a/groups/''${name// /+}")" 200
+              # Ids are URL-encoded, which matters for the system groups whose
+              # UUID is of the form global:Registered-Users.
+              uuid=$(tail -c +6 "$resp" | jq -re .id | sed 's/%3A/:/g')
+              printf '%s\t%s\n' "$uuid" "$name"
+            done <<< "$names"
+          } > "$work/groups"
+
+          if git -C "$work" diff --quiet; then
+            rm -rf "$work"
+            return
+          fi
+          # Never rewritten when nothing changed: this is the ref that says who
+          # may push, so a generation that turns out to be wrong should be one
+          # commit to look at rather than one per boot.
+          git -C "$work" add project.config groups
+          git -C "$work" -c user.name=gerrit-bootstrap -c user.email=${adminUser.email} \
+            commit -q -m "Configure $project from the boxen repo"
+          git -C "$work" push -q "${apiUrl}/a/$project" HEAD:refs/meta/config
+          rm -rf "$work"
+        }
+
+        # git over HTTP authenticates by the session cookie the login above
+        # already got, not by the identity header: under /a/ Gerrit asks for a
+        # credential of its own and answers 401 to the header alone, which is
+        # the same distinction the REST calls run into. The cookie jar curl
+        # keeps is already in the format git wants.
+        export GIT_CONFIG_COUNT=2
+        export GIT_CONFIG_KEY_0=http.cookieFile GIT_CONFIG_VALUE_0="$cookies"
+        export GIT_CONFIG_KEY_1=http.extraHeader GIT_CONFIG_VALUE_1="X-Forwarded-Proto: https"
+
         expect "$(req GET /a/groups/Administrators)" 200
         administrators=$(tail -c +6 "$resp" | jq -r .id)
+
         for project in ${lib.escapeShellArgs projects}; do
           if [ "$(req GET "/a/projects/$project")" = 404 ]; then
             expect "$(req PUT "/a/projects/$project" "{}")" 201
           fi
-          expect "$(req POST "/a/projects/$project/access" "$(jq -n --arg group "$administrators" \
-            '{add: {"refs/heads/*": {permissions: {push: {rules: {($group): {action: "ALLOW", force: false}}}}}}}')")" 200
+          # The one grant that can't come from the file, because it's the grant
+          # that permits the push: being an administrator is not enough on its
+          # own, refs/meta/config wants an owner who also holds Push. Granting
+          # it over REST breaks the circularity, and project.config carries the
+          # same rule so that replacing the file doesn't revoke it.
+          #
+          # Only when it's missing: the endpoint commits to refs/meta/config
+          # whether or not the rule is already there, so calling it every boot
+          # would rewrite the ref forever.
+          expect "$(req GET "/a/projects/$project/access")" 200
+          if ! tail -c +6 "$resp" | jq -e --arg group "$administrators" \
+            '.local["refs/meta/config"].permissions.push.rules[$group]' >/dev/null; then
+            expect "$(req POST "/a/projects/$project/access" "$(jq -n --arg group "$administrators" \
+              '{add: {"refs/meta/config": {permissions: {push: {rules: {($group): {action: "ALLOW", force: false}}}}}}}')")" 200
+          fi
+          configure_project "$project" "${gerritConfig}/$project/project.config"
         done
       '';
       # Runs as root: it only makes HTTP calls to loopback, and Gerrit itself

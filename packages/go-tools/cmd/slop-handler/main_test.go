@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bjackman/boxen/slop-tools/internal/gerrit"
+	"github.com/bjackman/boxen/go-tools/gerrit"
 )
 
 // The debounce exists so that reviewing a series of commits - which means
