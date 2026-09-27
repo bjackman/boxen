@@ -99,6 +99,12 @@ commentary.
   reader has the man page open, drop it; if the setting is genuinely subtle,
   a reference to the docs beats a paraphrase of them.
 
+### Naming
+
+- Wherever the type system doesn't capture it, a string that holds a filesystem
+  path should say so in its name: `keyFilePath`, not `keyFile`. Applies in
+  every language.
+
 ## Tips
 
 - I use Fish and most hosts have Fish set up as the login shell for my user, but
