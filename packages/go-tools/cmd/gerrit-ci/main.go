@@ -293,6 +293,9 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 		return fmt.Errorf("writing %s: %w", c.inFlightPath, err)
 	}
 	defer os.Remove(c.inFlightPath)
+	// Being stopped is a deploy or a shutdown, not something the patch set did,
+	// so it mustn't be blamed when the stop times out and ends in SIGKILL.
+	defer context.AfterFunc(ctx, func() { os.Remove(c.inFlightPath) })()
 
 	if err := c.fetch(ctx, patchSet.Ref); err != nil {
 		return fmt.Errorf("fetching %s into %s: %w", patchSet.Ref, c.repoPath, err)
