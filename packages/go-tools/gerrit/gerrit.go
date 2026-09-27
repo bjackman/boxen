@@ -85,6 +85,25 @@ type PatchSet struct {
 	// The ref this patch set can be fetched from, as refs/changes/NN/change/N.
 	Ref       string     `json:"ref"`
 	Approvals []Approval `json:"approvals"`
+	// Only filled in by QueryWithComments.
+	Comments []InlineComment `json:"comments"`
+}
+
+// InlineComment is an inline comment as `gerrit query --comments` reports it,
+// which is enough to read one but not to reply to it: there's no id.
+type InlineComment struct {
+	File     string  `json:"file"`
+	Line     int     `json:"line"`
+	Reviewer Account `json:"reviewer"`
+	Message  string  `json:"message"`
+}
+
+// Message is a change message: a review's cover message, or Gerrit's own
+// record of an upload or a vote.
+type Message struct {
+	Timestamp int64   `json:"timestamp"`
+	Reviewer  Account `json:"reviewer"`
+	Message   string  `json:"message"`
 }
 
 // Approval is one label vote, as `gerrit query --current-patch-set` reports it.
@@ -116,6 +135,9 @@ type Change struct {
 	URL             string   `json:"url"`
 	Owner           Account  `json:"owner"`
 	CurrentPatchSet PatchSet `json:"currentPatchSet"`
+	// Only filled in by QueryWithComments.
+	Messages  []Message  `json:"comments"`
+	PatchSets []PatchSet `json:"patchSets"`
 }
 
 // Comment is a published inline comment. Gerrit's REST API reports these per
@@ -171,11 +193,25 @@ func (c *Client) ssh(stdin string, args ...string) (string, error) {
 
 // Query runs `gerrit query`, dropping the trailing stats row.
 func (c *Client) Query(terms ...string) ([]Change, error) {
-	args := append([]string{"gerrit", "query", "--format=JSON", "--current-patch-set"}, terms...)
-	out, err := c.ssh("", args...)
+	return c.query(nil, terms)
+}
+
+// QueryWithComments is Query plus each change's messages and all its patch
+// sets, each with its inline comments.
+func (c *Client) QueryWithComments(terms ...string) ([]Change, error) {
+	return c.query([]string{"--patch-sets", "--comments"}, terms)
+}
+
+func (c *Client) query(options []string, terms []string) ([]Change, error) {
+	args := append([]string{"gerrit", "query", "--format=JSON", "--current-patch-set"}, options...)
+	out, err := c.ssh("", append(args, terms...)...)
 	if err != nil {
 		return nil, err
 	}
+	return parseQuery(out)
+}
+
+func parseQuery(out string) ([]Change, error) {
 	var changes []Change
 	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
 		if line == "" {
@@ -194,6 +230,12 @@ func (c *Client) Query(terms ...string) ([]Change, error) {
 	return changes, nil
 }
 
+// AddReviewer is idempotent: adding someone who is already a reviewer succeeds.
+func (c *Client) AddReviewer(change int, reviewer string) error {
+	_, err := c.ssh("", "gerrit", "set-reviewers", "--add", reviewer, fmt.Sprint(change))
+	return err
+}
+
 func (c *Client) Review(change int, patchSet int, review ReviewInput) error {
 	encoded, err := json.Marshal(review)
 	if err != nil {
@@ -203,9 +245,6 @@ func (c *Client) Review(change int, patchSet int, review ReviewInput) error {
 	return err
 }
 
-// Comments returns the published inline comments on a change, newest patch set
-// included. No SSH command reports these: `gerrit query --comments` gives only
-// the patch-set-level messages.
 // login exchanges the proxy credential for a Gerrit session. The REST API under
 // /a/ wants a credential of Gerrit's own, which the proxy has already consumed,
 // and the plain paths are anonymous without a session - so this is the one way
@@ -232,6 +271,8 @@ func (c *Client) login() error {
 	return nil
 }
 
+// Comments returns the published inline comments on a change, newest patch set
+// included, with the ids that replying needs and no SSH command reports.
 func (c *Client) Comments(change int) ([]Comment, error) {
 	if !c.loggedIn {
 		if err := c.login(); err != nil {
@@ -289,8 +330,6 @@ func truncate(s string, max int) string {
 	return s[:max] + "..."
 }
 
-// Event is the part of a stream-events record this workflow reads. The stream
-// carries no comment bodies, so it's only ever a hint to go and look.
 // Event types delivered by stream-events. Gerrit emits more than these; these
 // are the ones anything here reacts to.
 const (
@@ -304,9 +343,13 @@ const (
 	EventWipStateChanged = "wip-state-changed"
 )
 
+// Event is the part of a stream-events record this workflow reads. The stream
+// carries no comment bodies, so it's only ever a hint to go and look.
 type Event struct {
-	Type   string `json:"type"`
-	Change struct {
+	Type string `json:"type"`
+	// Who was added, on EventReviewerAdded.
+	Reviewer Account `json:"reviewer"`
+	Change   struct {
 		Number  int    `json:"number"`
 		Project string `json:"project"`
 		Topic   string `json:"topic"`
