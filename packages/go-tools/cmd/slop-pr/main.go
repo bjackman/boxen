@@ -12,35 +12,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 
-	"github.com/bjackman/boxen/go-tools/gerrit"
+	"github.com/bjackman/boxen/go-tools/internal/slopflags"
 )
 
-var (
-	gerritHost       string
-	gerritPort       string
-	gerritURL        string
-	pusher           string
-	reviewer         string
-	branch           string
-	keyFilePath      string
-	authUser         string
-	passwordFilePath string
-)
-
-func init() {
-	flag.StringVar(&gerritHost, "gerrit-host", "pizza", "Gerrit host to push to")
-	flag.StringVar(&gerritPort, "gerrit-port", "29418", "Gerrit SSH port")
-	flag.StringVar(&gerritURL, "gerrit-url", "https://gerrit.home.yawn.io", "Gerrit web base URL")
-	flag.StringVar(&pusher, "pusher", "slopbot", "Gerrit account to push as")
-	flag.StringVar(&reviewer, "reviewer", "brendan", "Reviewer to add to the change")
-	flag.StringVar(&branch, "branch", "master", "Branch changes are proposed against")
-	flag.StringVar(&keyFilePath, "key-file", "/run/agenix/slopbot-ssh-privkey", "Path to the SSH private key")
-	flag.StringVar(&authUser, "auth-user", "slopbot", "User to authenticate to the proxy as")
-	flag.StringVar(&passwordFilePath, "password-file", "/run/agenix/slopbot-authelia-password", "Path to the file holding the proxy password")
-}
+var config = slopflags.Register(flag.CommandLine)
 
 // publishedError is a failure after the change reached the forge, where
 // reporting it as a plain failure would suggest nothing had been pushed.
@@ -109,14 +86,7 @@ func run() error {
 		return err
 	}
 
-	port, err := strconv.Atoi(gerritPort)
-	if err != nil {
-		return fmt.Errorf("bad gerritPort %q: %w", gerritPort, err)
-	}
-	client, err := gerrit.NewClient(gerrit.Config{
-		Host: gerritHost, Port: port, User: pusher, KeyFile: keyFilePath,
-		BaseURL: gerritURL, AuthUser: authUser, PasswordFile: passwordFilePath,
-	})
+	client, err := config.Client()
 	if err != nil {
 		return err
 	}
@@ -150,9 +120,9 @@ func projectFromURL(remote string) (string, error) {
 // concerned: the change is published either way.
 func push(topic string) error {
 	args := []string{
-		"push", "origin", "HEAD:refs/for/" + branch,
+		"push", "origin", "HEAD:refs/for/" + config.Branch,
 		"-o", "topic=" + topic,
-		"-o", "r=" + reviewer,
+		"-o", "r=" + config.Reviewer,
 	}
 	cmd := exec.Command("git", args...)
 	var stderr strings.Builder
