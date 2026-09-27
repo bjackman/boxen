@@ -111,6 +111,20 @@ in
     # Left out of the for_window focus rules below on purpose: this starts with
     # the session, so focussing it would steal focus at login.
     bjackman.wayland-services.signal-desktop = lib.getExe pkgs.signal-desktop;
+    # Signal requests activation when its window first maps, which sway turns
+    # into urgency since the window lands on a hidden workspace.
+    systemd.user.services.signal-desktop.Service.ExecStartPost = lib.getExe (
+      pkgs.writeShellApplication {
+        name = "signal-clear-startup-urgency";
+        runtimeInputs = [ pkgs.sway ];
+        text = ''
+          for _ in $(seq 60); do
+            swaymsg -q '[app_id="signal" urgent=latest] urgent disable' && exit 0
+            sleep 1
+          done
+        '';
+      }
+    );
 
     services.swayidle = {
       enable = true;
