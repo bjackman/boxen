@@ -25,7 +25,7 @@ buildGoModule {
   version = "0.1.0";
   # Only what these commands import, so that the rest of the module changing
   # doesn't restart the agents that have this on their PATH. The other commands
-  # are built from probe.nix and gerrit-ci.nix instead.
+  # are built from probe.nix, gerrit-ci.nix and review-bot.nix instead.
   src = lib.fileset.toSource {
     root = ./.;
     fileset = lib.fileset.unions [
