@@ -7,35 +7,14 @@
   ...
 }:
 let
-  gerrit = homelab.servers.gerrit;
-  gerritArgs = {
-    gerritHost = gerrit.networking.hostName;
-    gerritPort = gerrit.bjackman.gerritSshPort;
-    keyFile = config.age.secrets.slopbot-ssh-privkey.path;
-  };
-  slop = pkgs.bjackman.slop.override gerritArgs;
-  hostKeys = import ../secrets/host-keys.nix;
-  probeHosts = builtins.attrNames homelab.nodes;
-  slopProbe = pkgs.bjackman.slop-probe.override {
-    hosts = probeHosts;
-    keyFile = config.age.secrets.slopbot-probe-ssh-privkey.path;
-    knownHostsFile = pkgs.writeText "slop-probe-known-hosts" (
-      lib.concatMapStrings (host: "${host} ${hostKeys.${host}}\n") probeHosts
-    );
-  };
-  slopTools = pkgs.bjackman.slop-tools.override (
-    gerritArgs
-    // {
-      gerritUrl = gerrit.bjackman.iap.services.gerrit.url;
-      passwordFile = config.age.secrets.slopbot-authelia-password.path;
-    }
-  );
+  slop = config.bjackman.slopClient.packages;
 in
 {
   imports = [
     ./brendan.nix
     ./common.nix
     ./server.nix
+    ./slop-client.nix
     "${modulesPath}/virtualisation/incus-virtual-machine.nix"
     # Note it's unusual to directly import brendan-home.nix from a host's
     # top-level module, usually they'll import pc.nix, but this is a VM.
@@ -86,30 +65,9 @@ in
     systemd-boot.configurationLimit = 4;
   };
 
-  age.secrets = {
-    slopbot-ssh-privkey = {
-      file = ../secrets/slopbot-ssh-privkey.age;
-      mode = "400";
-      owner = "brendan";
-    };
-    slopbot-probe-ssh-privkey = {
-      file = ../secrets/slopbot-probe-ssh-privkey.age;
-      mode = "400";
-      owner = "brendan";
-    };
-  };
+  bjackman.slopClient.user = "brendan";
 
-  environment.systemPackages = [
-    slop
-    slopTools
-    slopProbe
-  ];
-
-  age.secrets.slopbot-authelia-password = {
-    file = ../secrets/slopbot-authelia-password.age;
-    mode = "400";
-    owner = "brendan";
-  };
+  environment.systemPackages = builtins.attrValues slop;
 
   # Runs as me rather than as a service user: it drives the same sessions I
   # attach to interactively, and Claude Code keys those by home directory.
@@ -127,7 +85,7 @@ in
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      ExecStart = "${slopTools}/bin/slop-handler";
+      ExecStart = "${slop.slop-tools}/bin/slop-handler";
       User = "brendan";
       StateDirectory = "slop-handler";
       Restart = "on-failure";
