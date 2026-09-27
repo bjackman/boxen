@@ -324,9 +324,21 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 		Labels:  map[string]int{*label: vote},
 		Message: message(runErr, logPath, c.logURL(name)),
 	}); err != nil {
+		if open, openErr := c.isOpen(change.Number); openErr == nil && !open {
+			log.Printf("not voting on %s: change %d was closed while it was being checked", name, change.Number)
+			return nil
+		}
 		return fmt.Errorf("voting %s%+d on %d,%d: %w", *label, vote, change.Number, patchSet.Number, err)
 	}
 	return nil
+}
+
+func (c *checker) isOpen(number int) (bool, error) {
+	changes, err := c.client.Query("status:open", "change:"+strconv.Itoa(number))
+	if err != nil {
+		return false, fmt.Errorf("looking up whether change %d is open: %w", number, err)
+	}
+	return len(changes) == 1, nil
 }
 
 // runChecks builds each of the flake's checks in its own nix process, so that
