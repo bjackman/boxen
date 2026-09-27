@@ -79,12 +79,15 @@ in
         # throttle before Gerrit's JVM feels it and die before the OOM killer
         # gets to choose. A unit that failed is an alert; a JVM that was picked
         # instead is a lost review queue.
-        MemoryHigh = "2G";
-        MemoryMax = "3500M";
+        MemoryHigh = "3G";
+        MemoryMax = "4G";
+        # MemoryMax doesn't count swap, so without this the unit swaps its way
+        # past it and fills the host's swap instead of dying.
+        MemorySwapMax = "2G";
         # An evaluation killed for memory is a failed check, not a dead runner.
         OOMPolicy = "continue";
-        # It can't use them - nix-eval-jobs is the bottleneck and it's
-        # single-threaded per worker - and Jellyfin can.
+        # It can't use them - evaluation is the bottleneck and it's
+        # single-threaded - and Jellyfin can.
         CPUQuota = "400%";
         Nice = 10;
         IOSchedulingClass = "idle";
