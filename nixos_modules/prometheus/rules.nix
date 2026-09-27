@@ -6,7 +6,7 @@ let
   # alerts that actually have a runbook file should set this.
   runbookUrl =
     name:
-    "https://github.com/bjackman/boxen/blob/master/.agents/skills/investigate-alert/references/${name}.md";
+    "https://github.com/bjackman/boxen/blob/master/hm_files/skills/investigate-alert/references/${name}.md";
 in
 {
   options.bjackman.prometheus.rules = lib.mkOption {
