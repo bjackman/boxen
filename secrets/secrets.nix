@@ -87,13 +87,14 @@ in
   # ssh-keygen -t ed25519 -C slopbot@gerrit -f key && agenix -e slopbot-ssh-privkey.age < key
   "slopbot-ssh-privkey.age".publicKeys = all ++ [ hostKeys.slopbox ];
   # The key slop-probe connects to the homelab with. See
-  # design_docs/agent_prod_access.md. Only the agent VM uses it, and the hosts
+  # design_docs/agent_prod_access.md. Only the agent hosts use it, and the hosts
   # it reaches need nothing but the public half, so this doesn't go to `all`.
   # ssh-keygen -t ed25519 -C slopbot@probe -f key && agenix -e slopbot-probe-ssh-privkey.age < key
   "slopbot-probe-ssh-privkey.age".publicKeys = [
     chungito
     fw13
     hostKeys.slopbox
+    hostKeys.pizza
   ];
   # slopbot's Authelia password, which is how the agent authenticates to
   # anything behind the proxy - Gerrit's REST API today. The hash of it lives
