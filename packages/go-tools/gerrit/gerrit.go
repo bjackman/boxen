@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
@@ -352,6 +353,32 @@ func (c *Client) StreamEvents(ctx context.Context, onEvent func(Event)) error {
 		return err
 	}
 	return errors.New("event stream closed")
+}
+
+// Watch follows the event stream until ctx is done, reconnecting when it drops,
+// and pokes wake without blocking for each event that match accepts. A
+// long-lived SSH connection can die quietly, so this is only ever a hint to go
+// and look.
+func (c *Client) Watch(ctx context.Context, match func(Event) bool, wake chan<- struct{}) {
+	for ctx.Err() == nil {
+		err := c.StreamEvents(ctx, func(event Event) {
+			if !match(event) {
+				return
+			}
+			select {
+			case wake <- struct{}{}:
+			default:
+			}
+		})
+		if ctx.Err() != nil {
+			return
+		}
+		log.Printf("event stream stopped (%v), reconnecting", err)
+		select {
+		case <-ctx.Done():
+		case <-time.After(30 * time.Second):
+		}
+	}
 }
 
 // Gerrit reports times in UTC, without a zone, to nanosecond precision.

@@ -92,7 +92,13 @@ func run() error {
 
 	// Buffered so a burst of events collapses into one pending sweep.
 	wake := make(chan struct{}, 1)
-	go watch(ctx, client, wake)
+	go client.Watch(ctx, func(event gerrit.Event) bool {
+		if event.Type != gerrit.EventPatchSetCreated || event.Change.Project != *project {
+			return false
+		}
+		log.Printf("new patch set on change %d, sweeping", event.Change.Number)
+		return true
+	}, wake)
 
 	ticker := time.NewTicker(*sweepFreq)
 	defer ticker.Stop()
@@ -109,32 +115,6 @@ func run() error {
 			return nil
 		case <-wake:
 		case <-ticker.C:
-		}
-	}
-}
-
-// watch follows Gerrit's event stream, which is a long-lived SSH connection and
-// so can die quietly. Nothing depends on it being up: it only saves waiting for
-// the next sweep.
-func watch(ctx context.Context, client *gerrit.Client, wake chan<- struct{}) {
-	for ctx.Err() == nil {
-		err := client.StreamEvents(ctx, func(event gerrit.Event) {
-			if event.Type != gerrit.EventPatchSetCreated || event.Change.Project != *project {
-				return
-			}
-			log.Printf("new patch set on change %d, sweeping", event.Change.Number)
-			select {
-			case wake <- struct{}{}:
-			default:
-			}
-		})
-		if ctx.Err() != nil {
-			return
-		}
-		log.Printf("event stream stopped (%v), reconnecting", err)
-		select {
-		case <-ctx.Done():
-		case <-time.After(30 * time.Second):
 		}
 	}
 }
