@@ -19,19 +19,23 @@
 buildGoModule {
   pname = "slop-tools";
   version = "0.1.0";
-  src = ./.;
+  # Only what these commands import, so that the rest of the module changing
+  # doesn't restart the agents that have this on their PATH. The other commands
+  # are built from probe.nix and gerrit-ci.nix instead.
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./go.mod
+      ./gerrit
+      ./internal/session
+      ./cmd/slop-handler
+      ./cmd/slop-pr
+      ./cmd/slop-reply
+    ];
+  };
   # No dependencies outside the standard library, so there's no vendor hash to
   # keep up to date.
   vendorHash = null;
-
-  # Built from probe.nix and gerrit-ci.nix instead, each configured for its own
-  # key and host. Built from here they would be unconfigured and shadow those
-  # in the profile.
-  excludedPackages = [
-    "cmd/slop-probe"
-    "cmd/slop-probe-server"
-    "cmd/gerrit-ci"
-  ];
 
   nativeBuildInputs = [ makeWrapper ];
 
