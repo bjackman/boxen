@@ -16,6 +16,10 @@ let
   # over SSH needs no separate registration step.
   adminKeys = config.users.users.${admin}.openssh.authorizedKeys.keys;
   gerritConfig = ../gerrit_config;
+  stateDir = "/var/lib/gerrit-bootstrap";
+  keyPath = "${stateDir}/id_ed25519";
+  hostKeyPath = "/var/lib/gerrit/etc/ssh_host_ed25519_key.pub";
+  sshUrl = "ssh://${admin}@127.0.0.1:${toString config.bjackman.gerritSshPort}";
   slopbotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDjnmpfN+r2BJ6ksEvVpQDmDQaEpk+sV9GVMeqK6/pg1 slopbot@forgejo";
   ciBotKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFy1m+rbpUHFBGKfEVI1pgMGZtOtqNyQc751D4BIuDCP ci-bot@gerrit";
   ciBot = {
@@ -24,6 +28,8 @@ let
   };
 in
 {
+  imports = [ ./impermanence.nix ];
+
   options.bjackman.gerritSshPort = lib.mkOption {
     type = lib.types.port;
     readOnly = true;
@@ -46,11 +52,11 @@ in
   };
 
   config = lib.mkIf (projects != [ ]) {
-    # Everything here goes through the REST API on loopback, authenticated by
-    # the header Gerrit is configured to trust. That's also how the admin
+    # Everything but git goes through the REST API on loopback, authenticated
+    # by the header Gerrit is configured to trust. That's also how the admin
     # account comes into being: the first account to authenticate is made an
-    # administrator, so this unit creates it deliberately rather than leaving it
-    # to whoever logs in first.
+    # administrator, so this unit creates it deliberately rather than leaving
+    # it to whoever logs in first.
     systemd.services.gerrit-bootstrap = {
       after = [ "gerrit.service" ];
       requires = [ "gerrit.service" ];
@@ -62,12 +68,14 @@ in
         pkgs.coreutils
         pkgs.gawk
         pkgs.jq
+        pkgs.openssh
       ];
       script = ''
         cookies=$(mktemp)
         resp=$(mktemp)
         keys=$(mktemp)
-        trap 'rm -f "$cookies" "$resp" "$keys"' EXIT
+        known_hosts=$(mktemp)
+        trap 'rm -f "$cookies" "$resp" "$keys" "$known_hosts"' EXIT
 
         for _ in $(seq 60); do
           if curl -sS -o /dev/null "${apiUrl}/"; then
@@ -125,13 +133,20 @@ in
           return 1
         }
 
+        # Git goes over SSH because Gerrit only serves it over HTTP when
+        # download.scheme offers HTTP. The key is registered as mine, which
+        # grants nothing that the header doesn't already.
+        if [ ! -e ${keyPath} ]; then
+          ssh-keygen -q -t ed25519 -N "" -C gerrit-bootstrap -f ${keyPath}
+        fi
+
         # My own keys, so that pushing to a branch and administering over SSH
         # need no separate registration step.
         expect "$(req GET "/a/accounts/${admin}/sshkeys")" 200
         # Gerrit prefixes JSON responses with )]}' to break naive cross-site
         # script inclusion, which jq will not parse.
         tail -c +6 "$resp" > "$keys"
-        for key in ${lib.escapeShellArgs adminKeys}; do
+        for key in ${lib.escapeShellArgs adminKeys} "$(cat ${keyPath}.pub)"; do
           encoded=$(echo "$key" | awk '{ print $2 }')
           if ! jq -e --arg key "$encoded" 'any(.[]; .encoded_key == $key)' "$keys" >/dev/null; then
             expect "$(curl -sS -o "$resp" -w '%{http_code}' -c "$cookies" -b "$cookies" \
@@ -222,7 +237,7 @@ in
           local project=$1 source=$2 work
           work=$(mktemp -d)
           git -C "$work" init -q
-          git -C "$work" fetch -q "${apiUrl}/a/$project" refs/meta/config
+          git -C "$work" fetch -q "${sshUrl}/$project" refs/meta/config
           git -C "$work" checkout -q FETCH_HEAD
           cp "$source" "$work/project.config"
 
@@ -255,18 +270,12 @@ in
           git -C "$work" add project.config groups
           git -C "$work" -c user.name=gerrit-bootstrap -c user.email=${adminUser.email} \
             commit -q -m "Configure $project from the boxen repo"
-          git -C "$work" push -q "${apiUrl}/a/$project" HEAD:refs/meta/config
+          git -C "$work" push -q "${sshUrl}/$project" HEAD:refs/meta/config
           rm -rf "$work"
         }
 
-        # git over HTTP authenticates by the session cookie the login above
-        # already got, not by the identity header: under /a/ Gerrit asks for a
-        # credential of its own and answers 401 to the header alone, which is
-        # the same distinction the REST calls run into. The cookie jar curl
-        # keeps is already in the format git wants.
-        export GIT_CONFIG_COUNT=2
-        export GIT_CONFIG_KEY_0=http.cookieFile GIT_CONFIG_VALUE_0="$cookies"
-        export GIT_CONFIG_KEY_1=http.extraHeader GIT_CONFIG_VALUE_1="X-Forwarded-Proto: https"
+        echo "[127.0.0.1]:${toString config.bjackman.gerritSshPort} $(cat ${hostKeyPath})" > "$known_hosts"
+        export GIT_SSH_COMMAND="ssh -i ${keyPath} -o IdentitiesOnly=yes -o UserKnownHostsFile=$known_hosts"
 
         expect "$(req GET /a/groups/Administrators)" 200
         administrators=$(tail -c +6 "$resp" | jq -r .id)
@@ -293,12 +302,23 @@ in
           configure_project "$project" "${gerritConfig}/$project/project.config"
         done
       '';
-      # Runs as root: it only makes HTTP calls to loopback, and Gerrit itself
+      # Runs as root: it only talks to Gerrit on loopback, and Gerrit itself
       # runs under DynamicUser so there is no service account to borrow.
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
+        StateDirectory = "gerrit-bootstrap";
+        StateDirectoryMode = "0700";
       };
     };
+
+    bjackman.impermanence.extraPersistence.directories = [
+      {
+        directory = stateDir;
+        mode = "0700";
+        user = "root";
+        group = "root";
+      }
+    ];
   };
 }
