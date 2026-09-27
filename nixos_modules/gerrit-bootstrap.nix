@@ -26,6 +26,10 @@ let
     email = "ci-bot@yawn.io";
     displayName = "CI";
   };
+  reviewBot = {
+    email = "review-bot@yawn.io";
+    displayName = "Review bot";
+  };
 in
 {
   imports = [ ./impermanence.nix ];
@@ -212,6 +216,11 @@ in
         # an Authelia login that nothing would ever use.
         bot_account ci-bot ${ciBot.email} ${lib.escapeShellArg ciBot.displayName} \
           ${lib.escapeShellArg ciBotKey}
+        ${lib.optionalString config.bjackman.reviewBot.enable ''
+          # Its key only exists in the secret, which the agent can't read.
+          bot_account review-bot ${reviewBot.email} ${lib.escapeShellArg reviewBot.displayName} \
+            "$(ssh-keygen -y -f ${config.age.secrets.review-bot-ssh-privkey.path})"
+        ''}
 
         # Voting on a label is granted to a group, never to an account.
         if [ "$(req GET /a/groups/ci)" = 404 ]; then

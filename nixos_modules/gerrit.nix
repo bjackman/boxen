@@ -17,6 +17,7 @@ in
     ./impermanence.nix
     ./gerrit-bootstrap.nix
     ./gerrit-ci.nix
+    ./review-bot.nix
     ./github-mirror.nix
   ];
 
