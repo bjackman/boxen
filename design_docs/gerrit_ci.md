@@ -28,6 +28,7 @@ builds every NixOS `toplevel` plus every Home Manager activation package:
 | evaluating all six checks to `drvPath` | 37 s | 3.64 GiB |
 | `nix flake check` | 66 s | 4.64 GiB |
 | `nix-fast-build --flake .#checks.x86_64-linux` | 31 s | 2.26 GiB |
+| one `nix build` per check, largest (`chungito`), measured on `chungito` | 13 s | 1.71 GiB |
 | building all six, warm store | 27 s | negligible |
 
 Cold, there is ~500 MiB to download, mostly the desktop closures of hosts this
@@ -107,16 +108,21 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    runs, so CI there is the arrangement in which "it worked on my machine" and
    "it passed" are the same statement.
 
-1. **The job is `nix-fast-build`, not `nix flake check`.** 2.26 GiB against
-   4.64 GiB, on the same work, and faster. `nix flake check` evaluates the whole
-   flake and holds it live; `nix-fast-build` drives `nix-eval-jobs`, which
-   evaluates attribute by attribute in workers it can restart.
+1. **The job is one `nix build` per check, not `nix flake check`.** `nix flake
+   check` evaluates the whole flake and holds it live, 4.64 GiB. A process per
+   check frees each configuration's evaluation before starting the next, so the
+   peak is the largest single configuration, 1.71 GiB.
 
    This is the decision that makes decision 1 true. Against 4.79 GiB of
    worst-case headroom, `nix flake check` leaves about 150 MiB - which is not
-   headroom, it's a coin flip - and `nix-fast-build` leaves 2.5 GiB. The margin
+   headroom, it's a coin flip - and the loop leaves about 3 GiB. The margin
    also has to absorb every host added to the flake from here on, because
    evaluation cost scales with them.
+
+   We started with `nix-fast-build`, whose 2.26 GiB above was measured on
+   slopbox. On pizza it ran eight `nix-eval-jobs` workers, one per core, which
+   swapped the whole host into the ground. Limited to the one worker pizza can
+   afford, it does nothing this loop doesn't.
 
 1. **The unit is contained, and when it dies it says so in Gerrit.** Two halves
    of one requirement.
@@ -329,8 +335,8 @@ runner died" on it.
 Per patch set:
 
 1. `git fetch origin refs/changes/NN/CCCC/P`, check it out detached.
-1. `nix-fast-build --flake '.#checks.x86_64-linux' --no-nom --no-link`, output to
-   `logs/CCCC-P.txt`.
+1. `nix build --no-link .#checks.x86_64-linux.<name>` for each check in turn,
+   output to `logs/CCCC-P.txt`.
 1. `gerrit review CCCC,P --json` with `{"labels": {"Verified": ±1},
    "message": ...}`, the message being the verdict, the last few lines on
    failure, and the log URL.

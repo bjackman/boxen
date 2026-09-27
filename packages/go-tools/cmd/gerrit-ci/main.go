@@ -10,6 +10,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -304,15 +305,7 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 	}
 	runCtx, cancel := context.WithTimeout(ctx, *runLimit)
 	defer cancel()
-	// nix-eval-jobs rather than a whole-flake evaluation: it evaluates
-	// attribute by attribute in workers it can restart, which is what keeps
-	// this inside the memory this box has spare. See the design doc.
-	cmd := exec.CommandContext(runCtx, "nix-fast-build",
-		"--flake", ".#checks."+*nixSystem, "--no-nom", "--no-link")
-	cmd.Dir = c.repoPath
-	cmd.Stdout = logFile
-	cmd.Stderr = logFile
-	runErr := cmd.Run()
+	runErr := c.runChecks(runCtx, logFile)
 	logFile.Close()
 
 	// A check that was cancelled says nothing about the change, so don't vote.
@@ -332,6 +325,45 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 		Message: message(runErr, logPath, c.logURL(name)),
 	}); err != nil {
 		return fmt.Errorf("voting %s%+d on %d,%d: %w", *label, vote, change.Number, patchSet.Number, err)
+	}
+	return nil
+}
+
+// runChecks builds each of the flake's checks in its own nix process, so that
+// only one configuration's evaluation is ever live. We tried nix-fast-build,
+// but this box doesn't have the memory for more than one nix-eval-jobs worker,
+// and with one it offered nothing over this loop.
+func (c *checker) runChecks(ctx context.Context, logFile io.Writer) error {
+	checksAttr := ".#checks." + *nixSystem
+	list := exec.CommandContext(ctx, "nix", "eval", "--json", checksAttr, "--apply", "builtins.attrNames")
+	list.Dir = c.repoPath
+	list.Stderr = logFile
+	out, err := list.Output()
+	if err != nil {
+		return fmt.Errorf("listing %s: %w", checksAttr, err)
+	}
+	var names []string
+	if err := json.Unmarshal(out, &names); err != nil {
+		return fmt.Errorf("parsing the list of %s: %w", checksAttr, err)
+	}
+
+	var failed []string
+	for _, name := range names {
+		fmt.Fprintf(logFile, "==> %s\n", name)
+		build := exec.CommandContext(ctx, "nix", "build", "--no-link", checksAttr+"."+name)
+		build.Dir = c.repoPath
+		build.Stdout = logFile
+		build.Stderr = logFile
+		if err := build.Run(); err != nil {
+			if ctx.Err() != nil {
+				return fmt.Errorf("building %s: %w", name, ctx.Err())
+			}
+			fmt.Fprintf(logFile, "==> %s failed: %v\n", name, err)
+			failed = append(failed, name)
+		}
+	}
+	if len(failed) > 0 {
+		return fmt.Errorf("%s failed", strings.Join(failed, ", "))
 	}
 	return nil
 }

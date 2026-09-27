@@ -10,7 +10,6 @@
   lib,
   makeWrapper,
   nix,
-  nix-fast-build,
   openssh,
 }:
 buildGoModule {
@@ -30,7 +29,6 @@ buildGoModule {
       lib.makeBinPath [
         git
         nix
-        nix-fast-build
         openssh
       ]
     }
