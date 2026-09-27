@@ -8,13 +8,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/bjackman/boxen/go-tools/internal/slopflags"
+	"github.com/bjackman/boxen/go-tools/internal/worktree"
 )
 
 var config = slopflags.Register(flag.CommandLine)
@@ -68,16 +67,7 @@ func exitCode(err error) int {
 }
 
 func run() error {
-	root, err := git("rev-parse", "--show-toplevel")
-	if err != nil {
-		return err
-	}
-	topic := filepath.Base(root)
-	remote, err := git("remote", "get-url", "origin")
-	if err != nil {
-		return err
-	}
-	project, err := projectFromURL(remote)
+	project, topic, err := worktree.Topic()
 	if err != nil {
 		return err
 	}
@@ -103,18 +93,6 @@ func run() error {
 	return nil
 }
 
-func projectFromURL(remote string) (string, error) {
-	parsed, err := url.Parse(remote)
-	if err != nil {
-		return "", fmt.Errorf("parsing remote URL %q: %w", remote, err)
-	}
-	project := strings.TrimSuffix(strings.Trim(parsed.Path, "/"), ".git")
-	if parsed.Host == "" || project == "" {
-		return "", fmt.Errorf("remote URL %q doesn't name a Gerrit project", remote)
-	}
-	return project, nil
-}
-
 // push sends every commit not yet on the branch as one topic. Gerrit rejects a
 // push whose commits it already has, which is success as far as this is
 // concerned: the change is published either way.
@@ -137,15 +115,4 @@ func push(topic string) error {
 		return fmt.Errorf("git push: %w", err)
 	}
 	return nil
-}
-
-func git(args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
-	var stderr strings.Builder
-	cmd.Stderr = &stderr
-	out, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("git %s: %w: %s", strings.Join(args, " "), err, strings.TrimSpace(stderr.String()))
-	}
-	return strings.TrimSpace(string(out)), nil
 }

@@ -18,6 +18,7 @@ let
   wrapped = [
     "slop-pr"
     "slop-reply"
+    "slop-review"
   ];
 in
 buildGoModule {
@@ -34,6 +35,9 @@ buildGoModule {
       ./internal/slopflags
       ./cmd/slop-pr
       ./cmd/slop-reply
+      ./cmd/slop-review
+      ./internal/review
+      ./internal/worktree
     ];
   };
   # No dependencies outside the standard library, so there's no vendor hash to
