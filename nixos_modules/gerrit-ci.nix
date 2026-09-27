@@ -55,7 +55,10 @@ in
       allowedUsers = [ "brendan" ];
     };
 
-    services.caddy.virtualHosts."http://127.0.0.1:${toString logPort}".extraConfig = ''
+    # Not http://127.0.0.1:port, which would also match only that Host, and the
+    # proxy forwards the public one.
+    services.caddy.virtualHosts."http://:${toString logPort}".extraConfig = ''
+      bind 127.0.0.1
       root * ${stateDir}/logs
       file_server browse
     '';
