@@ -1,7 +1,5 @@
 {
   config,
-  lib,
-  pkgs,
   homelab,
   modulesPath,
   ...
@@ -68,30 +66,6 @@ in
   bjackman.slopClient.user = "brendan";
 
   environment.systemPackages = builtins.attrValues slop;
-
-  # Runs as me rather than as a service user: it drives the same sessions I
-  # attach to interactively, and Claude Code keys those by home directory.
-  systemd.services.slop-handler = {
-    description = "Drive agent sessions from Gerrit review comments";
-    # Claude Code refuses to run its Bash tool without a POSIX shell, and
-    # systemd sets SHELL from passwd, where mine is fish. /run/current-system
-    # is on the path so that the agent sees the same tools I would.
-    environment.SHELL = lib.getExe pkgs.bashInteractive;
-    path = [
-      "/run/current-system/sw"
-      pkgs.bashInteractive
-    ];
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      ExecStart = "${slop.slop-tools}/bin/slop-handler";
-      User = "brendan";
-      StateDirectory = "slop-handler";
-      Restart = "on-failure";
-      RestartSec = "30s";
-    };
-  };
 
   home-manager.users.brendan.imports = [ ../hm_modules/slopbox.nix ];
 

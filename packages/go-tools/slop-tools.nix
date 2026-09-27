@@ -1,11 +1,9 @@
 {
   buildGoModule,
-  claude-code,
   git,
   lib,
   makeWrapper,
   openssh,
-  tmux,
   gerritHost ? "pizza",
   gerritPort ? 29418,
   gerritUrl ? "https://gerrit.home.yawn.io",
@@ -34,8 +32,6 @@ buildGoModule {
       ./go.mod
       ./gerrit
       ./internal/slopflags
-      ./internal/session
-      ./cmd/slop-handler
       ./cmd/slop-pr
       ./cmd/slop-reply
     ];
@@ -69,14 +65,6 @@ buildGoModule {
         ]
       }
     done
-    wrapProgram $out/bin/slop-handler --add-flags "$flags" --prefix PATH : ${
-      lib.makeBinPath [
-        claude-code
-        git
-        openssh
-        tmux
-      ]
-    }
   '';
 
   # One flag list for every tool, so a tool that doesn't define one of them

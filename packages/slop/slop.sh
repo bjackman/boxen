@@ -8,9 +8,8 @@ topic=$1
 project=${2:-boxen}
 worktree="$HOME/slop/$project/$topic"
 
-# The whole workflow hangs off this being stable: the same topic always means
-# the same session, so review comments land back in the conversation that
-# produced the change. See design_docs/gerrit.md.
+# The same topic always means the same session, so coming back to a change
+# resumes the conversation that produced it.
 session_id=$(uuidgen --sha1 --namespace @url --name "$project:$topic")
 transcript="$HOME/.claude/projects/$(echo "$worktree" | tr '/.' '--')/$session_id.jsonl"
 
