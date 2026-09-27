@@ -154,6 +154,7 @@ in
                 LABELS = {{ $labels }}
             '';
             summary = "Host physical component too hot (instance {{ $labels.instance }})";
+            runbook_url = runbookUrl "host-physical-component-too-hot";
           };
           expr = ''
             # pizza is kept fully loaded and its laptop CPU runs hot by design.
