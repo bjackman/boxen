@@ -311,8 +311,7 @@ Not just familiar — structurally closer to what this design already reaches fo
    What the defaults *also* refuse is me pushing to a branch at all - the
    mainline is only meant to advance by submitting a change - which is right
    until you have to import an existing history. So the one grant reconciled
-   from Nix is `Push` on `refs/heads/*` for `Administrators`, non-force, so
-   history still can't be rewritten.
+   from Nix is `Push` on `refs/heads/*` for `Administrators`, with force.
 
    **Rejected: rewriting `refs/meta/config`.** ACLs live in a file on a git ref,
    which sounds like the better fit for this repo, but the REST API edits the

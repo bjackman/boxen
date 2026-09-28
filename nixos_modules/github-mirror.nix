@@ -54,7 +54,7 @@ in
           -o UserKnownHostsFile=${knownHosts}"
         git -C ${repoDir}/${repo}.git \
           push git@github.com:bjackman/${repo}.git \
-          'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
+          '+refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
       '';
       serviceConfig = {
         Type = "oneshot";
