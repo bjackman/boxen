@@ -225,11 +225,11 @@ in
         # The right monitor is also daisy-chained off the left one for the Mac.
         # Both heads have the same description so match by connector name.
         (makeProfile "chungito-desk-daisy-chain" (
-          chungitoDesk (presets.dell-u3225qe-b // { criteria = "DP-2"; })
+          chungitoDesk (presets.dell-u3225qe-b // { criteria = "DP-4"; })
           ++ [
             {
               monitor = presets.dell-u3225qe-b // {
-                criteria = "DP-4";
+                criteria = "DP-2";
               };
               status = "disable";
             }

@@ -27,6 +27,16 @@
   hardware.graphics.enable = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia.open = true;
+  hardware.nvidia.package =
+    let
+      pkg = config.boot.kernelPackages.nvidiaPackages.${config.hardware.nvidia.branch};
+    in
+    pkg
+    // {
+      open = pkg.open.overrideAttrs (old: {
+        patches = old.patches ++ [ ../../nixos_files/chungito/nvidia-kapi-event-queue.patch ];
+      });
+    };
   programs.sway.extraOptions = [ "--unsupported-gpu" ];
 
   # Didn't help:

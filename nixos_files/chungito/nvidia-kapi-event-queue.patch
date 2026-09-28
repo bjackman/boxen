@@ -1,0 +1,110 @@
+nvidia-modeset: Deliver KAPI events on their own kthread
+
+KAPI event callbacks (nvidia-drm's nv_drm_event_callback()) run on
+nvkms_kthread_q, which also services DP IRQs and NVKMS timers. The callback
+can block on work that needs that kthread:
+
+- nv_drm_dev_load() holds nv_dev->lock while enumerating connectors, which
+  waits up to 10s per GetConnectorInfo() call for DP detection to complete.
+  If a DYNAMIC_DPY_CONNECTED event is queued meanwhile (e.g. for the first
+  sink found in a daisy-chained MST topology), the callback blocks on
+  nv_dev->lock, the sideband replies for the rest of the topology are never
+  processed, and loading only proceeds once the waits time out.
+
+- nv_drm_handle_dynamic_display_connected() -> nv_drm_add_encoder() calls
+  GetConnectorInfo(), which then waits for DP detection on the very kthread
+  that performs it.
+
+With two DELL U3225QEs daisy-chained this delays loading nvidia-drm by ~20s
+("Failed to get dynamic displays during device registration") and stalls
+event processing for another ~10s after that ("Flip event timeout on head 0").
+
+Deliver KAPI events on a dedicated kthread so a blocking event callback can't
+stall DP IRQ handling.
+
+--- a/kernel-open/nvidia-modeset/nvidia-modeset-linux.c
++++ b/kernel-open/nvidia-modeset/nvidia-modeset-linux.c
+@@ -480,12 +480,15 @@
+ 
+ /*************************************************************************
+  * NVKMS executes almost all of its queued work items on a single
+- * kthread.  The exception are deferred close() handlers, which typically
+- * block for long periods of time and stall their queue.
++ * kthread.  The exceptions are deferred close() handlers, which typically
++ * block for long periods of time and stall their queue, and KAPI event
++ * callbacks, which can block waiting for DP detection and so must not stall
++ * the kthread that services DP IRQs.
+  *************************************************************************/
+ 
+ static struct nv_kthread_q nvkms_kthread_q;
+ static struct nv_kthread_q nvkms_deferred_close_kthread_q;
++static struct nv_kthread_q nvkms_kapi_event_kthread_q;
+ 
+ /*************************************************************************
+  * The nvkms_per_open structure tracks data that is specific to a
+@@ -782,7 +785,7 @@
+         case NVKMS_CLIENT_KERNEL_SPACE:
+             if (eventsAvailable) {
+                 nv_kthread_q_schedule_q_item(
+-                    &nvkms_kthread_q,
++                    &nvkms_kapi_event_kthread_q,
+                     &popen->u.kernel.events.nv_kthread_q_item);
+             }
+ 
+@@ -1456,7 +1459,7 @@
+          * nvkms_ioctl_common() should reject the request.
+          */
+ 
+-        nv_kthread_q_flush(&nvkms_kthread_q);
++        nv_kthread_q_flush(&nvkms_kapi_event_kthread_q);
+     }
+ 
+     nvkms_free(popen, sizeof(*popen));
+@@ -2116,6 +2119,12 @@
+         goto fail_deferred_close_kthread;
+     }
+ 
++    ret = nv_kthread_q_init(&nvkms_kapi_event_kthread_q,
++                            "nvidia-modeset/kapi_event_kthread_q");
++    if (ret != 0) {
++        goto fail_kapi_event_kthread;
++    }
++
+     INIT_LIST_HEAD(&nvkms_timers.list);
+     spin_lock_init(&nvkms_timers.lock);
+ 
+@@ -2142,6 +2151,8 @@
+ fail_module_load:
+     nvkms_unregister_chrdev();
+ fail_register_chrdev:
++    nv_kthread_q_stop(&nvkms_kapi_event_kthread_q);
++fail_kapi_event_kthread:
+     nv_kthread_q_stop(&nvkms_deferred_close_kthread_q);
+ fail_deferred_close_kthread:
+     nv_kthread_q_stop(&nvkms_kthread_q);
+@@ -2210,6 +2221,7 @@
+ 
+     spin_unlock_irqrestore(&nvkms_timers.lock, flags);
+ 
++    nv_kthread_q_stop(&nvkms_kapi_event_kthread_q);
+     nv_kthread_q_stop(&nvkms_deferred_close_kthread_q);
+     nv_kthread_q_stop(&nvkms_kthread_q);
+ 
+--- a/kernel-open/nvidia-drm/nvidia-drm-drv.c
++++ b/kernel-open/nvidia-drm/nvidia-drm-drv.c
+@@ -650,12 +650,12 @@
+ /*
+  * We can't just call drm_kms_helper_hotplug_event directly because
+  * fbdev_generic may attempt to set a mode from inside the hotplug event
+- * handler. Because kapi event handling runs on nvkms_kthread_q, this blocks
++ * handler. Because kapi event handling runs on a single kthread, this blocks
+  * other event processing including the flip completion notifier expected by
+  * nv_drm_atomic_commit.
+  *
+- * Defer hotplug event handling to a work item so that nvkms_kthread_q can
+- * continue processing events while a DRM modeset is in progress.
++ * Defer hotplug event handling to a work item so that the kapi event kthread
++ * can continue processing events while a DRM modeset is in progress.
+  */
+ static void nv_drm_handle_hotplug_event(struct work_struct *work)
+ {
