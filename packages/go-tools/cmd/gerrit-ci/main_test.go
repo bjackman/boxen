@@ -142,3 +142,58 @@ func TestParsePatchSetName(t *testing.T) {
 		}
 	}
 }
+
+func onto(number int, revision, parent string) gerrit.Change {
+	return gerrit.Change{
+		Number: number,
+		Branch: "master",
+		CurrentPatchSet: gerrit.PatchSet{
+			Number: 1, Revision: revision, Parents: []string{parent},
+		},
+	}
+}
+
+func TestReady(t *testing.T) {
+	tips := map[string]string{"master": "tip"}
+	a := onto(1, "a", "tip")
+	b := onto(2, "b", "a")
+	c := onto(3, "c", "b")
+	sibling := onto(4, "d", "tip")
+	stale := onto(5, "e", "old")
+	onStale := onto(6, "f", "e")
+	merge := onto(7, "g", "tip")
+	merge.CurrentPatchSet.Parents = []string{"tip", "a"}
+	other := onto(8, "h", "tip")
+	other.Branch = "release"
+
+	for _, test := range []struct {
+		name        string
+		submittable []gerrit.Change
+		want        []int
+	}{
+		{"whole stack goes as its top", []gerrit.Change{a, b, c}, []int{3}},
+		{"stops below what isn't submittable", []gerrit.Change{a, c}, []int{1}},
+		{"nothing whose parent isn't", []gerrit.Change{b, c}, nil},
+		{"independent stacks, oldest first", []gerrit.Change{sibling, a, b}, []int{2, 4}},
+		{"nothing on a stale base", []gerrit.Change{stale, onStale}, nil},
+		{"no merges", []gerrit.Change{merge}, nil},
+		{"tip of its own branch only", []gerrit.Change{other}, nil},
+	} {
+		open := []gerrit.Change{a, b, c, sibling, stale, onStale, merge, other}
+		var got []int
+		for _, change := range ready(open, test.submittable, tips) {
+			got = append(got, change.Number)
+		}
+		if fmt.Sprint(got) != fmt.Sprint(test.want) {
+			t.Errorf("%s: ready() = %v, want %v", test.name, got, test.want)
+		}
+	}
+}
+
+func TestParseLsRemote(t *testing.T) {
+	got := parseLsRemote("aaa\tHEAD\nbbb\trefs/heads/master\nccc\trefs/heads/release/1\nddd\trefs/tags/v1\n")
+	want := map[string]string{"master": "bbb", "release/1": "ccc"}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Errorf("parseLsRemote() = %v, want %v", got, want)
+	}
+}

@@ -13,8 +13,11 @@ regressed. This is the plan to get it back.
 1. The smallest system that does both. Not a CI platform.
 
 Nice to have, and not goals: rich presentation inside Gerrit - a Checks tab, a
-per-job breakdown, links from the diff. More than one job, more than one
-project, or automatic submission of changes that pass.
+per-job breakdown, links from the diff. More than one job, or more than one
+project.
+
+Added later: changes that are ready are submitted without anyone pressing the
+button. See decision 10.
 
 ## Background
 
@@ -296,6 +299,24 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    Administrator's `Verified+1` overrides it for the times the check is red for
    reasons that have nothing to do with the change.
 
+1. **The runner submits what's ready, and only onto the commit it checked.**
+   Ready means `is:submittable` - my `Code-Review+2` and `Verified+1`, so the
+   +2 is what says "ship it when it's green" - and neither WIP nor private,
+   which is the way to hold one back. A change in a stack only goes when every
+   change beneath it is ready too, and the bottom one's parent is the tip of
+   its branch. Gerrit already refuses to submit a change over an unsubmittable
+   ancestor; the tip condition is the runner's own. The project rebases if
+   necessary on submit, so a green stack on a stale base would otherwise land
+   as a tree nothing ever built, with nobody looking. A stale stack
+   sits until it's rebased, which makes new patch sets and so a fresh check.
+
+   It's a pass over the open changes at the start of each sweep and after each
+   vote, submitting the top of one ready stack at a time - Gerrit takes the
+   rest along - and recomputing in between, since each submit moves the tip.
+   `comment-added` and `change-merged` wake a sweep as well as
+   `patchset-created`, so a +2 on something already green goes straight in.
+   `ci-bot`'s group holds `submit` on `refs/heads/*` for it.
+
 ## Design
 
 ### `nixos_modules/gerrit-ci.nix`
@@ -405,7 +426,10 @@ would change nothing.
 - **A patch set is checked as uploaded, not rebased onto `master`.** A change
   based on a stale `master` can be green and still break it once submitted.
   Rebasing before submitting makes a new patch set, which is checked afresh,
-  so it's a matter of doing that when `master` has moved.
+  so it's a matter of doing that when `master` has moved. Auto-submit only
+  takes stacks that sit on the tip, so this is down to submitting by hand. The
+  flip side is that a ready stack on a stale base waits silently: nothing tells
+  anyone it needs a rebase.
 - **The agent doesn't hear about a red check.** `slop-handler` wakes on my
   comments, not on `ci-bot`'s, so a `Verified-1` on a slopbot change waits for
   me to notice it. Feeding it through is the obvious next step.

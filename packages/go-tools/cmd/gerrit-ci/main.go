@@ -1,6 +1,6 @@
 // gerrit-ci builds every patch set of a project and votes Verified on it, so
-// that a change can't be submitted without its checks having passed. See
-// design_docs/gerrit_ci.md.
+// that a change can't be submitted without its checks having passed, and
+// submits the changes that are then ready. See design_docs/gerrit_ci.md.
 //
 // The event stream only wakes it up: the work is always to reconcile against
 // the API, so a dropped stream or a restart costs latency rather than
@@ -53,6 +53,7 @@ var (
 		"Address to serve the logs and the Checks API on")
 	allowOrigin = flag.String("allow-origin", "https://gerrit.home.yawn.io",
 		"Origin of the Gerrit web UI, whose Checks plugin fetches from this runner")
+	autoSubmit = flag.Bool("auto-submit", true, "submit changes that are ready, along with the stack beneath them")
 )
 
 func main() {
@@ -105,10 +106,15 @@ func run() error {
 	// Buffered so a burst of events collapses into one pending sweep.
 	wake := make(chan struct{}, 1)
 	go client.Watch(ctx, func(event gerrit.Event) bool {
-		if event.Type != gerrit.EventPatchSetCreated || event.Change.Project != *project {
+		if event.Change.Project != *project {
 			return false
 		}
-		log.Printf("new patch set on change %d, sweeping", event.Change.Number)
+		switch event.Type {
+		case gerrit.EventPatchSetCreated, gerrit.EventCommentAdded, gerrit.EventChangeMerged:
+		default:
+			return false
+		}
+		log.Printf("%s on change %d, sweeping", event.Type, event.Change.Number)
 		return true
 	}, wake)
 
@@ -220,6 +226,7 @@ func parsePatchSetName(name string) (int, int, error) {
 }
 
 func (c *checker) sweep(ctx context.Context) error {
+	c.submitReady(ctx)
 	changes, err := c.client.Query("status:open", "project:"+*project)
 	if err != nil {
 		return fmt.Errorf("querying open changes on %s: %w", *project, err)
@@ -246,7 +253,9 @@ func (c *checker) sweep(ctx context.Context) error {
 			// One bad change mustn't stop the others being checked.
 			log.Printf("checking change %d: %v", change.Number, err)
 			c.report(change, err)
+			continue
 		}
+		c.submitReady(ctx)
 	}
 	if err := c.pruneLogs(); err != nil {
 		log.Printf("pruning logs: %v", err)
@@ -271,6 +280,142 @@ func pending(changes []gerrit.Change, label, user string) []gerrit.Change {
 		return out[i].CurrentPatchSet.Number > out[j].CurrentPatchSet.Number
 	})
 	return out
+}
+
+// submitReady submits each stack of changes that has passed review and its
+// checks all the way down. Failing to is logged rather than returned: it's
+// retried on the next sweep, and must not stop anything being checked.
+func (c *checker) submitReady(ctx context.Context) {
+	if !*autoSubmit {
+		return
+	}
+	// Refused until the next pass, so that one stack Gerrit won't take doesn't
+	// hold up the rest.
+	refused := map[int]bool{}
+	// Each submit moves a branch, which can leave what was ready before it no
+	// longer sitting on the tip, so it's worked out afresh every time.
+	for ctx.Err() == nil {
+		change, err := c.nextReady(ctx, refused)
+		if err != nil {
+			log.Printf("finding changes to submit: %v", err)
+			return
+		}
+		if change == nil {
+			return
+		}
+		log.Printf("submitting change %d patch set %d", change.Number, change.CurrentPatchSet.Number)
+		if err := c.client.Submit(change.Number, change.CurrentPatchSet.Number); err != nil {
+			log.Printf("submitting change %d: %v", change.Number, err)
+			refused[change.Number] = true
+		}
+	}
+}
+
+func (c *checker) nextReady(ctx context.Context, refused map[int]bool) (*gerrit.Change, error) {
+	submittable, err := c.client.Query("status:open", "project:"+*project, "is:submittable", "-is:wip", "-is:private")
+	if err != nil {
+		return nil, fmt.Errorf("querying submittable changes on %s: %w", *project, err)
+	}
+	if len(submittable) == 0 {
+		return nil, nil
+	}
+	open, err := c.client.Query("status:open", "project:"+*project)
+	if err != nil {
+		return nil, fmt.Errorf("querying open changes on %s: %w", *project, err)
+	}
+	tips, err := c.branchTips(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, change := range ready(open, submittable, tips) {
+		if !refused[change.Number] {
+			return &change, nil
+		}
+	}
+	return nil, nil
+}
+
+// ready returns the tops of the stacks that can be submitted, oldest first. A
+// stack qualifies when every change in it is submittable and the bottom one's
+// parent is the tip of its branch: the checks ran against that base and no
+// other, so submitting onto anything newer would land something never built.
+// Only the top is returned because submitting it takes the rest along.
+func ready(open, submittable []gerrit.Change, tips map[string]string) []gerrit.Change {
+	byRevision := map[string]gerrit.Change{}
+	for _, change := range open {
+		byRevision[change.CurrentPatchSet.Revision] = change
+	}
+	isSubmittable := map[int]bool{}
+	for _, change := range submittable {
+		isSubmittable[change.Number] = true
+	}
+	stackReady := func(change gerrit.Change) bool {
+		for {
+			if !isSubmittable[change.Number] {
+				return false
+			}
+			parents := change.CurrentPatchSet.Parents
+			if len(parents) != 1 {
+				return false
+			}
+			if tip, ok := tips[change.Branch]; ok && parents[0] == tip {
+				return true
+			}
+			parent, ok := byRevision[parents[0]]
+			if !ok || parent.Branch != change.Branch {
+				return false
+			}
+			change = parent
+		}
+	}
+
+	var stacks []gerrit.Change
+	beneath := map[string]bool{}
+	for _, change := range submittable {
+		if stackReady(change) {
+			stacks = append(stacks, change)
+			beneath[change.CurrentPatchSet.Parents[0]] = true
+		}
+	}
+	var tops []gerrit.Change
+	for _, change := range stacks {
+		if !beneath[change.CurrentPatchSet.Revision] {
+			tops = append(tops, change)
+		}
+	}
+	sort.Slice(tops, func(i, j int) bool { return tops[i].Number < tops[j].Number })
+	return tops
+}
+
+// branchTips maps each branch of the project, by short name, to the commit at
+// its tip.
+func (c *checker) branchTips(ctx context.Context) (map[string]string, error) {
+	cmd := gitCommand(ctx, "", "ls-remote", "--heads", c.remoteURL())
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("listing branches of %s: %w: %s", c.remoteURL(), err, strings.TrimSpace(stderr.String()))
+	}
+	return parseLsRemote(string(out)), nil
+}
+
+func parseLsRemote(out string) map[string]string {
+	tips := map[string]string{}
+	for _, line := range strings.Split(out, "\n") {
+		revision, ref, ok := strings.Cut(strings.TrimSpace(line), "\t")
+		if !ok {
+			continue
+		}
+		if branch, ok := strings.CutPrefix(ref, "refs/heads/"); ok {
+			tips[branch] = revision
+		}
+	}
+	return tips
+}
+
+func (c *checker) remoteURL() string {
+	return fmt.Sprintf("ssh://%s@%s:%s/%s", *user, *gerritHost, *gerritPort, *project)
 }
 
 // report tells a change that it can't be checked. Without it, a runner that
@@ -493,7 +638,7 @@ func tail(path string, n int) string {
 
 func (c *checker) fetch(ctx context.Context, ref string) error {
 	if _, err := os.Stat(filepath.Join(c.repoPath, ".git")); errors.Is(err, os.ErrNotExist) {
-		url := fmt.Sprintf("ssh://%s@%s:%s/%s", *user, *gerritHost, *gerritPort, *project)
+		url := c.remoteURL()
 		if err := git(ctx, "", "clone", url, c.repoPath); err != nil {
 			return fmt.Errorf("cloning %s: %w", url, err)
 		}
@@ -512,11 +657,16 @@ func (c *checker) fetch(ctx context.Context, ref string) error {
 	return nil
 }
 
-func git(ctx context.Context, dir string, args ...string) error {
+func gitCommand(ctx context.Context, dir string, args ...string) *exec.Cmd {
 	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), fmt.Sprintf(
 		"GIT_SSH_COMMAND=ssh -i '%s' -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new", *keyFilePath))
+	return cmd
+}
+
+func git(ctx context.Context, dir string, args ...string) error {
+	cmd := gitCommand(ctx, dir, args...)
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
