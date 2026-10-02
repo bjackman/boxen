@@ -77,6 +77,7 @@ in
   };
 
   bjackman.gerritCi.enable = true;
+  bjackman.reviewBot.enable = true;
 
   bjackman.gerritProjects = [
     "boxen"

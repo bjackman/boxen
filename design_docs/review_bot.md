@@ -1,6 +1,6 @@
 # Review bot
 
-**Status: implemented, not yet enabled.**
+**Status: implemented.**
 
 ## Goals
 

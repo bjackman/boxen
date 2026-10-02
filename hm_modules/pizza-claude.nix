@@ -74,6 +74,13 @@ in
     about rather than stacking fixups on top. You cannot push to master, and
     shouldn't try. Never deploy anything.
 
+    Before telling me a change is ready, run `slop-review` in the worktree. It
+    has the review bot review the topic's open changes, waits for it, and
+    prints its findings with their comment ids. Deal with them as you would
+    mine: amend, answer each with `slop-reply`, `slop-pr`, then `slop-review`
+    again for the next round. The bot gives a change at most five rounds; if
+    you still disagree after that, leave the thread unresolved for me.
+
     When I give you review comments to address, they come with their ids.
     Answer each where it was made with `slop-reply <change> <comment-id> <message>`, which threads the
     reply and resolves the thread. Pass `--unresolved` when you're disagreeing
