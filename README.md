@@ -249,12 +249,12 @@ Secrets are stored using [agenix](https://github.com/ryantm/agenix). At runtime
 they get decrypted and dumped into a tmpfs as plaintext (lol).
 
 To add a secret, run `nix develop` to get the `agenix` CLI, then go into
-`secrets/` and add it to `secrets.nix` following the existing pattern in there.
+`secrets/` and add it to `agenix-rules.nix` following the existing pattern in there.
 That's where you configure which keys can decrypt it. Then run `agenix -e <name>.age`.
 Then to make it get decrypted at runtime, add it to `age.secrets`
 in the home-manager/NixOS config.
 
-To add a recipient key for a secret, update `secrets.nix` to include it in that
+To add a recipient key for a secret, update `agenix-rules.nix` to include it in that
 secret's `publicKeys`setting, then run `agenix -r` from the `secrets/` dir.
 Note that this requires decrypting the keys, which your current user might not
 have the ability to do if the only recipients are host keys. In that case, use

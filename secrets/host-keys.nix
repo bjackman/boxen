@@ -1,5 +1,5 @@
 # SSH host public keys for the machines in this repo. They are agenix
-# recipients (see secrets.nix) and also the known-hosts entries anything
+# recipients (see agenix-rules.nix) and also the known-hosts entries anything
 # connecting to these machines non-interactively needs, so they live in one
 # place rather than being copied into both.
 {
