@@ -17,6 +17,8 @@ let
     "--project=${cfg.project}"
     "--log-url=${logUrl}"
     "--state-dir=${stateDir}"
+    "--listen=127.0.0.1:${toString logPort}"
+    "--allow-origin=${config.bjackman.iap.services.gerrit.url}"
   ];
 in
 {
@@ -54,14 +56,6 @@ in
       forwardAuth = true;
       allowedUsers = [ "brendan" ];
     };
-
-    # Not http://127.0.0.1:port, which would also match only that Host, and the
-    # proxy forwards the public one.
-    services.caddy.virtualHosts."http://:${toString logPort}".extraConfig = ''
-      bind 127.0.0.1
-      root * ${stateDir}/logs
-      file_server browse
-    '';
 
     systemd.services.gerrit-ci = {
       after = [

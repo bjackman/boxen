@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -47,7 +48,11 @@ var (
 	runLimit  = flag.Duration("run-limit", 60*time.Minute, "how long a single check may take")
 	logMaxAge = flag.Duration("log-max-age", 14*24*time.Hour,
 		"how long a build log is kept, which wants to outlast any open change")
-	once = flag.Bool("once", false, "check what's pending and exit, rather than watching")
+	once   = flag.Bool("once", false, "check what's pending and exit, rather than watching")
+	listen = flag.String("listen", "127.0.0.1:8080",
+		"Address to serve the logs and the Checks API on")
+	allowOrigin = flag.String("allow-origin", "https://gerrit.home.yawn.io",
+		"Origin of the Gerrit web UI, whose Checks plugin fetches from this runner")
 )
 
 func main() {
@@ -75,6 +80,7 @@ func run() error {
 		logsPath:     filepath.Join(*stateDirPath, "logs"),
 		inFlightPath: filepath.Join(*stateDirPath, "in-flight"),
 		reported:     map[string]bool{},
+		state:        &state{},
 	}
 	if err := os.MkdirAll(c.logsPath, 0o755); err != nil {
 		return fmt.Errorf("creating log directory %s: %w", c.logsPath, err)
@@ -89,6 +95,12 @@ func run() error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	srv := &server{logsPath: c.logsPath, state: c.state, allowOrigin: *allowOrigin}
+	httpServer := &http.Server{Addr: *listen, Handler: srv.handler()}
+	serveErr := make(chan error, 1)
+	go func() { serveErr <- httpServer.ListenAndServe() }()
+	defer httpServer.Close()
 
 	// Buffered so a burst of events collapses into one pending sweep.
 	wake := make(chan struct{}, 1)
@@ -113,6 +125,8 @@ func run() error {
 		select {
 		case <-ctx.Done():
 			return nil
+		case err := <-serveErr:
+			return fmt.Errorf("serving on %s: %w", *listen, err)
 		case <-wake:
 		case <-ticker.C:
 		}
@@ -130,13 +144,14 @@ type checker struct {
 	// Patch sets that couldn't be checked and have been told so, keyed by
 	// name, so that a sweep retrying them doesn't say it again every time.
 	reported map[string]bool
+	state    *state
 }
 
 func patchSetName(change int, patchSet int) string {
 	return fmt.Sprintf("%d-%d", change, patchSet)
 }
 
-func (c *checker) logURL(name string) string {
+func logURLFor(name string) string {
 	return fmt.Sprintf("%s/%s.txt", strings.TrimSuffix(*logURL, "/"), name)
 }
 
@@ -164,12 +179,22 @@ func (c *checker) failInFlight() error {
 		log.Printf("%s was in flight when the runner died; failing it", name)
 		msg := fmt.Sprintf("The CI runner died while checking this patch set, so it's marked failed "+
 			"rather than retried. Upload a new patch set to check it again.\n\nLog up to that point: %s",
-			c.logURL(name))
+			logURLFor(name))
 		if err := c.client.Review(number, patchSet, gerrit.ReviewInput{
 			Labels:  map[string]int{*label: -1},
 			Message: msg,
 		}); err != nil {
 			return fmt.Errorf("voting %s-1 on %s, which was in flight: %w", *label, name, err)
+		}
+		r := &record{
+			Change: number, PatchSet: patchSet, Subject: changes[0].Subject,
+			Finished: time.Now(), Vote: -1, Error: "the CI runner died while checking this patch set",
+		}
+		if info, err := os.Stat(c.inFlightPath); err == nil {
+			r.Started = info.ModTime()
+		}
+		if err := writeRecord(c.logsPath, r); err != nil {
+			log.Printf("recording that %s killed the runner: %v", name, err)
 		}
 	}
 	if err := os.Remove(c.inFlightPath); err != nil {
@@ -204,6 +229,12 @@ func (c *checker) sweep(ctx context.Context) error {
 		return nil
 	}
 	log.Printf("%d patch set(s) to check", len(pending))
+	var queued []queuedPatchSet
+	for _, change := range pending {
+		queued = append(queued, queuedPatchSet{Change: change.Number, PatchSet: change.CurrentPatchSet.Number})
+	}
+	c.state.setQueued(queued)
+	defer c.state.setQueued(nil)
 	for _, change := range pending {
 		if ctx.Err() != nil {
 			return ctx.Err()
@@ -272,23 +303,27 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 	if err := os.WriteFile(c.inFlightPath, []byte(name+"\n"), 0o644); err != nil {
 		return fmt.Errorf("writing %s: %w", c.inFlightPath, err)
 	}
+	c.state.start(&record{Change: change.Number, PatchSet: patchSet.Number, Subject: change.Subject, Started: time.Now()})
+	defer c.state.finish()
 	defer os.Remove(c.inFlightPath)
 	// Being stopped is a deploy or a shutdown, not something the patch set did,
 	// so it mustn't be blamed when the stop times out and ends in SIGKILL.
 	defer context.AfterFunc(ctx, func() { os.Remove(c.inFlightPath) })()
 
-	if err := c.fetch(ctx, patchSet.Ref); err != nil {
-		return fmt.Errorf("fetching %s into %s: %w", patchSet.Ref, c.repoPath, err)
-	}
-
 	logPath := filepath.Join(c.logsPath, name+".txt")
 	logFile, err := os.Create(logPath)
 	if err != nil {
-		return fmt.Errorf("creating log file %s: %w", logPath, err)
+		return c.recordFailure(ctx, fmt.Errorf("creating log file %s: %w", logPath, err))
+	}
+	if err := c.fetch(ctx, patchSet.Ref); err != nil {
+		err = fmt.Errorf("fetching %s into %s: %w", patchSet.Ref, c.repoPath, err)
+		fmt.Fprintln(logFile, err)
+		logFile.Close()
+		return c.recordFailure(ctx, err)
 	}
 	runCtx, cancel := context.WithTimeout(ctx, *runLimit)
 	defer cancel()
-	runErr := c.runChecks(runCtx, logFile)
+	runErr := c.runChecks(runCtx, logFile, c.state.addResult)
 	logFile.Close()
 
 	// A check that was cancelled says nothing about the change, so don't vote.
@@ -303,9 +338,22 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 	if errors.Is(runCtx.Err(), context.DeadlineExceeded) {
 		runErr = fmt.Errorf("timed out after %v, which may not be the change's fault", *runLimit)
 	}
+
+	done, _ := c.state.snapshot()
+	done.Finished = time.Now()
+	done.Vote = vote
+	// Failed builds are already in the record's checks; anything else stopped
+	// the run short.
+	var buildErr *buildFailure
+	if runErr != nil && !errors.As(runErr, &buildErr) {
+		done.Error = runErr.Error()
+	}
+	if err := writeRecord(c.logsPath, done); err != nil {
+		log.Printf("recording the result of %s: %v", name, err)
+	}
 	if err := c.client.Review(change.Number, patchSet.Number, gerrit.ReviewInput{
 		Labels:  map[string]int{*label: vote},
-		Message: message(runErr, logPath, c.logURL(name)),
+		Message: message(runErr, logPath, logURLFor(name)),
 	}); err != nil {
 		if open, openErr := c.isOpen(change.Number); openErr == nil && !open {
 			log.Printf("not voting on %s: change %d was closed while it was being checked", name, change.Number)
@@ -314,6 +362,21 @@ func (c *checker) check(ctx context.Context, change gerrit.Change) error {
 		return fmt.Errorf("voting %s%+d on %d,%d: %w", *label, vote, change.Number, patchSet.Number, err)
 	}
 	return nil
+}
+
+// recordFailure records a run that stopped before it could build anything, so
+// that Checks shows why until the sweep retries it. It returns err.
+func (c *checker) recordFailure(ctx context.Context, err error) error {
+	if ctx.Err() != nil {
+		return err
+	}
+	r, _ := c.state.snapshot()
+	r.Finished = time.Now()
+	r.Error = err.Error()
+	if writeErr := writeRecord(c.logsPath, r); writeErr != nil {
+		log.Printf("recording the failure to check %s: %v", r.name(), writeErr)
+	}
+	return err
 }
 
 func (c *checker) isOpen(number int) (bool, error) {
@@ -328,7 +391,7 @@ func (c *checker) isOpen(number int) (bool, error) {
 // only one configuration's evaluation is ever live. We tried nix-fast-build,
 // but this box doesn't have the memory for more than one nix-eval-jobs worker,
 // and with one it offered nothing over this loop.
-func (c *checker) runChecks(ctx context.Context, logFile io.Writer) error {
+func (c *checker) runChecks(ctx context.Context, logFile io.Writer, onResult func(checkResult)) error {
 	checksAttr := ".#checks." + *nixSystem
 	list := exec.CommandContext(ctx, "nix", "eval", "--json", checksAttr, "--apply", "builtins.attrNames")
 	list.Dir = c.repoPath
@@ -355,12 +418,25 @@ func (c *checker) runChecks(ctx context.Context, logFile io.Writer) error {
 			}
 			fmt.Fprintf(logFile, "==> %s failed: %v\n", name, err)
 			failed = append(failed, name)
+			onResult(checkResult{Name: name, Passed: false})
+			continue
 		}
+		onResult(checkResult{Name: name, Passed: true})
 	}
 	if len(failed) > 0 {
-		return fmt.Errorf("%s failed", strings.Join(failed, ", "))
+		return &buildFailure{failed: failed}
 	}
 	return nil
+}
+
+// buildFailure is a run that got as far as building every check and had some
+// fail, as opposed to one that couldn't build them at all.
+type buildFailure struct {
+	failed []string
+}
+
+func (e *buildFailure) Error() string {
+	return fmt.Sprintf("%s failed", strings.Join(e.failed, ", "))
 }
 
 // message is what shows up on the change. It carries enough to tell whether the
