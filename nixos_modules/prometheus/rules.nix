@@ -156,7 +156,16 @@ in
             summary = "Host physical component too hot (instance {{ $labels.instance }})";
           };
           expr = ''
-            ((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!="tctl"} > 75))
+            # pizza is kept fully loaded and its laptop CPU runs hot by design.
+            # thinkpad temp1 is the same CPU reading.
+            ((
+              (
+                node_hwmon_temp_celsius
+                unless node_hwmon_temp_celsius{instance="pizza", chip="platform_coretemp_0"}
+                unless node_hwmon_temp_celsius{instance="pizza", chip="platform_thinkpad_hwmon", sensor="temp1"}
+              )
+              * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!="tctl"} > 75
+            ))
             * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
           '';
           for = "5m";
