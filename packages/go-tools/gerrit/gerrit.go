@@ -80,8 +80,9 @@ type Account struct {
 }
 
 type PatchSet struct {
-	Number   int    `json:"number"`
-	Revision string `json:"revision"`
+	Number   int      `json:"number"`
+	Revision string   `json:"revision"`
+	Parents  []string `json:"parents"`
 	// The ref this patch set can be fetched from, as refs/changes/NN/change/N.
 	Ref       string     `json:"ref"`
 	Approvals []Approval `json:"approvals"`
@@ -242,6 +243,11 @@ func (c *Client) Review(change int, patchSet int, review ReviewInput) error {
 		return err
 	}
 	_, err = c.ssh(string(encoded), "gerrit", "review", fmt.Sprintf("%d,%d", change, patchSet), "--json")
+	return err
+}
+
+func (c *Client) Submit(change int, patchSet int) error {
+	_, err := c.ssh("", "gerrit", "review", "--submit", fmt.Sprintf("%d,%d", change, patchSet))
 	return err
 }
 
