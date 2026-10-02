@@ -54,12 +54,13 @@ gigabytes of evaluation fit in that headroom next to Gerrit's JVM.
 - **There is no `Verified` label on this instance.** Gerrit only creates it if
   you say yes to a prompt during `gerrit init`, and the nixpkgs module runs
   init non-interactively. It has to be added to `All-Projects`.
-- **The Checks plugin isn't packaged.** The tabbed CI panel that is the modern
-  answer to "show CI in the Gerrit UI" is not among the plugins in nixpkgs'
-  `gerrit.war` (`codemirror-editor`, `commit-message-length-validator`,
-  `delete-project`, `download-commands`, `gitiles`, `hooks`, `plugin-manager`,
-  `replication`, `reviewnotes`, `singleusergroup`, `webhooks`). Packaging it
-  means Bazel against the matching Gerrit source tree.
+- **The Checks tab needs a frontend plugin, not a packaged one.** The tabbed
+  CI panel is built into the web UI and hidden until a JavaScript plugin
+  registers a provider with `plugin.checks()`
+  (`Documentation/pg-plugin-checks-api.html`). That is one `.js` file in the
+  site's `plugins/`, which `services.gerrit.plugins` can install, so nothing
+  needs building. The old `checks` backend plugin, which stored checkers in
+  NoteDb, is a different thing and isn't needed.
 
 ### What else was considered
 
@@ -195,15 +196,23 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    resource limits and no ability to defer, batch or retry - and a hook that
    takes 30 seconds and 2 GiB is a hook that makes pushing feel broken.
 
-1. **The full log is a file, served as static text through the IAP.** Each run
+1. **The full log is a file, served as plain text through the IAP.** Each run
    writes its output to `logs/CCCC-P.txt` in the runner's state directory, and
    the review message carries a one-line verdict, the last few lines, and a URL.
 
-   That's a Caddy `file_server` on an ordinary `bjackman.iap.services` entry -
-   the same three lines every other service in this repo uses, `forwardAuth`
-   with `allowedUsers = [ "brendan" ]`. No log viewer, no job database, no
-   second web application: the runner's only obligation is to write a file
-   where Caddy can find it.
+   The runner serves that directory itself, behind an ordinary
+   `bjackman.iap.services` entry with `forwardAuth` and
+   `allowedUsers = [ "brendan" ]`. Next to each log it writes
+   `logs/CCCC-P.json`, a record of the run, and it serves
+   `/api/checks/<change>`: that change's runs, queued, running and finished,
+   already in the shape of the Checks API. A `gerrit-ci.js` frontend plugin
+   fetches that and hands it to the Checks tab. The records are for display
+   only; whether a patch set needs checking is still the vote's job.
+
+   The plugin fetches cross-origin with the IAP session cookie, which works
+   because both hosts are under `home.yawn.io`. When that session expires, the
+   redirect to the login page fails CORS and the tab shows an error until the
+   runner's URL is visited again.
 
    Logs are pruned by age rather than kept forever; a fortnight is longer than
    any change stays open in practice.
@@ -325,7 +334,7 @@ systemd.services.gerrit-ci = {
 ```
 
 The state directory holds one clone of `boxen`, fetched into rather than
-re-cloned per run, and `logs/`, which is what the `file_server` serves.
+re-cloned per run, and `logs/`, which the runner serves.
 `gerrit-ci-failed.service` is decision 3's loud half: it reads the in-flight
 patch set from a file the runner writes before it starts work, and posts "the
 runner died" on it.

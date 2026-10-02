@@ -57,6 +57,13 @@ in
       allowedUsers = [ "brendan" ];
     };
 
+    services.gerrit.plugins = [
+      (pkgs.replaceVars ./gerrit-ci.js {
+        ciUrl = logUrl;
+        inherit (cfg) project;
+      })
+    ];
+
     systemd.services.gerrit-ci = {
       after = [
         "gerrit.service"
