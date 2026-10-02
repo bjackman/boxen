@@ -199,7 +199,7 @@ in
             monitor = presets.lg-ultrafine;
             name = "main";
             mode = "3840x2160";
-            scale = 1.0;
+            scale = 1.25;
           }
           {
             monitor = presets.eDP;
