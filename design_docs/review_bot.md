@@ -154,3 +154,68 @@ browser login, so switching it on is manual:
 - **Relaying my own comments** is still by hand. A `slop-comments` that lists
   a topic's unresolved threads with their ids would make "address the
   comments on 82" the whole instruction.
+
+## Addendum: alternatives discussed and parked
+
+Recorded so they don't have to be worked out again. None of them changes the
+design above.
+
+### Messaging between sessions
+
+Messaging between sessions already exists from inside a session: an agent has
+`ListAgents` and `SendMessage` tools, backed by a per-process socket under
+`/tmp/cc-socks/`. What's missing is a way for an outside process, like
+`review-bot`, to send a message into a running session; if Claude Code gains
+one, it would remove `slop-review`'s wait, and - the bigger win - let comments
+from me wake the session that wrote the change, which is what `slop-handler`
+was for.
+
+If it lands, use it as a doorbell: the message says only "review-bot voted on
+change 102, run `slop-review`" or "Brendan commented on 84", and the content
+is still fetched from Gerrit. The agent session runs with permissions
+bypassed, and a channel carrying text from a service that reads untrusted
+diffs would be a route for prompt injection into it. A lost message then also
+loses nothing.
+
+Two snags. `claude-remote-control` runs with `PrivateTmp=true`, so a service
+in another unit can't reach the sockets; the doorbell would have to run inside
+that unit, as `claude`, watching the event stream. And the session to ring is
+found from the topic only through an undocumented naming scheme: topic
+`bridge-cse_01Loq…` is session `bridge-cse-01loq…-fe` to `ListAgents`.
+
+### A persistent reviewer
+
+A long-lived reviewer session would remember its earlier rounds rather than
+reconstructing them from the threads, and as a Remote Control session I could
+question and steer it from the app. Against it:
+
+- Something would have to deliver work into it - the problem this design
+  avoids by starting a fresh `claude -p` per review.
+- Every review reads untrusted diffs. A fresh process confines an injection
+  to one review; a long-lived session carries it into the reviews of other
+  changes.
+- Its context grows across changes, and it anchors on its own earlier
+  verdicts.
+- A hung session means no reviews until someone notices; the service starts
+  clean every time and recovers its work from Gerrit.
+
+If later rounds turn out to lose the thread, the cheaper fix is a session per
+change: give each change's reviewer a fixed session id on its first round and
+`claude -p --resume` it on the next. That keeps memory across rounds with no
+long-lived process and no messaging, and still confines an injection to one
+change. One small test change's second round rebuilt its context from the
+threads fine, so this waits for evidence.
+
+Steering is better done with a review guidelines file beside `CLAUDE.md`,
+reviewed like any other change, than by talking to a session.
+
+### The Claude Agent SDK
+
+It only sends messages into sessions it runs itself: `ClaudeSDKClient` keeps
+one open within a process, and `resume` or `fork` starts a new run from a
+saved transcript, which is `claude -p --resume` as a library. It can't
+attach to a session running in another process, so it doesn't help with
+getting findings to the agent. It would make a persistent reviewer practical,
+since the service would own the session it feeds, but the objections above
+still apply; and it's Python or TypeScript beside Go tools. (From the
+documentation, not tested.)
