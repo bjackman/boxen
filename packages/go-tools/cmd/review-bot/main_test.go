@@ -114,3 +114,13 @@ func TestBuildPrompt(t *testing.T) {
 		}
 	}
 }
+
+func TestFailureReason(t *testing.T) {
+	notLoggedIn := `{"duration_api_ms":0,"stop_reason":"stop_sequence","usage":{"input_tokens":0,"output_tokens":0,"server_tool_use":{"web_search_requests":0}},"is_error":true,"result":"Not logged in · Please run /login"}`
+	if got := failureReason([]byte(notLoggedIn), nil); got != "Not logged in · Please run /login" {
+		t.Errorf("failureReason() = %q, want claude's own message", got)
+	}
+	if got := failureReason([]byte("not json"), []byte("segfault\n")); got != "segfault\nnot json" {
+		t.Errorf("failureReason() without JSON = %q, want stderr then stdout", got)
+	}
+}

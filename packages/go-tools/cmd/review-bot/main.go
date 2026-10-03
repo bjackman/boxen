@@ -402,9 +402,21 @@ func runClaude(ctx context.Context, repoPath, inputsPath, prompt string) (*resul
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("claude: %w: %s", err, truncate(stderr.String()+stdout.String(), 500))
+		return nil, fmt.Errorf("claude: %w: %s", err, failureReason(stdout.Bytes(), stderr.Bytes()))
 	}
 	return parseOutput(stdout.Bytes())
+}
+
+// failureReason is what claude says went wrong. It reports its own failures,
+// like not being logged in, in the result field of the JSON it still prints.
+func failureReason(stdout, stderr []byte) string {
+	var output struct {
+		Result string `json:"result"`
+	}
+	if json.Unmarshal(stdout, &output) == nil && output.Result != "" {
+		return truncate(output.Result, 500)
+	}
+	return truncate(string(stderr)+string(stdout), 500)
 }
 
 func parseOutput(out []byte) (*result, error) {
