@@ -12,7 +12,8 @@ Gerrit.install((plugin) => {
         let response;
         try {
           // The runner is behind the IAP, which needs the session cookie.
-          response = await fetch(`${ciUrl}/api/checks/${change.changeNumber}`, {
+          const path = `${change.changeNumber}/${change.patchsetNumber}`;
+          response = await fetch(`${ciUrl}/api/checks/${path}`, {
             credentials: "include",
           });
         } catch (e) {

@@ -75,6 +75,10 @@ func TestServeChecks(t *testing.T) {
 	if err := writeRecord(logsPath, &record{Change: 12, PatchSet: 1, Vote: 1, Started: time.Now()}); err != nil {
 		t.Fatal(err)
 	}
+	// Another patch set of the same change, which also mustn't.
+	if err := writeRecord(logsPath, &record{Change: 12, PatchSet: 2, Vote: -1, Started: time.Now()}); err != nil {
+		t.Fatal(err)
+	}
 	// Another change whose number shares a prefix, which mustn't show up.
 	if err := writeRecord(logsPath, &record{Change: 123, PatchSet: 1, Vote: 1}); err != nil {
 		t.Fatal(err)
@@ -86,9 +90,9 @@ func TestServeChecks(t *testing.T) {
 	handler := srv.handler()
 
 	resp := httptest.NewRecorder()
-	handler.ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/12", nil))
+	handler.ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/12/1", nil))
 	if resp.Code != http.StatusOK {
-		t.Fatalf("GET /api/checks/12 = %d: %s", resp.Code, resp.Body)
+		t.Fatalf("GET /api/checks/12/1 = %d: %s", resp.Code, resp.Body)
 	}
 	if got := resp.Header().Get("Access-Control-Allow-Origin"); got != "https://gerrit.example" {
 		t.Errorf("Access-Control-Allow-Origin = %q", got)
@@ -103,7 +107,7 @@ func TestServeChecks(t *testing.T) {
 		t.Fatalf("parsing %s: %v", resp.Body, err)
 	}
 	if len(body.Runs) != 1 || body.Runs[0].Patchset != 1 || body.Runs[0].Status != "COMPLETED" {
-		t.Errorf("runs = %+v, want change 12's one completed run", body.Runs)
+		t.Errorf("runs = %+v, want change 12 patch set 1's one completed run", body.Runs)
 	}
 
 	resp = httptest.NewRecorder()
@@ -112,10 +116,12 @@ func TestServeChecks(t *testing.T) {
 		t.Errorf("GET /12-1.txt = %d %q, want the log: review messages link there", resp.Code, resp.Body)
 	}
 
-	resp = httptest.NewRecorder()
-	handler.ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/nope", nil))
-	if resp.Code != http.StatusBadRequest {
-		t.Errorf("GET /api/checks/nope = %d, want 400", resp.Code)
+	for _, bad := range []string{"/api/checks/nope/1", "/api/checks/12/nope"} {
+		resp = httptest.NewRecorder()
+		handler.ServeHTTP(resp, httptest.NewRequest("GET", bad, nil))
+		if resp.Code != http.StatusBadRequest {
+			t.Errorf("GET %s = %d, want 400", bad, resp.Code)
+		}
 	}
 }
 
@@ -124,7 +130,7 @@ func TestServeChecks(t *testing.T) {
 func TestServeChecksNoRuns(t *testing.T) {
 	srv := &server{logsPath: t.TempDir(), state: &state{}}
 	resp := httptest.NewRecorder()
-	srv.handler().ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/1", nil))
+	srv.handler().ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/1/1", nil))
 	if got, want := resp.Body.String(), "{\"runs\":[]}\n"; got != want {
 		t.Errorf("body = %q, want %q", got, want)
 	}

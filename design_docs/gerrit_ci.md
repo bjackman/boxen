@@ -207,9 +207,9 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    `bjackman.iap.services` entry with `forwardAuth` and
    `allowedUsers = [ "brendan" ]`. Next to each log it writes
    `logs/CCCC-P.json`, a record of the run, and it serves
-   `/api/checks/<change>`: that change's runs, queued, running and finished,
-   already in the shape of the Checks API. A `gerrit-ci.js` frontend plugin
-   fetches that and hands it to the Checks tab. The records are for display
+   `/api/checks/<change>/<patch set>`: that patch set's run, queued, running or
+   finished, already in the shape of the Checks API. A `gerrit-ci.js` frontend
+   plugin fetches that and hands it to the Checks tab. The records are for display
    only; whether a patch set needs checking is still the vote's job.
 
    The plugin fetches cross-origin with the IAP session cookie, which works

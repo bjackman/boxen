@@ -229,11 +229,14 @@ type server struct {
 
 func (s *server) handler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/checks/{change}", s.serveChecks)
+	mux.HandleFunc("GET /api/checks/{change}/{patchSet}", s.serveChecks)
 	mux.Handle("GET /", http.FileServer(http.Dir(s.logsPath)))
 	return mux
 }
 
+// serveChecks serves the runs of one patch set. The Checks UI asks per patch
+// set and refuses two runs with the same name unless they're numbered attempts,
+// so it mustn't be given the other patch sets' runs.
 func (s *server) serveChecks(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", s.allowOrigin)
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -243,6 +246,11 @@ func (s *server) serveChecks(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, fmt.Sprintf("bad change number %q", req.PathValue("change")), http.StatusBadRequest)
 		return
 	}
+	patchSet, err := strconv.Atoi(req.PathValue("patchSet"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("bad patch set number %q", req.PathValue("patchSet")), http.StatusBadRequest)
+		return
+	}
 	records, err := readRecords(s.logsPath, change)
 	if err != nil {
 		log.Printf("serving checks for change %d: %v", change, err)
@@ -250,8 +258,10 @@ func (s *server) serveChecks(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	running, queued := s.state.snapshot()
+	runs := slices.DeleteFunc(checkRuns(records, running, queued, change),
+		func(run checkRun) bool { return run.Patchset != patchSet })
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]any{"runs": checkRuns(records, running, queued, change)}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]any{"runs": runs}); err != nil {
 		log.Printf("writing checks for change %d: %v", change, err)
 	}
 }
