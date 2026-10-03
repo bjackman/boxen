@@ -48,6 +48,7 @@ in
       ];
       wants = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
+      restartTriggers = [ config.age.secrets.review-bot-claude-env.file ];
       serviceConfig = {
         ExecStart = "${pkgs.bjackman.review-bot}/bin/review-bot ${flags}";
         User = "review-bot";
