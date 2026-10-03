@@ -110,7 +110,9 @@ func run() error {
 			return false
 		}
 		switch event.Type {
-		case gerrit.EventPatchSetCreated, gerrit.EventCommentAdded, gerrit.EventChangeMerged:
+		case gerrit.EventPatchSetCreated:
+			c.state.enqueue(queuedPatchSet{Change: event.Change.Number, PatchSet: event.PatchSet.Number})
+		case gerrit.EventCommentAdded, gerrit.EventChangeMerged:
 		default:
 			return false
 		}
@@ -225,27 +227,37 @@ func parsePatchSetName(name string) (int, int, error) {
 	return number, patchSet, nil
 }
 
+// sweep checks pending patch sets until there are none, asking Gerrit again
+// after each one: a check takes minutes, in which time patch sets are uploaded
+// and superseded.
 func (c *checker) sweep(ctx context.Context) error {
 	c.submitReady(ctx)
-	changes, err := c.client.Query("status:open", "project:"+*project)
-	if err != nil {
-		return fmt.Errorf("querying open changes on %s: %w", *project, err)
-	}
-	pending := pending(changes, *label, *user)
-	if len(pending) == 0 {
-		return nil
-	}
-	log.Printf("%d patch set(s) to check", len(pending))
-	var queued []queuedPatchSet
-	for _, change := range pending {
-		queued = append(queued, queuedPatchSet{Change: change.Number, PatchSet: change.CurrentPatchSet.Number})
-	}
-	c.state.setQueued(queued)
-	defer c.state.setQueued(nil)
-	for _, change := range pending {
+	// So that a patch set that can't be checked waits for the next sweep
+	// rather than being retried in a loop.
+	tried := map[string]bool{}
+	for {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		changes, err := c.client.Query("status:open", "project:"+*project)
+		if err != nil {
+			return fmt.Errorf("querying open changes on %s: %w", *project, err)
+		}
+		var todo []gerrit.Change
+		var queued []queuedPatchSet
+		for _, change := range pending(changes, *label, *user) {
+			if !tried[patchSetName(change.Number, change.CurrentPatchSet.Number)] {
+				todo = append(todo, change)
+				queued = append(queued, queuedPatchSet{Change: change.Number, PatchSet: change.CurrentPatchSet.Number})
+			}
+		}
+		c.state.setQueued(queued)
+		if len(todo) == 0 {
+			break
+		}
+		log.Printf("%d patch set(s) to check", len(todo))
+		change := todo[0]
+		tried[patchSetName(change.Number, change.CurrentPatchSet.Number)] = true
 		if err := c.check(ctx, change); err != nil {
 			if ctx.Err() != nil {
 				return ctx.Err()

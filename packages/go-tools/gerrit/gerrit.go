@@ -360,6 +360,10 @@ type Event struct {
 		Project string `json:"project"`
 		Topic   string `json:"topic"`
 	} `json:"change"`
+	// The new patch set, on EventPatchSetCreated.
+	PatchSet struct {
+		Number int `json:"number"`
+	} `json:"patchSet"`
 }
 
 // StreamEvents calls onEvent for each event until the connection drops or the

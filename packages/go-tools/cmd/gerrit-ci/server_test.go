@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 )
@@ -133,5 +134,19 @@ func TestServeChecksNoRuns(t *testing.T) {
 	srv.handler().ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/1/1", nil))
 	if got, want := resp.Body.String(), "{\"runs\":[]}\n"; got != want {
 		t.Errorf("body = %q, want %q", got, want)
+	}
+}
+
+// A patch set uploaded mid-sweep is queued from its event, replacing the older
+// patch set it supersedes.
+func TestEnqueue(t *testing.T) {
+	s := &state{}
+	s.setQueued([]queuedPatchSet{{Change: 1, PatchSet: 1}, {Change: 2, PatchSet: 3}})
+	s.enqueue(queuedPatchSet{Change: 2, PatchSet: 4})
+	s.enqueue(queuedPatchSet{Change: 5, PatchSet: 1})
+	_, got := s.snapshot()
+	want := []queuedPatchSet{{Change: 1, PatchSet: 1}, {Change: 2, PatchSet: 4}, {Change: 5, PatchSet: 1}}
+	if !slices.Equal(got, want) {
+		t.Errorf("queue = %v, want %v", got, want)
 	}
 }

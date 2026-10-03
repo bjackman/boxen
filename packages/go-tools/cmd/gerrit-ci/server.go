@@ -56,6 +56,15 @@ func (s *state) setQueued(queued []queuedPatchSet) {
 	s.queued = queued
 }
 
+// enqueue adds a patch set to the queue ahead of the next sweep, replacing any
+// older patch set of the same change.
+func (s *state) enqueue(q queuedPatchSet) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.queued = slices.DeleteFunc(s.queued, func(other queuedPatchSet) bool { return other.Change == q.Change })
+	s.queued = append(s.queued, q)
+}
+
 func (s *state) start(r *record) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
