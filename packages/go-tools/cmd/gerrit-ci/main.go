@@ -312,7 +312,8 @@ func (c *checker) submitReady(ctx context.Context) {
 }
 
 func (c *checker) nextReady(ctx context.Context, refused map[int]bool) (*gerrit.Change, error) {
-	submittable, err := c.client.Query("status:open", "project:"+*project, "is:submittable", "-is:wip", "-is:private")
+	// gerrit query over SSH takes anything starting with - as an option of its own.
+	submittable, err := c.client.Query("status:open", "project:"+*project, "is:submittable", "NOT is:wip", "NOT is:private")
 	if err != nil {
 		return nil, fmt.Errorf("querying submittable changes on %s: %w", *project, err)
 	}
