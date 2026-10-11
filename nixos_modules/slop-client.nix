@@ -30,7 +30,6 @@ in
 
   config = {
     bjackman.slopClient.packages = {
-      slop = pkgs.bjackman.slop.override gerritArgs;
       slop-tools = pkgs.bjackman.slop-tools.override (
         gerritArgs
         // {

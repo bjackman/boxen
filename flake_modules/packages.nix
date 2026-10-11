@@ -29,7 +29,6 @@
       notmuch-propagate-mute = final.callPackage ../packages/notmuch-propagate-mute { };
       spellcheck_commitmsg = final.callPackage ../packages/spellcheck_commitmsg { };
       spellcheck_commitmsgs = final.callPackage ../packages/spellcheck_commitmsgs { };
-      slop = final.callPackage ../packages/slop { };
       slop-tools = final.callPackage ../packages/go-tools/slop-tools.nix { };
       slop-probe = final.callPackage ../packages/go-tools/probe.nix { };
       gerrit-ci = final.callPackage ../packages/go-tools/gerrit-ci.nix { };
