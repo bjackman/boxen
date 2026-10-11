@@ -9,7 +9,15 @@
 buildGoModule {
   pname = "review-bot";
   version = "0.1.0";
-  src = ./.;
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./go.mod
+      ./gerrit
+      ./internal/review
+      ./cmd/review-bot
+    ];
+  };
   vendorHash = null;
 
   subPackages = [ "cmd/review-bot" ];
