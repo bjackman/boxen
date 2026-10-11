@@ -158,9 +158,10 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    for itself.
 
    A check that killed the runner must not simply be retried: if the patch set
-   is what killed it, it will again, and while it's the newest change nothing
-   older ever gets checked. So on startup the runner votes -1 on the patch set
-   the in-flight file names, and a new patch set is what checks it again.
+   is what killed it, it will again, and while it's the most recently uploaded
+   nothing older ever gets checked. So on startup the runner votes -1 on the
+   patch set the in-flight file names, and a new patch set is what checks it
+   again.
 
    Short of dying, anything that stops the runner reaching a vote - a failed
    fetch, a vote Gerrit refused - is posted on the change, once per patch set

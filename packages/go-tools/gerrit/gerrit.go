@@ -86,6 +86,8 @@ type PatchSet struct {
 	// The ref this patch set can be fetched from, as refs/changes/NN/change/N.
 	Ref       string     `json:"ref"`
 	Approvals []Approval `json:"approvals"`
+	// When it was uploaded, in seconds since the epoch.
+	CreatedOn int64 `json:"createdOn"`
 	// Only filled in by QueryWithComments.
 	Comments []InlineComment `json:"comments"`
 }

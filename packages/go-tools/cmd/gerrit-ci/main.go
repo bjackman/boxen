@@ -165,7 +165,7 @@ func logURLFor(name string) string {
 
 // failInFlight votes against a patch set whose check was still running when
 // this process last died. Retrying it would only kill the runner again, and
-// while it's the newest change nothing older would ever be checked.
+// while it's the most recently uploaded nothing older would ever be checked.
 func (c *checker) failInFlight() error {
 	contents, err := os.ReadFile(c.inFlightPath)
 	if errors.Is(err, os.ErrNotExist) {
@@ -276,8 +276,9 @@ func (c *checker) sweep(ctx context.Context) error {
 }
 
 // pending returns the changes whose current patch set hasn't been voted on,
-// newest first: a fresh patch set is more interesting than one that has been
-// waiting, and if the queue is never drained it's the recent work that matters.
+// most recently uploaded first: a fresh patch set is more interesting than one
+// that has been waiting, and if the queue is never drained it's the recent work
+// that matters. That goes by the patch set, not the change, which can be old.
 func pending(changes []gerrit.Change, label, user string) []gerrit.Change {
 	var out []gerrit.Change
 	for _, change := range changes {
@@ -286,10 +287,10 @@ func pending(changes []gerrit.Change, label, user string) []gerrit.Change {
 		}
 	}
 	sort.Slice(out, func(i, j int) bool {
-		if out[i].Number != out[j].Number {
-			return out[i].Number > out[j].Number
+		if out[i].CurrentPatchSet.CreatedOn != out[j].CurrentPatchSet.CreatedOn {
+			return out[i].CurrentPatchSet.CreatedOn > out[j].CurrentPatchSet.CreatedOn
 		}
-		return out[i].CurrentPatchSet.Number > out[j].CurrentPatchSet.Number
+		return out[i].Number > out[j].Number
 	})
 	return out
 }

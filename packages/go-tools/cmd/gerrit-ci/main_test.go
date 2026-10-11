@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -45,6 +46,24 @@ func TestPending(t *testing.T) {
 		if numbers[i] != want[i] {
 			t.Fatalf("pending() = %v, want %v (newest first)", numbers, want)
 		}
+	}
+}
+
+// A new patch set on an old change goes ahead of newer changes that have been
+// waiting.
+func TestPendingOrder(t *testing.T) {
+	uploaded := func(number int, createdOn int64) gerrit.Change {
+		c := change(number, 1)
+		c.CurrentPatchSet.CreatedOn = createdOn
+		return c
+	}
+	got := pending([]gerrit.Change{uploaded(12, 100), uploaded(11, 300), uploaded(13, 200)}, "Verified", "ci-bot")
+	var numbers []int
+	for _, c := range got {
+		numbers = append(numbers, c.Number)
+	}
+	if want := []int{11, 13, 12}; !slices.Equal(numbers, want) {
+		t.Errorf("pending() = %v, want %v (most recently uploaded first)", numbers, want)
 	}
 }
 
