@@ -57,7 +57,6 @@
         format = config.treefmt.build.check self;
         add-user = pkgs.callPackage ../packages/add-user.nix { };
         deploy-tf-arr = pkgs.callPackage ../tf/arr/deploy.nix { inherit homelab; };
-        deploy-tf-slopbox = pkgs.callPackage ../tf/slopbox/deploy.nix { inherit self; };
       };
     };
 }
