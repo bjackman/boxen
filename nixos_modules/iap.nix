@@ -194,7 +194,7 @@ in
           plugins = [ "github.com/caddy-dns/cloudflare@v0.2.2" ];
           # https://github.com/NixOS/nixpkgs/issues/450289
           # Have to update this every time Caddy is updated :(
-          hash = "sha256-EKFsWWPds2ESNUXzW1dgRhV8OXjGkweewHYEhEX7Aio=";
+          hash = "sha256-UPd4CWjm8Cq5EZ9OkBCglE23hD8+przFBSw8Ey6zMz8=";
         };
         # This configures Caddy to do the special dance with Cloudflare to get a
         # Lets Encrypt certificate. Because we want a wildcard certificate we need
