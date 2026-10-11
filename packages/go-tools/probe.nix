@@ -17,7 +17,15 @@
 buildGoModule {
   pname = "slop-probe";
   version = "0.1.0";
-  src = ./.;
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./go.mod
+      ./internal/probe
+      ./cmd/slop-probe
+      ./cmd/slop-probe-server
+    ];
+  };
   vendorHash = null;
 
   subPackages = [
