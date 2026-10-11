@@ -1,11 +1,11 @@
 ---
 name: probe-homelab
-description: Look at the live state of Brendan's homelab hosts (pizza, norte) from slopbox - journals, unit state, disk and ZFS health, what was deployed when. Use when investigating something in prod rather than in the config, when an alert or a bug report needs evidence from a running machine, or when you would otherwise want to SSH into a homelab host.
+description: Look at the live state of Brendan's homelab hosts (pizza, norte) with slop-probe - journals, unit state, disk and ZFS health, what was deployed when. Use when investigating something in prod rather than in the config, when an alert or a bug report needs evidence from a running machine, or when you would otherwise want to SSH into a homelab host.
 ---
 
 # Probing the homelab
 
-Agents on slopbox have no shell on the homelab hosts. What they have is
+Agents get no privileged access to the homelab hosts. What they have is
 `slop-probe`, which runs one of a fixed set of read-only commands declared in
 `nixos_modules/slop-probe.nix` and deployed to the host. Everything below is
 safe to run unattended; none of it can change anything.

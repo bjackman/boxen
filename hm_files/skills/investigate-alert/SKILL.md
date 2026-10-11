@@ -58,9 +58,10 @@ following the existing examples in the code.
 1. Evaluate the `expr` (and its sub-parts) as PromQL against pizza to see the
    current value and which series are involved.
 1. Identify the affected host/instance from `$labels.instance`, and go look at
-   it. On slopbox that means `slop-probe` - see the `probe-homelab` skill. From
-   one of my workstations it means SSH by hostname (`ssh pizza`, `ssh norte`,
-   ...); read-only info-gathering over SSH is fine per `CLAUDE.md`.
+   it. As the `claude` user on pizza that means `slop-probe` - see the
+   `probe-homelab` skill. From one of my workstations it means SSH by hostname
+   (`ssh pizza`, `ssh norte`, ...); read-only info-gathering over SSH is fine
+   per `CLAUDE.md`.
 1. Distinguish a **monitoring-stack fault** (exporter down, scrape failing) from
    a **real condition** on the host. Check the relevant exporter is up and its
    other metrics look fresh before trusting or blaming a single series.
