@@ -138,14 +138,15 @@ func TestServeChecksNoRuns(t *testing.T) {
 }
 
 // A patch set uploaded mid-sweep is queued from its event, replacing the older
-// patch set it supersedes.
+// patch set it supersedes, and in the order it will be checked: most recently
+// uploaded first.
 func TestEnqueue(t *testing.T) {
 	s := &state{}
 	s.setQueued([]queuedPatchSet{{Change: 1, PatchSet: 1}, {Change: 2, PatchSet: 3}})
 	s.enqueue(queuedPatchSet{Change: 2, PatchSet: 4})
 	s.enqueue(queuedPatchSet{Change: 5, PatchSet: 1})
 	_, got := s.snapshot()
-	want := []queuedPatchSet{{Change: 1, PatchSet: 1}, {Change: 2, PatchSet: 4}, {Change: 5, PatchSet: 1}}
+	want := []queuedPatchSet{{Change: 5, PatchSet: 1}, {Change: 2, PatchSet: 4}, {Change: 1, PatchSet: 1}}
 	if !slices.Equal(got, want) {
 		t.Errorf("queue = %v, want %v", got, want)
 	}

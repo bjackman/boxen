@@ -60,12 +60,13 @@ func (s *state) setQueued(queued []queuedPatchSet) {
 }
 
 // enqueue adds a patch set to the queue ahead of the next sweep, replacing any
-// older patch set of the same change.
+// older patch set of the same change. It goes at the front: it's the most
+// recent upload, which is what's checked next.
 func (s *state) enqueue(q queuedPatchSet) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.queued = slices.DeleteFunc(s.queued, func(other queuedPatchSet) bool { return other.Change == q.Change })
-	s.queued = append(s.queued, q)
+	s.queued = slices.Insert(s.queued, 0, q)
 }
 
 func (s *state) start(r *record) {
