@@ -1,4 +1,4 @@
-# A read-only channel from the agent VM into this host. The agent reaches it
+# A read-only channel from agents into this host. The agent reaches it
 # over SSH, as an unprivileged user whose authorized_keys entry forces a command
 # that can only run the probes declared here - so investigating prod needs no
 # permission prompt and still can't change anything. Growing the set below is a
@@ -114,7 +114,7 @@ in
       type = lib.types.str;
       default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbMoDtPhYzvz0G2tu1qi/HjR3nK5qG4389VCrKh3pHH slopbot@probe";
       description = ''
-        SSH public key the agent VM connects with. It goes into the probe
+        SSH public key agents connect with. It goes into the probe
         user's authorized_keys behind a forced command, so holding it grants
         nothing beyond the probes declared here.
       '';
@@ -146,7 +146,7 @@ in
     users.users.${cfg.user} = {
       isSystemUser = true;
       group = cfg.user;
-      description = "Read-only homelab access for agents on slopbox";
+      description = "Read-only homelab access for agents";
       home = "/var/empty";
       # sshd runs the forced command through the account's shell.
       shell = pkgs.bash;
