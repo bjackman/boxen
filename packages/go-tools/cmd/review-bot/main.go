@@ -322,6 +322,11 @@ func buildPrompt(change gerrit.Change, round, maxRounds int, in inputs) string {
 		"match the commit message, design problems, and breaches of CLAUDE.md. Read the code " +
 		"to confirm a suspicion before you raise it. Leave out matters of taste, and don't pad: " +
 		"no findings is the right answer for a good change.\n\n")
+	b.WriteString("Pre-existing issues are out of scope. If you spot issues that were already there, " +
+		"in surrounding code or in code the change only moves, it's usually best to ignore them. " +
+		"If you think one amounts to a significant real-world bug, suggest in the summary that " +
+		"the implementer fixes it in a separate commit, but don't make it a finding: findings are " +
+		"what the change has to fix before it's done.\n\n")
 	b.WriteString("For each finding, file is the path from the repository root of a file this " +
 		"change modifies, line is a line in the new version of that file, and message says " +
 		"concisely what is wrong and why. For a point about the change as a whole or its " +

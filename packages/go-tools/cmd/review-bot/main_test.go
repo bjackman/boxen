@@ -104,6 +104,9 @@ func TestBuildPrompt(t *testing.T) {
 	if !strings.Contains(first, "the diff") || strings.Contains(first, "fixed") {
 		t.Errorf("round 1 prompt should have the diff and no history: %q", first)
 	}
+	if !strings.Contains(first, "Pre-existing issues are out of scope") {
+		t.Errorf("prompt doesn't scope out pre-existing issues: %q", first)
+	}
 	if strings.Contains(first, "series") {
 		t.Errorf("prompt mentions a series there isn't: %q", first)
 	}
