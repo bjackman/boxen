@@ -213,6 +213,10 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    plugin fetches that and hands it to the Checks tab. The records are for display
    only; whether a patch set needs checking is still the vote's job.
 
+   The root is a status page rendered from the same state: what's running, what's
+   queued, and the last fifty runs with links to their changes and logs. It's a
+   template that refreshes itself, with no JavaScript.
+
    The plugin fetches cross-origin with the IAP session cookie, which works
    because both hosts are under `home.yawn.io`. When that session expires, the
    redirect to the login page fails CORS and the tab shows an error until the

@@ -361,6 +361,7 @@ type Event struct {
 		Number  int    `json:"number"`
 		Project string `json:"project"`
 		Topic   string `json:"topic"`
+		Subject string `json:"subject"`
 	} `json:"change"`
 	// The new patch set, on EventPatchSetCreated.
 	PatchSet struct {

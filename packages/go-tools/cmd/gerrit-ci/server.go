@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -41,6 +43,7 @@ func (r *record) name() string {
 type queuedPatchSet struct {
 	Change   int
 	PatchSet int
+	Subject  string
 }
 
 // state is what the runner is doing right now, shared with the HTTP server.
@@ -113,9 +116,13 @@ func writeRecord(logsPath string, r *record) error {
 
 // readRecords returns the finished records of every patch set of a change.
 func readRecords(logsPath string, change int) ([]record, error) {
-	paths, err := filepath.Glob(filepath.Join(logsPath, strconv.Itoa(change)+"-*.json"))
+	return readRecordFiles(filepath.Join(logsPath, strconv.Itoa(change)+"-*.json"))
+}
+
+func readRecordFiles(pattern string) ([]record, error) {
+	paths, err := filepath.Glob(pattern)
 	if err != nil {
-		return nil, fmt.Errorf("listing the records of change %d: %w", change, err)
+		return nil, fmt.Errorf("listing %s: %w", pattern, err)
 	}
 	var records []record
 	for _, path := range paths {
@@ -232,12 +239,20 @@ func toCheckRun(r *record) checkRun {
 type server struct {
 	logsPath string
 	state    *state
-	// The Gerrit web UI's origin, which the Checks plugin fetches from.
-	allowOrigin string
+	// The Gerrit web UI, whose Checks plugin fetches from this server and
+	// which the status page links to.
+	gerritURL string
+	status    *template.Template
+}
+
+func newServer(logsPath string, state *state, gerritURL string) *server {
+	gerritURL = strings.TrimSuffix(gerritURL, "/")
+	return &server{logsPath: logsPath, state: state, gerritURL: gerritURL, status: statusTemplate(gerritURL)}
 }
 
 func (s *server) handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", s.serveStatus)
 	mux.HandleFunc("GET /api/checks/{change}/{patchSet}", s.serveChecks)
 	mux.Handle("GET /", http.FileServer(http.Dir(s.logsPath)))
 	return mux
@@ -247,7 +262,7 @@ func (s *server) handler() http.Handler {
 // set and refuses two runs with the same name unless they're numbered attempts,
 // so it mustn't be given the other patch sets' runs.
 func (s *server) serveChecks(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", s.allowOrigin)
+	w.Header().Set("Access-Control-Allow-Origin", s.gerritURL)
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 	change, err := strconv.Atoi(req.PathValue("change"))

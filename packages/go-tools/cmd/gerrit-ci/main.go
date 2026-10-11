@@ -51,8 +51,8 @@ var (
 	once   = flag.Bool("once", false, "check what's pending and exit, rather than watching")
 	listen = flag.String("listen", "127.0.0.1:8080",
 		"Address to serve the logs and the Checks API on")
-	allowOrigin = flag.String("allow-origin", "https://gerrit.home.yawn.io",
-		"Origin of the Gerrit web UI, whose Checks plugin fetches from this runner")
+	gerritURL = flag.String("gerrit-url", "https://gerrit.home.yawn.io",
+		"Gerrit web UI, whose Checks plugin fetches from this runner and which the status page links to")
 	autoSubmit = flag.Bool("auto-submit", true, "submit changes that are ready, along with the stack beneath them")
 )
 
@@ -97,7 +97,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	srv := &server{logsPath: c.logsPath, state: c.state, allowOrigin: *allowOrigin}
+	srv := newServer(c.logsPath, c.state, *gerritURL)
 	httpServer := &http.Server{Addr: *listen, Handler: srv.handler()}
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- httpServer.ListenAndServe() }()
@@ -111,7 +111,9 @@ func run() error {
 		}
 		switch event.Type {
 		case gerrit.EventPatchSetCreated:
-			c.state.enqueue(queuedPatchSet{Change: event.Change.Number, PatchSet: event.PatchSet.Number})
+			c.state.enqueue(queuedPatchSet{
+				Change: event.Change.Number, PatchSet: event.PatchSet.Number, Subject: event.Change.Subject,
+			})
 		case gerrit.EventCommentAdded, gerrit.EventChangeMerged:
 		default:
 			return false
@@ -248,7 +250,9 @@ func (c *checker) sweep(ctx context.Context) error {
 		for _, change := range pending(changes, *label, *user) {
 			if !tried[patchSetName(change.Number, change.CurrentPatchSet.Number)] {
 				todo = append(todo, change)
-				queued = append(queued, queuedPatchSet{Change: change.Number, PatchSet: change.CurrentPatchSet.Number})
+				queued = append(queued, queuedPatchSet{
+					Change: change.Number, PatchSet: change.CurrentPatchSet.Number, Subject: change.Subject,
+				})
 			}
 		}
 		c.state.setQueued(queued)

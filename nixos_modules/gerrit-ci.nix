@@ -18,7 +18,7 @@ let
     "--log-url=${logUrl}"
     "--state-dir=${stateDir}"
     "--listen=127.0.0.1:${toString logPort}"
-    "--allow-origin=${config.bjackman.iap.services.gerrit.url}"
+    "--gerrit-url=${config.bjackman.iap.services.gerrit.url}"
   ];
 in
 {

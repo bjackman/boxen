@@ -87,7 +87,7 @@ func TestServeChecks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(logsPath, "12-1.txt"), []byte("the log\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	srv := &server{logsPath: logsPath, state: &state{}, allowOrigin: "https://gerrit.example"}
+	srv := newServer(logsPath, &state{}, "https://gerrit.example/")
 	handler := srv.handler()
 
 	resp := httptest.NewRecorder()
@@ -129,7 +129,7 @@ func TestServeChecks(t *testing.T) {
 // An empty list must encode as [], not null: the plugin passes it straight to
 // Gerrit.
 func TestServeChecksNoRuns(t *testing.T) {
-	srv := &server{logsPath: t.TempDir(), state: &state{}}
+	srv := newServer(t.TempDir(), &state{}, "https://gerrit.example")
 	resp := httptest.NewRecorder()
 	srv.handler().ServeHTTP(resp, httptest.NewRequest("GET", "/api/checks/1/1", nil))
 	if got, want := resp.Body.String(), "{\"runs\":[]}\n"; got != want {
