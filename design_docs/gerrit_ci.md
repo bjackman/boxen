@@ -206,12 +206,13 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
 
    The runner serves that directory itself, behind an ordinary
    `bjackman.iap.services` entry with `forwardAuth` and
-   `allowedUsers = [ "brendan" ]`. Next to each log it writes
-   `logs/CCCC-P.json`, a record of the run, and it serves
-   `/api/checks/<change>/<patch set>`: that patch set's run, queued, running or
-   finished, already in the shape of the Checks API. A `gerrit-ci.js` frontend
-   plugin fetches that and hands it to the Checks tab. The records are for display
-   only; whether a patch set needs checking is still the vote's job.
+   `allowedUsers = [ "brendan" "slopbot" ]`, so agents can read why their
+   changes failed. Next to each log it writes `logs/CCCC-P.json`, a record of
+   the run, and it serves `/api/checks/<change>/<patch set>`: that patch set's
+   run, queued, running or finished, already in the shape of the Checks API. A
+   `gerrit-ci.js` frontend plugin fetches that and hands it to the Checks tab.
+   The records are for display only; whether a patch set needs checking is still
+   the vote's job.
 
    The root is a status page rendered from the same state: what's running, what's
    queued, and the last fifty runs with links to their changes and logs. It's a
@@ -335,7 +336,7 @@ bjackman.ports.gerrit-ci-logs = { };
 bjackman.iap.services.gerrit-ci-logs = {
   port = config.bjackman.ports.gerrit-ci-logs.port;
   forwardAuth = true;
-  allowedUsers = [ "brendan" ];
+  allowedUsers = [ "brendan" "slopbot" ];
 };
 
 systemd.services.gerrit-ci = {

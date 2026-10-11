@@ -54,7 +54,10 @@ in
     bjackman.iap.services.gerrit-ci-logs = {
       port = logPort;
       forwardAuth = true;
-      allowedUsers = [ "brendan" ];
+      allowedUsers = [
+        "brendan"
+        "slopbot"
+      ];
     };
 
     services.gerrit.plugins = [
