@@ -91,7 +91,9 @@ func run() error {
 	}
 
 	if *once {
-		return c.sweep(context.Background())
+		err := c.sweep(context.Background())
+		c.submitReady(context.Background())
+		return err
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -103,8 +105,23 @@ func run() error {
 	go func() { serveErr <- httpServer.ListenAndServe() }()
 	defer httpServer.Close()
 
-	// Buffered so a burst of events collapses into one pending sweep.
+	// Buffered so a burst of events collapses into one pending sweep. Checks
+	// and submits are woken separately, so that a vote is acted on without
+	// waiting for a check that may take a quarter of an hour.
 	wake := make(chan struct{}, 1)
+	wakeCheck := make(chan struct{}, 1)
+	wakeSubmit := make(chan struct{}, 1)
+	go func() {
+		for range wake {
+			for _, ch := range []chan struct{}{wakeCheck, wakeSubmit} {
+				select {
+				case ch <- struct{}{}:
+				default:
+				}
+			}
+		}
+	}()
+	go c.submitLoop(ctx, wakeSubmit)
 	go client.Watch(ctx, func(event gerrit.Event) bool {
 		if event.Change.Project != *project {
 			return false
@@ -137,6 +154,22 @@ func run() error {
 			return nil
 		case err := <-serveErr:
 			return fmt.Errorf("serving on %s: %w", *listen, err)
+		case <-wakeCheck:
+		case <-ticker.C:
+		}
+	}
+}
+
+// submitLoop submits what's ready whenever woken, alongside the checks. A check's
+// own vote is an event too, so nothing it does needs to wake this directly.
+func (c *checker) submitLoop(ctx context.Context, wake <-chan struct{}) {
+	ticker := time.NewTicker(*sweepFreq)
+	defer ticker.Stop()
+	for {
+		c.submitReady(ctx)
+		select {
+		case <-ctx.Done():
+			return
 		case <-wake:
 		case <-ticker.C:
 		}
@@ -233,7 +266,6 @@ func parsePatchSetName(name string) (int, int, error) {
 // after each one: a check takes minutes, in which time patch sets are uploaded
 // and superseded.
 func (c *checker) sweep(ctx context.Context) error {
-	c.submitReady(ctx)
 	// So that a patch set that can't be checked waits for the next sweep
 	// rather than being retried in a loop.
 	tried := map[string]bool{}
@@ -269,9 +301,7 @@ func (c *checker) sweep(ctx context.Context) error {
 			// One bad change mustn't stop the others being checked.
 			log.Printf("checking change %d: %v", change.Number, err)
 			c.report(change, err)
-			continue
 		}
-		c.submitReady(ctx)
 	}
 	if err := c.pruneLogs(); err != nil {
 		log.Printf("pruning logs: %v", err)
@@ -301,7 +331,7 @@ func pending(changes []gerrit.Change, label, user string) []gerrit.Change {
 
 // submitReady submits each stack of changes that has passed review and its
 // checks all the way down. Failing to is logged rather than returned: it's
-// retried on the next sweep, and must not stop anything being checked.
+// retried on the next pass.
 func (c *checker) submitReady(ctx context.Context) {
 	if !*autoSubmit {
 		return

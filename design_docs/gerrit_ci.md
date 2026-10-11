@@ -315,11 +315,12 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    as a tree nothing ever built, with nobody looking. A stale stack
    sits until it's rebased, which makes new patch sets and so a fresh check.
 
-   It's a pass over the open changes at the start of each sweep and after each
-   vote, submitting the top of one ready stack at a time - Gerrit takes the
-   rest along - and recomputing in between, since each submit moves the tip.
-   `comment-added` and `change-merged` wake a sweep as well as
-   `patchset-created`, so a +2 on something already green goes straight in.
+   It's a pass over the open changes, submitting the top of one ready stack at
+   a time - Gerrit takes the rest along - and recomputing in between, since
+   each submit moves the tip. It runs alongside the checks rather than between
+   them, woken by `comment-added`, `change-merged` and `patchset-created` and on
+   the sweep timer, so a +2 on something already green goes straight in even
+   while another change is being built.
    `ci-bot`'s group holds `submit` on `refs/heads/*` for it.
 
 ## Design
