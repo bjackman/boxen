@@ -7,5 +7,4 @@
   fw13 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHVBFKZzXD+YUcB83N+FfIHFH2rQpk060e1OjEWZMp59 root@nixos";
   norte = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEwxzu2JNI7hdrKWlmqjkwNLRf7kMEcSlxE3nKUrbEp6 root@norte";
   pizza = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAmiVXunDkdw9EBJtfPshYvR3od5p00vbL9MqlaJZgGf root@pizza";
-  slopbox = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtq1hx4Z4uL/Hqjuz/d56uxFCpSuOAHiFOs8v0yMUaF root@slopbox";
 }
