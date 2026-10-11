@@ -74,12 +74,6 @@
         # with it.
         builder = inputs.nixos-raspberrypi.lib.nixosSystem;
       };
-      slopbox = mkNixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ../nixos_modules/slopbox.nix
-        ];
-      };
     };
 
   # This defines the configurations for machines using standalone

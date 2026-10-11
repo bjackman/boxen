@@ -214,10 +214,6 @@ can rekey secrets to allow it to access them.
 - [ ] Run Woodpecker CI (or similar) in homelab.
 - [ ] Set up cloud archive backups
 - [ ] Set up SeaweedFS (or similar) in homelab.
-- [ ] Make slopbox have a persistent up-to-date setup
-- [ ] Give slopbox its own Git identity
-- [ ] Improve "slopbox mode" agent prompt (perhaps it would be better as a
-  "skill").
 
 ## Inspecting the config
 
