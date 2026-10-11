@@ -15,7 +15,14 @@
 buildGoModule {
   pname = "gerrit-ci";
   version = "0.1.0";
-  src = ./.;
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./go.mod
+      ./gerrit
+      ./cmd/gerrit-ci
+    ];
+  };
   vendorHash = null;
 
   # This also narrows the check phase, so the shared library keeps its
