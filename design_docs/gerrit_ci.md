@@ -315,6 +315,11 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    necessary on submit, so a green stack on a stale base would otherwise land
    as a tree nothing ever built, with nobody looking. A stale stack
    sits until it's rebased, which makes new patch sets and so a fresh check.
+   It isn't rebased automatically - every move of `master` would mean a check
+   of every waiting change - but it is said once per patch set, on the top of
+   the stack, that it's ready and needs a rebase. The runner finds its earlier
+   message among the change's messages rather than remembering, as it does
+   with its votes.
 
    It's a pass over the open changes, submitting the top of one ready stack at
    a time - Gerrit takes the rest along - and recomputing in between, since
@@ -435,8 +440,8 @@ would change nothing.
   Rebasing before submitting makes a new patch set, which is checked afresh,
   so it's a matter of doing that when `master` has moved. Auto-submit only
   takes stacks that sit on the tip, so this is down to submitting by hand. The
-  flip side is that a ready stack on a stale base waits silently: nothing tells
-  anyone it needs a rebase.
+  flip side is that a ready stack on a stale base waits for a rebase, which
+  the runner asks for but doesn't do.
 - **The agent doesn't hear about a red check.** `slop-handler` wakes on my
   comments, not on `ci-bot`'s, so a `Verified-1` on a slopbot change waits for
   me to notice it. Feeding it through is the obvious next step.

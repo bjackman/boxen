@@ -185,26 +185,61 @@ func TestReady(t *testing.T) {
 	other := onto(8, "h", "tip")
 	other.Branch = "release"
 
+	outdated := onto(9, "i", "a-previous-patch-set")
+
 	for _, test := range []struct {
 		name        string
 		submittable []gerrit.Change
-		want        []int
+		ready       []int
+		stale       []int
 	}{
-		{"whole stack goes as its top", []gerrit.Change{a, b, c}, []int{3}},
-		{"stops below what isn't submittable", []gerrit.Change{a, c}, []int{1}},
-		{"nothing whose parent isn't", []gerrit.Change{b, c}, nil},
-		{"independent stacks, oldest first", []gerrit.Change{sibling, a, b}, []int{2, 4}},
-		{"nothing on a stale base", []gerrit.Change{stale, onStale}, nil},
-		{"no merges", []gerrit.Change{merge}, nil},
-		{"tip of its own branch only", []gerrit.Change{other}, nil},
+		{"whole stack goes as its top", []gerrit.Change{a, b, c}, []int{3}, nil},
+		{"stops below what isn't submittable", []gerrit.Change{a, c}, []int{1}, nil},
+		{"nothing whose parent isn't", []gerrit.Change{b, c}, nil, nil},
+		{"independent stacks, oldest first", []gerrit.Change{sibling, a, b}, []int{2, 4}, nil},
+		{"a stack on a stale base, as its top", []gerrit.Change{stale, onStale}, nil, []int{6}},
+		{"stale below what isn't submittable", []gerrit.Change{onStale}, nil, nil},
+		{"on an outdated patch set", []gerrit.Change{outdated}, nil, []int{9}},
+		{"no merges", []gerrit.Change{merge}, nil, nil},
+		{"tip of its own branch only", []gerrit.Change{other}, nil, []int{8}},
 	} {
-		open := []gerrit.Change{a, b, c, sibling, stale, onStale, merge, other}
-		var got []int
-		for _, change := range ready(open, test.submittable, tips) {
-			got = append(got, change.Number)
+		open := []gerrit.Change{a, b, c, sibling, stale, onStale, merge, other, outdated}
+		gotReady, gotStale := stacks(open, test.submittable, tips)
+		if got := numbers(gotReady); fmt.Sprint(got) != fmt.Sprint(test.ready) {
+			t.Errorf("%s: ready = %v, want %v", test.name, got, test.ready)
 		}
-		if fmt.Sprint(got) != fmt.Sprint(test.want) {
-			t.Errorf("%s: ready() = %v, want %v", test.name, got, test.want)
+		if got := numbers(gotStale); fmt.Sprint(got) != fmt.Sprint(test.stale) {
+			t.Errorf("%s: stale = %v, want %v", test.name, got, test.stale)
+		}
+	}
+}
+
+func numbers(changes []gerrit.Change) []int {
+	var out []int
+	for _, change := range changes {
+		out = append(out, change.Number)
+	}
+	return out
+}
+
+func TestReportedStale(t *testing.T) {
+	mine := func(text string) gerrit.Message {
+		return gerrit.Message{Reviewer: gerrit.Account{Username: "ci-bot"}, Message: text}
+	}
+	posted := mine("Patch Set 2:\n\n" + staleMessage)
+	for _, test := range []struct {
+		name     string
+		messages []gerrit.Message
+		patchSet int
+		want     bool
+	}{
+		{"posted on this patch set", []gerrit.Message{mine("Patch Set 2: Verified+1"), posted}, 2, true},
+		{"only on an earlier one", []gerrit.Message{posted}, 3, false},
+		{"by someone else", []gerrit.Message{{Reviewer: gerrit.Account{Username: "brendan"}, Message: posted.Message}}, 2, false},
+		{"something else", []gerrit.Message{mine("Patch Set 2:\n\nChecks passed.")}, 2, false},
+	} {
+		if got := reportedStale(test.messages, "ci-bot", test.patchSet); got != test.want {
+			t.Errorf("%s: reportedStale() = %v, want %v", test.name, got, test.want)
 		}
 	}
 }

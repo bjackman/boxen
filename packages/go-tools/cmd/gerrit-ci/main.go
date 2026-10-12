@@ -342,12 +342,17 @@ func (c *checker) submitReady(ctx context.Context) {
 	// Each submit moves a branch, which can leave what was ready before it no
 	// longer sitting on the tip, so it's worked out afresh every time.
 	for ctx.Err() == nil {
-		change, err := c.nextReady(ctx, refused)
+		change, stale, err := c.nextReady(ctx, refused)
 		if err != nil {
 			log.Printf("finding changes to submit: %v", err)
 			return
 		}
 		if change == nil {
+			for _, change := range stale {
+				if err := c.reportStale(change); err != nil {
+					log.Printf("reporting that change %d needs a rebase: %v", change.Number, err)
+				}
+			}
 			return
 		}
 		log.Printf("submitting change %d patch set %d", change.Number, change.CurrentPatchSet.Number)
@@ -358,37 +363,73 @@ func (c *checker) submitReady(ctx context.Context) {
 	}
 }
 
-func (c *checker) nextReady(ctx context.Context, refused map[int]bool) (*gerrit.Change, error) {
+// nextReady returns the top of a stack to submit, or if there's none, the tops of
+// the stacks that would be ready but for being based on something older than
+// the tip.
+func (c *checker) nextReady(ctx context.Context, refused map[int]bool) (*gerrit.Change, []gerrit.Change, error) {
 	// gerrit query over SSH takes anything starting with - as an option of its own.
 	submittable, err := c.client.Query("status:open", "project:"+*project, "is:submittable", "NOT is:wip", "NOT is:private")
 	if err != nil {
-		return nil, fmt.Errorf("querying submittable changes on %s: %w", *project, err)
+		return nil, nil, fmt.Errorf("querying submittable changes on %s: %w", *project, err)
 	}
 	if len(submittable) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	open, err := c.client.Query("status:open", "project:"+*project)
 	if err != nil {
-		return nil, fmt.Errorf("querying open changes on %s: %w", *project, err)
+		return nil, nil, fmt.Errorf("querying open changes on %s: %w", *project, err)
 	}
 	tips, err := c.branchTips(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	for _, change := range ready(open, submittable, tips) {
+	ready, stale := stacks(open, submittable, tips)
+	for _, change := range ready {
 		if !refused[change.Number] {
-			return &change, nil
+			return &change, nil, nil
 		}
 	}
-	return nil, nil
+	return nil, stale, nil
 }
 
-// ready returns the tops of the stacks that can be submitted, oldest first. A
-// stack qualifies when every change in it is submittable and the bottom one's
-// parent is the tip of its branch: the checks ran against that base and no
-// other, so submitting onto anything newer would land something never built.
-// Only the top is returned because submitting it takes the rest along.
-func ready(open, submittable []gerrit.Change, tips map[string]string) []gerrit.Change {
+// staleMessage is posted on a stack that would be submitted if it were rebased,
+// and is how the runner knows it already has been.
+const staleMessage = "Ready to submit, but not based on the tip of the branch, " +
+	"so it won't be submitted automatically. Rebase the stack to have it checked again and submitted."
+
+// reportStale says once per patch set why a change Gerrit would submit is
+// being left alone. Otherwise nothing distinguishes it from one the runner
+// hasn't got round to.
+func (c *checker) reportStale(change gerrit.Change) error {
+	patchSet := change.CurrentPatchSet.Number
+	changes, err := c.client.QueryWithComments("change:" + strconv.Itoa(change.Number))
+	if err != nil {
+		return fmt.Errorf("reading the messages on change %d: %w", change.Number, err)
+	}
+	if len(changes) == 1 && reportedStale(changes[0].Messages, *user, patchSet) {
+		return nil
+	}
+	log.Printf("change %d patch set %d needs a rebase to be submitted", change.Number, patchSet)
+	return c.client.Review(change.Number, patchSet, gerrit.ReviewInput{Message: staleMessage})
+}
+
+func reportedStale(messages []gerrit.Message, user string, patchSet int) bool {
+	prefix := fmt.Sprintf("Patch Set %d:", patchSet)
+	for _, m := range messages {
+		if m.Reviewer.Username == user && strings.HasPrefix(m.Message, prefix) &&
+			strings.Contains(m.Message, staleMessage) {
+			return true
+		}
+	}
+	return false
+}
+
+// stacks returns the tops of the stacks in which every change is submittable,
+// oldest first, split by whether the bottom one's parent is the tip of its
+// branch. Only those on the tip are ready: the checks ran against that base and
+// no other, so submitting onto anything newer would land something never
+// built. Only the top is returned because submitting it takes the rest along.
+func stacks(open, submittable []gerrit.Change, tips map[string]string) (ready, stale []gerrit.Change) {
 	byRevision := map[string]gerrit.Change{}
 	for _, change := range open {
 		byRevision[change.CurrentPatchSet.Revision] = change
@@ -397,42 +438,54 @@ func ready(open, submittable []gerrit.Change, tips map[string]string) []gerrit.C
 	for _, change := range submittable {
 		isSubmittable[change.Number] = true
 	}
-	stackReady := func(change gerrit.Change) bool {
+	// Whether every change down the stack is submittable, and if so whether
+	// it's on the tip. A parent that is neither the tip nor an open change's
+	// current patch set is something a rebase would replace.
+	walk := func(change gerrit.Change) (complete, onTip bool) {
 		for {
 			if !isSubmittable[change.Number] {
-				return false
+				return false, false
 			}
 			parents := change.CurrentPatchSet.Parents
 			if len(parents) != 1 {
-				return false
+				return false, false
 			}
 			if tip, ok := tips[change.Branch]; ok && parents[0] == tip {
-				return true
+				return true, true
 			}
 			parent, ok := byRevision[parents[0]]
-			if !ok || parent.Branch != change.Branch {
-				return false
+			if !ok {
+				return true, false
+			}
+			if parent.Branch != change.Branch {
+				return false, false
 			}
 			change = parent
 		}
 	}
 
-	var stacks []gerrit.Change
 	beneath := map[string]bool{}
+	var complete []gerrit.Change
+	onTip := map[int]bool{}
 	for _, change := range submittable {
-		if stackReady(change) {
-			stacks = append(stacks, change)
+		if ok, tip := walk(change); ok {
+			complete = append(complete, change)
+			onTip[change.Number] = tip
 			beneath[change.CurrentPatchSet.Parents[0]] = true
 		}
 	}
-	var tops []gerrit.Change
-	for _, change := range stacks {
-		if !beneath[change.CurrentPatchSet.Revision] {
-			tops = append(tops, change)
+	sort.Slice(complete, func(i, j int) bool { return complete[i].Number < complete[j].Number })
+	for _, change := range complete {
+		if beneath[change.CurrentPatchSet.Revision] {
+			continue
+		}
+		if onTip[change.Number] {
+			ready = append(ready, change)
+		} else {
+			stale = append(stale, change)
 		}
 	}
-	sort.Slice(tops, func(i, j int) bool { return tops[i].Number < tops[j].Number })
-	return tops
+	return ready, stale
 }
 
 // branchTips maps each branch of the project, by short name, to the commit at
