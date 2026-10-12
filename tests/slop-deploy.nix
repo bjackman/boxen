@@ -2,15 +2,21 @@
 # real switch. What it fakes is the build. Each commit of the fixture repository
 # names a system that is already in the VM's store, so that nothing has to be
 # evaluated inside the VM.
+#
+# passthru.chat boots the same VM outside the sandbox and starts a Claude Code
+# session as slopops against it, with the caller's login.
 { lib, pkgs }:
 let
   sshKeys = import "${pkgs.path}/nixos/tests/ssh-keys.nix" pkgs;
   repoPath = "/srv/boxen.git";
   git = lib.getExe pkgs.git;
   slopProbe = "${pkgs.bjackman.slop-probe}/bin/slop-probe";
+  # Without the wrapper that puts its own ssh first, so that the one chat puts
+  # on PATH reaches the forwarded port.
+  slopProbeUnwrapped = "${pkgs.bjackman.slop-probe.overrideAttrs { postFixup = ""; }}/bin/slop-probe";
 in
 pkgs.testers.runNixOSTest (
-  { nodes, ... }:
+  { config, nodes, ... }:
   let
     systemPath = name: nodes.target.slopDeployTest.systems.${name};
 
@@ -48,6 +54,27 @@ pkgs.testers.runNixOSTest (
         git -C "$1" remote remove origin
       '';
     };
+
+    localScript = pkgs.writeText "slop-deploy-local.py" ''
+      import os
+      import time
+
+      state_dir_path = os.environ["SLOP_DEPLOY_STATE_DIR_PATH"]
+      start_all()
+      target.wait_for_unit("multi-user.target")
+      target.copy_from_host(f"{state_dir_path}/upstream.git", "${repoPath}")
+      target.send_monitor_command(f"hostfwd_add tcp:127.0.0.1:{os.environ['SLOP_DEPLOY_PORT']}-:22")
+      open(f"{state_dir_path}/ready", "w").close()
+      while not os.path.exists(f"{state_dir_path}/done"):
+          time.sleep(1)
+    '';
+    localConfig = pkgs.writers.writeJSON "slop-deploy-local.json" (
+      config.driverConfiguration // { test_script = localScript; }
+    );
+
+    claude = pkgs.bjackman.slopops.claudeConfig { probeHosts = [ "target" ]; };
+    claudeSettings = pkgs.writers.writeJSON "slopops-settings.json" claude.settings;
+    mcpConfig = pkgs.writers.writeJSON "slopops-mcp.json" { inherit (claude) mcpServers; };
   in
   {
     name = "slop-deploy";
@@ -195,5 +222,61 @@ pkgs.testers.runNixOSTest (
           for argument in ["master", f"{recent} --force", "'''"]:
               target.fail(f"runuser -u slopops -- sudo --non-interactive {start[0]} {argument}")
     '';
+
+    passthru.chat = pkgs.writeShellApplication {
+      name = "slop-deploy-chat";
+      runtimeInputs = [
+        pkgs.coreutils
+        pkgs.git
+        pkgs.gnused
+        pkgs.openssh
+      ];
+      text = ''
+        state_dir_path=$(mktemp -d -t slop-deploy.XXXXXX)
+        # The test driver puts the VM's sockets in here, the longest being
+        # vm-state-target/monitor, and a socket path can't exceed 107 bytes.
+        if [ ''${#state_dir_path} -gt 80 ]; then
+            rmdir "$state_dir_path"
+            echo "$state_dir_path is too long to hold the VM's sockets, set TMPDIR to something shorter" >&2
+            exit 1
+        fi
+        export SLOP_DEPLOY_STATE_DIR_PATH=$state_dir_path SLOP_DEPLOY_PORT=''${SLOP_DEPLOY_PORT:-2222}
+        echo "State, including the VM's console log, is in $state_dir_path" >&2
+
+        ${lib.getExe makeFixtureRepo} "$state_dir_path/upstream.git"
+        (cd "$state_dir_path" && TMPDIR=$state_dir_path ${config.driver}/bin/nixos-test-driver \
+            --config ${localConfig} >"$state_dir_path/driver.log" 2>&1) &
+        driver=$!
+        trap 'touch "$state_dir_path/done"; wait "$driver"' EXIT
+        for _ in $(seq 300); do
+            [ -e "$state_dir_path/ready" ] && break
+            kill -0 "$driver" 2>/dev/null || break
+            sleep 1
+        done
+        [ -e "$state_dir_path/ready" ] || { echo "The VM didn't start, see $state_dir_path/driver.log" >&2; exit 1; }
+
+        install -m 600 ${sshKeys.snakeOilPrivateKey} "$state_dir_path/id"
+        ssh-keyscan -p "$SLOP_DEPLOY_PORT" 127.0.0.1 2>/dev/null |
+            sed 's/^[^ ]* /target /' >"$state_dir_path/known_hosts"
+        printf 'Host target\n  HostName 127.0.0.1\n  Port %s\n  HostKeyAlias target\n' \
+            "$SLOP_DEPLOY_PORT" >"$state_dir_path/ssh_config"
+
+        mkdir "$state_dir_path/bin"
+        printf '#!/bin/sh\nexec %s -F %s "$@"\n' "$(command -v ssh)" "$state_dir_path/ssh_config" >"$state_dir_path/bin/ssh"
+        for channel in slop-probe:slopbot slop-deploy:slopops; do
+            printf '#!/bin/sh\nexec %s --ssh-user=%s --key-file=%s --known-hosts-file=%s --hosts=target "$@"\n' \
+                ${slopProbeUnwrapped} "''${channel#*:}" "$state_dir_path/id" "$state_dir_path/known_hosts" >"$state_dir_path/bin/''${channel%%:*}"
+        done
+        chmod +x "$state_dir_path"/bin/*
+        export PATH=$state_dir_path/bin:$PATH
+        slop-probe target list >/dev/null
+
+        git clone --quiet --mirror "$state_dir_path/upstream.git" "$state_dir_path/mirror.git"
+        cd "$state_dir_path/mirror.git"
+        ${lib.getExe pkgs.llm-agents.claude-code} --permission-mode default \
+            --settings ${claudeSettings} --mcp-config ${mcpConfig} --strict-mcp-config \
+            --append-system-prompt-file ${claude.instructions} "$@"
+      '';
+    };
   }
 )
