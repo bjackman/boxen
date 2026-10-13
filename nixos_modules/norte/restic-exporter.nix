@@ -31,4 +31,26 @@ in
   users.groups.restic-readers = { };
   bjackman.restic-exporter.group = "restic-readers";
   bjackman.sftpServer.extraReaders = [ "restic-readers" ];
+
+  # A client that dies mid-run leaves its lock behind and restic never clears
+  # it by itself, so an interrupted prune blocks every later backup.
+  systemd.services = lib.mapAttrs' (
+    name: user:
+    let
+      instance = config.bjackman.restic-exporter.instances.${name};
+    in
+    lib.nameValuePair "restic-unlock-${name}" {
+      startAt = "hourly";
+      unitConfig.RequiresMountsFor = [ chrootsDir ];
+      environment = {
+        RESTIC_REPOSITORY = instance.repositoryPath;
+        RESTIC_PASSWORD_FILE = instance.passwordFile;
+      };
+      serviceConfig = {
+        Type = "oneshot";
+        User = user.name;
+        ExecStart = "${pkgs.restic}/bin/restic unlock --no-cache";
+      };
+    }
+  ) users;
 }
