@@ -70,6 +70,8 @@ in
     systemd.services.gerrit-ci = {
       after = [
         "gerrit.service"
+        # gerrit.service is up well before Gerrit is; bootstrap waits for it.
+        "gerrit-bootstrap.service"
         "network-online.target"
       ];
       wants = [ "network-online.target" ];
