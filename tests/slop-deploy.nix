@@ -95,6 +95,8 @@ pkgs.testers.runNixOSTest (
           return target.succeed(f"${git} -C ${repoPath} rev-parse {ref}").strip()
 
       tip, recent, old, unmerged = rev("master"), rev("master~1"), rev("master~2"), rev("wip")
+      # As Gerrit's is on pizza, owned by the server rather than by root.
+      target.succeed("chown -R nobody:nogroup ${repoPath}")
 
       def probe(user: str, *args: str) -> tuple[int, str]:
           return target.execute(
