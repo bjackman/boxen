@@ -12,7 +12,7 @@ in
 pkgs.testers.runNixOSTest (
   { nodes, ... }:
   let
-    systemPath = name: nodes.target.specialisation.${name}.configuration.system.build.toplevel;
+    systemPath = name: nodes.target.slopDeployTest.systems.${name};
 
     makeFixtureRepo = pkgs.writeShellApplication {
       name = "make-fixture-repo";
@@ -36,7 +36,7 @@ pkgs.testers.runNixOSTest (
                 git -C "$work" commit --quiet --allow-empty --message "$3"
         }
 
-        commit 45 ${systemPath "good"} "target: Initial configuration"
+        commit 45 ${systemPath "initial"} "target: Initial configuration"
         commit 10 ${systemPath "good"} "target: Keep more journal"
         git -C "$work" branch wip
         commit 0 ${systemPath "broken"} "target: Add frobnicator"
@@ -53,31 +53,67 @@ pkgs.testers.runNixOSTest (
     name = "slop-deploy";
 
     nodes.target =
-      { pkgs, ... }:
       {
-        imports = [
-          ../nixos_modules/slop-probe.nix
-          ../nixos_modules/slop-deploy.nix
-        ];
-        virtualisation.memorySize = 1024;
-        services.openssh.enable = true;
-
-        bjackman.slopProbe.authorizedKey = sshKeys.snakeOilPublicKey;
-        bjackman.slopDeploy = {
-          authorizedKey = sshKeys.snakeOilPublicKey;
-          repoUrl = repoPath;
-          build = pkgs.writeShellScript "slop-deploy-fixture-build" ''
-            exec ${git} -C "$1" show "$2:toplevel"
-          '';
-        };
-
-        specialisation.good.configuration.environment.etc."slop-deploy-test".text = "good";
-        specialisation.broken.configuration.systemd.services.frobnicator = {
+        config,
+        extendModules,
+        pkgs,
+        ...
+      }:
+      let
+        moreJournal.services.journald.extraConfig = "SystemMaxUse=1G";
+        frobnicator.systemd.services.frobnicator = {
           wantedBy = [ "multi-user.target" ];
           serviceConfig = {
             Type = "oneshot";
             ExecStart = "${pkgs.coreutils}/bin/false";
           };
+        };
+        system = modules: (extendModules { inherit modules; }).config.system.build.toplevel;
+      in
+      {
+        imports = [
+          ../nixos_modules/slop-probe.nix
+          ../nixos_modules/slop-deploy.nix
+        ];
+
+        options.slopDeployTest.systems = lib.mkOption {
+          type = with lib.types; attrsOf package;
+          description = "The systems the fixture's commits name.";
+        };
+
+        config = {
+          virtualisation.memorySize = 1024;
+          services.openssh.enable = true;
+          # Test nodes leave it out unless they have specialisations.
+          system.switch.enable = true;
+          # The VM boots its kernel directly, and a switch would otherwise try
+          # to install GRUB on a disk it can't go on.
+          boot.loader.grub.enable = false;
+
+          bjackman.slopProbe.authorizedKey = sshKeys.snakeOilPublicKey;
+          bjackman.slopDeploy = {
+            authorizedKey = sshKeys.snakeOilPublicKey;
+            repoUrl = repoPath;
+            build = pkgs.writeShellScript "slop-deploy-fixture-build" ''
+              exec ${git} -C "$1" show "$2:toplevel"
+            '';
+          };
+
+          # Each adds a module to the one before, so that a diff between two of
+          # them is what the commit message says. Not specialisations, so that
+          # they stay out of the closure of the system the VM boots.
+          slopDeployTest.systems = {
+            initial = config.system.build.toplevel;
+            good = system [ moreJournal ];
+            broken = system [
+              moreJournal
+              frobnicator
+            ];
+          };
+          virtualisation.additionalPaths = [
+            config.slopDeployTest.systems.good
+            config.slopDeployTest.systems.broken
+          ];
         };
       };
 
