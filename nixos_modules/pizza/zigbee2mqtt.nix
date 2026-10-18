@@ -78,6 +78,17 @@ in
     };
   };
 
+  bjackman.ports.zigbee2mqtt-exporter = { };
+
+  services.prometheus.exporters.mqtt = {
+    enable = true;
+    port = config.bjackman.ports.zigbee2mqtt-exporter.port;
+    mqttTopic = "${cfg.settings.mqtt.base_topic}/#";
+    # fnmatch patterns, not MQTT wildcards. bridge/definitions alone would
+    # exceed the exporter's metric limit.
+    mqttIgnoredTopics = [ "${cfg.settings.mqtt.base_topic}/bridge*" ];
+  };
+
   age.secrets.zigbee2mqtt-secret = {
     file = ../../secrets/zigbee2mqtt-secret.yaml.age;
     # zigbee2mqtt appends .yaml to "!file key" references that lack it.

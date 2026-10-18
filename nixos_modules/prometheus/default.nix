@@ -57,6 +57,7 @@ in
         "node"
         "smartctl"
         "zfs"
+        "mqtt"
       ]
       ++ [
         # Restic exporters are defined via my own special option, define scrapes
