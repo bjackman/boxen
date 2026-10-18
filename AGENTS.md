@@ -28,6 +28,19 @@ them then that's totally fine.
   just check in with me first and ensure we have an easy way to revert to a
   clean state afterwards.
 
+### Secrets
+
+You can generate a secret that a change needs, such as an SSH key or a token,
+and encrypt it with agenix. Don't decline for fear of leaking it: what matters
+is that the plaintext never reaches your transcript. Pipe it from whatever
+generates it straight into `agenix -e`, keep any intermediate file in a private
+temporary directory that you delete afterwards, and print only what's public,
+like the `.pub` half of a key.
+
+agenix only encrypts a file that has an entry in `secrets/agenix-rules.nix`,
+so add that first. It's on PATH in `nix develop`; run it in `secrets/` with
+`RULES=./agenix-rules.nix`.
+
 ### Version control - on my workstation
 
 If you are running on one of my workstations (this is the default - if you're in
