@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   ...
 }:
 let
@@ -38,6 +39,15 @@ in
     settings = {
       version = 5;
       mqtt.server = "mqtt://127.0.0.1:${toString mqttPort}";
+      # Devices declared here keep these names: zigbee2mqtt writes frontend
+      # renames only to the first file, minus anything a later file defines.
+      devices = [
+        "devices.yaml"
+        ((pkgs.formats.yaml { }).generate "declared-devices.yaml" {
+          "0xf044d3fffec64b85".friendly_name = "bedroom_climate";
+          "0xf044d3fffec5f5bb".friendly_name = "living_room_climate";
+        })
+      ];
       serial = {
         port = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_6407f13d16f9ef11b12862135c2a50c9-if00-port0";
         adapter = "ember";
