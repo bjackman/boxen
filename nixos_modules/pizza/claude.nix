@@ -63,6 +63,12 @@ in
   };
   users.groups.claude = { };
 
+  age.secrets.udr7-api-key = {
+    file = ../../secrets/udr7-api-key.age;
+    mode = "400";
+    owner = "claude";
+  };
+
   bjackman.impermanence.extraPersistence.directories = [
     {
       directory = homePath;

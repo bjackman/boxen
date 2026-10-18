@@ -66,6 +66,10 @@ in
     in `boxen`: add it in your change, or tell me which probe you want. Don't go
     looking for another route in.
 
+    The UDR7 router serves the UniFi Network API at `https://192.168.1.1`; send
+    the key in `/run/agenix/udr7-api-key` as the `X-API-KEY` header. The key can
+    change the router's settings too, so only read with it unless I ask.
+
     ## Proposing changes
 
     Commit in your worktree, then run `slop-pr` from inside it: it pushes to
