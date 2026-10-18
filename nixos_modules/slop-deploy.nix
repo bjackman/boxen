@@ -176,7 +176,8 @@ in
       isSystemUser = true;
       group = cfg.user;
       description = "Lets agents deploy commits of ${cfg.branch}";
-      home = "/var/empty";
+      # A host where the agent itself runs as this account gives it a real one.
+      home = lib.mkDefault "/var/empty";
       shell = pkgs.bash;
       extraGroups = [ "systemd-journal" ];
       openssh.authorizedKeys.keys = [
