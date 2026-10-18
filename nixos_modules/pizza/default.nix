@@ -23,6 +23,7 @@
     ../silverbullet.nix
     ../iap.nix
     ../tailscale-exit-node.nix
+    ../nix-cache.nix
     ./disko.nix
     ./power.nix
     ./jellyfin.nix
@@ -199,6 +200,8 @@
   systemd.services.ddclient.after = [ "nss-user-lookup.target" ];
 
   bjackman.iap.host = true;
+
+  bjackman.nixCache.serve = true;
 
   system.stateVersion = "25.11";
 }

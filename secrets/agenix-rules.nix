@@ -126,4 +126,12 @@ in
     fw13
     hostKeys.pizza
   ];
+  # The key pizza signs its binary cache with. Every host that uses the cache
+  # trusts it, so it goes to nothing but pizza and my own keys. Generated with:
+  # nix key generate-secret --key-name pizza-1 | tee >(nix key convert-secret-to-public) | age -r ... -o nix-cache-signing-key.age
+  "nix-cache-signing-key.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.pizza
+  ];
 }
