@@ -135,4 +135,12 @@ in
     fw13
     hostKeys.pizza
   ];
+  # zigbee2mqtt's network key, as YAML for its "!file key" indirection.
+  # Generated with:
+  # od -An -tu1 -N16 /dev/urandom | awk -v OFS=', ' '{$1=$1; print "network_key: [" $0 "]"}' | age -r ... -o zigbee2mqtt-secret.yaml.age
+  "zigbee2mqtt-secret.yaml.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.pizza
+  ];
 }

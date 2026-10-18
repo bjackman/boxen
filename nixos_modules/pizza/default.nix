@@ -30,6 +30,7 @@
     ./iptv.nix
     ./tvheadend.nix
     ./claude.nix
+    ./zigbee2mqtt.nix
     # Don't load headless.nix, it disables all GPU stuff but we want GPU stuff
     # for Jellyfin.
     "${modulesPath}/profiles/minimal.nix"

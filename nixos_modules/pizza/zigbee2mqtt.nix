@@ -1,0 +1,96 @@
+{
+  config,
+  ...
+}:
+let
+  cfg = config.services.zigbee2mqtt;
+  mqttPort = 1883;
+in
+{
+  imports = [
+    ../ports.nix
+    ../iap.nix
+    ../impermanence.nix
+  ];
+
+  services.mosquitto = {
+    enable = true;
+    listeners = [
+      {
+        address = "127.0.0.1";
+        port = mqttPort;
+        omitPasswordAuth = true;
+        settings.allow_anonymous = true;
+        acl = [ "topic readwrite #" ];
+      }
+    ];
+  };
+
+  bjackman.ports.zigbee2mqtt = { };
+
+  bjackman.iap.services.zigbee2mqtt = {
+    port = config.bjackman.ports.zigbee2mqtt.port;
+    allowedUsers = [ "brendan" ];
+  };
+
+  services.zigbee2mqtt = {
+    enable = true;
+    settings = {
+      version = 5;
+      mqtt.server = "mqtt://127.0.0.1:${toString mqttPort}";
+      serial = {
+        port = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_6407f13d16f9ef11b12862135c2a50c9-if00-port0";
+        adapter = "ember";
+      };
+      frontend = {
+        enabled = true;
+        host = "127.0.0.1";
+        port = config.bjackman.ports.zigbee2mqtt.port;
+        url = config.bjackman.iap.services.zigbee2mqtt.url;
+      };
+      advanced = {
+        log_output = [ "console" ];
+        # configuration.yaml is overwritten on every start, so nothing can be
+        # left as GENERATE for zigbee2mqtt to fill in there.
+        network_key = "!${config.age.secrets.zigbee2mqtt-secret.path} network_key";
+        pan_id = 5235;
+        ext_pan_id = [
+          237
+          52
+          180
+          194
+          176
+          129
+          238
+          63
+        ];
+      };
+    };
+  };
+
+  age.secrets.zigbee2mqtt-secret = {
+    file = ../../secrets/zigbee2mqtt-secret.yaml.age;
+    mode = "400";
+    owner = "zigbee2mqtt";
+  };
+
+  systemd.services.zigbee2mqtt = {
+    wants = [ "mosquitto.service" ];
+    after = [ "mosquitto.service" ];
+  };
+
+  bjackman.impermanence.extraPersistence.directories = [
+    {
+      directory = cfg.dataDir;
+      user = "zigbee2mqtt";
+      group = "zigbee2mqtt";
+      mode = "0700";
+    }
+    {
+      directory = config.services.mosquitto.dataDir;
+      user = "mosquitto";
+      group = "mosquitto";
+      mode = "0700";
+    }
+  ];
+}
