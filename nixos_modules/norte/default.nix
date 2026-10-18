@@ -21,6 +21,7 @@
     ../iap.nix
     # Need to run {Rad,Son}arr locally so they can do hardlinks
     ../arr.nix
+    ../nix-cache.nix
     ./restic-exporter.nix
     ./samba-server.nix
     ./sftp-server.nix
@@ -32,6 +33,8 @@
   boot.loader.raspberry-pi.bootloader = "kernel";
 
   networking.hostName = "norte";
+
+  bjackman.nixCache.use = true;
 
   zramSwap.enable = true;
 

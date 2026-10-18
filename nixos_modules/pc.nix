@@ -4,7 +4,10 @@
   imports = [
     ./impermanence.nix
     ./brendan-home.nix
+    ./nix-cache.nix
   ];
+
+  bjackman.nixCache.use = true;
 
   boot.loader = {
     systemd-boot.enable = true;

@@ -21,6 +21,7 @@
       radarr = nodes.norte;
       sonarr = nodes.norte;
       transmission = nodes.pizza;
+      nixCache = nodes.pizza;
     };
   };
 }
