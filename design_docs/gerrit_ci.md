@@ -139,7 +139,9 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    and `IOSchedulingClass=idle` to keep it off Jellyfin's back, and `CPUQuota`
    well under the core count since the job can't use them anyway.
    `OOMPolicy=continue`, so that an evaluation killed at `MemoryMax` fails the
-   check rather than taking the runner down with it.
+   check rather than taking the runner down with it. Everything but
+   `OOMPolicy` is sized for pizza, so it's applied from
+   `nixos_modules/pizza/eval-limits.nix` rather than the module.
 
    Contained also means not root. The runner evaluates whatever anyone with
    push access uploads - slopbot included - so it runs as its own system user,
@@ -355,13 +357,7 @@ systemd.services.gerrit-ci = {
     Restart = "always";
     RestartSec = 30;
     StateDirectory = "gerrit-ci";
-    MemoryHigh = "3G";
-    MemoryMax = "4G";
-    MemorySwapMax = "2G";
     OOMPolicy = "continue";
-    CPUQuota = "400%";
-    Nice = 10;
-    IOSchedulingClass = "idle";
   };
 };
 ```

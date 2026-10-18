@@ -26,6 +26,7 @@
     ../nix-cache.nix
     ./disko.nix
     ./power.nix
+    ./eval-limits.nix
     ./jellyfin.nix
     ./iptv.nix
     ./tvheadend.nix
