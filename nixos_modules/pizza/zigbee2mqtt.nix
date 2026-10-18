@@ -70,6 +70,8 @@ in
 
   age.secrets.zigbee2mqtt-secret = {
     file = ../../secrets/zigbee2mqtt-secret.yaml.age;
+    # zigbee2mqtt appends .yaml to "!file key" references that lack it.
+    name = "zigbee2mqtt-secret.yaml";
     mode = "400";
     owner = "zigbee2mqtt";
   };
@@ -77,6 +79,9 @@ in
   systemd.services.zigbee2mqtt = {
     wants = [ "mosquitto.service" ];
     after = [ "mosquitto.service" ];
+    # Otherwise a config error brings up an unauthenticated setup page on
+    # 0.0.0.0:8080.
+    environment.Z2M_ONBOARD_NO_SERVER = "1";
   };
 
   bjackman.impermanence.extraPersistence.directories = [
