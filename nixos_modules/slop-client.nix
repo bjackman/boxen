@@ -15,6 +15,9 @@ let
   };
   hostKeys = import ../secrets/host-keys.nix;
   probeHosts = builtins.attrNames homelab.nodes;
+  knownHostsFile = pkgs.writeText "slop-probe-known-hosts" (
+    lib.concatMapStrings (host: "${host} ${hostKeys.${host}}\n") probeHosts
+  );
 in
 {
   options.bjackman.slopClient = {
@@ -25,6 +28,15 @@ in
     packages = lib.mkOption {
       type = lib.types.attrsOf lib.types.package;
       readOnly = true;
+    };
+    probeClient = lib.mkOption {
+      type = with lib.types; functionTo package;
+      readOnly = true;
+      description = ''
+        Builds slop-probe for the homelab's hosts, given the arguments that
+        differ by caller, such as keyFile, so that another agent on the host
+        can have one with its own credentials.
+      '';
     };
   };
 
@@ -37,14 +49,17 @@ in
           passwordFile = config.age.secrets.slopbot-authelia-password.path;
         }
       );
-      slop-probe = pkgs.bjackman.slop-probe.override {
-        hosts = probeHosts;
-        keyFile = config.age.secrets.slopbot-probe-ssh-privkey.path;
-        knownHostsFile = pkgs.writeText "slop-probe-known-hosts" (
-          lib.concatMapStrings (host: "${host} ${hostKeys.${host}}\n") probeHosts
-        );
-      };
+      slop-probe = cfg.probeClient { keyFile = config.age.secrets.slopbot-probe-ssh-privkey.path; };
     };
+    bjackman.slopClient.probeClient =
+      args:
+      pkgs.bjackman.slop-probe.override (
+        {
+          inherit knownHostsFile;
+          hosts = probeHosts;
+        }
+        // args
+      );
 
     age.secrets = lib.genAttrs [
       "slopbot-ssh-privkey"
