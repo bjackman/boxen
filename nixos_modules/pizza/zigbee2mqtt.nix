@@ -52,6 +52,11 @@ in
         port = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_6407f13d16f9ef11b12862135c2a50c9-if00-port0";
         adapter = "ember";
       };
+      availability = {
+        enabled = true;
+        # The SNZB-02Ps report temperature and humidity at least hourly.
+        passive.timeout = 180;
+      };
       frontend = {
         enabled = true;
         host = "127.0.0.1";
@@ -87,6 +92,7 @@ in
     # fnmatch patterns, not MQTT wildcards. bridge/definitions alone would
     # exceed the exporter's metric limit.
     mqttIgnoredTopics = [ "${cfg.settings.mqtt.base_topic}/bridge*" ];
+    zigbee2MqttAvailability = true;
   };
 
   age.secrets.zigbee2mqtt-secret = {

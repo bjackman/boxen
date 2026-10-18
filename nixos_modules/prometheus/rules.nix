@@ -461,5 +461,42 @@ in
         }
       ];
     }
+    {
+      name = "Zigbee";
+      rules = [
+        {
+          alert = "ZigbeeDeviceOffline";
+          annotations = {
+            description = ''
+              zigbee2mqtt considers {{ $labels.topic }} offline: a battery device
+              has sent nothing within its availability timeout, or a mains device
+              stopped answering pings.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Zigbee device offline ({{ $labels.topic }})";
+          };
+          # Availability comes from zigbee2mqtt's retained messages, so unlike
+          # the device's own readings it survives an exporter restart.
+          expr = "mqtt_zigbee_availability == 0";
+          for = "0m";
+          labels.severity = "warning";
+        }
+        {
+          alert = "ZigbeeDeviceBatteryLow";
+          annotations = {
+            description = ''
+              {{ $labels.topic }} battery is at {{ $value }}%.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Zigbee device battery low ({{ $labels.topic }})";
+          };
+          expr = "mqtt_battery < 20";
+          for = "1h";
+          labels.severity = "warning";
+        }
+      ];
+    }
   ];
 }
