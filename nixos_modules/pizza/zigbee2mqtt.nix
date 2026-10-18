@@ -20,11 +20,19 @@ in
       {
         address = "127.0.0.1";
         port = mqttPort;
-        omitPasswordAuth = true;
-        settings.allow_anonymous = true;
-        acl = [ "topic readwrite #" ];
+        settings.listener_allow_anonymous = true;
+        acl = [ "topic read #" ];
+        users.zigbee2mqtt = {
+          passwordFile = config.age.secrets.mosquitto-zigbee2mqtt-password.path;
+          acl = [ "readwrite #" ];
+        };
       }
     ];
+  };
+
+  age.secrets.mosquitto-zigbee2mqtt-password = {
+    file = ../../secrets/mosquitto-zigbee2mqtt-password.age;
+    mode = "400";
   };
 
   bjackman.ports.zigbee2mqtt = { };
@@ -38,7 +46,11 @@ in
     enable = true;
     settings = {
       version = 5;
-      mqtt.server = "mqtt://127.0.0.1:${toString mqttPort}";
+      mqtt = {
+        server = "mqtt://127.0.0.1:${toString mqttPort}";
+        user = "zigbee2mqtt";
+        password = "!${config.age.secrets.zigbee2mqtt-mqtt.path} password";
+      };
       # Devices declared here keep these names: zigbee2mqtt writes frontend
       # renames only to the first file, minus anything a later file defines.
       devices = [
@@ -100,6 +112,12 @@ in
     file = ../../secrets/zigbee2mqtt-secret.yaml.age;
     # zigbee2mqtt appends .yaml to "!file key" references that lack it.
     name = "zigbee2mqtt-secret.yaml";
+    mode = "400";
+    owner = "zigbee2mqtt";
+  };
+  age.secrets.zigbee2mqtt-mqtt = {
+    file = ../../secrets/zigbee2mqtt-mqtt.yaml.age;
+    name = "zigbee2mqtt-mqtt.yaml";
     mode = "400";
     owner = "zigbee2mqtt";
   };

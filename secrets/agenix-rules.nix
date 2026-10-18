@@ -152,4 +152,19 @@ in
     fw13
     hostKeys.pizza
   ];
+  # zigbee2mqtt's password for Mosquitto: raw for Mosquitto, and as YAML for
+  # zigbee2mqtt's "!file key" indirection. Generated with:
+  # pw=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+  # echo "$pw" | age -r ... -o mosquitto-zigbee2mqtt-password.age
+  # echo "password: \"$pw\"" | age -r ... -o zigbee2mqtt-mqtt.yaml.age
+  "mosquitto-zigbee2mqtt-password.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.pizza
+  ];
+  "zigbee2mqtt-mqtt.yaml.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.pizza
+  ];
 }
