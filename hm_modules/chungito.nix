@@ -20,6 +20,7 @@
       ];
     in
     [
+      "github:bjackman/limmat-kernel-nix/master#devShells.${pkgs.stdenv.hostPlatform.system}.kernel"
       {
         flakeRef = "github:bjackman/boxen/master#nixosConfigurations.norte.config.system.build.toplevel";
         inherit buildArgs;
