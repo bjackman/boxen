@@ -14,6 +14,7 @@
             inputs'.home-manager.packages.default
             inputs'.limmat.packages.default
             pkgs.agenix
+            pkgs.bashInteractive
             pkgs.nix-diff
             pkgs.nixos-rebuild
             inputs'.deploy-rs.packages.default
