@@ -120,6 +120,15 @@ in
     fw13
     hostKeys.pizza
   ];
+  # The key slopops deploys with. See design_docs/slopops.md. Of the hosts only
+  # pizza can read it, since only slopops uses it; the public half is
+  # bjackman.slopDeploy.authorizedKey:
+  # ssh-keygen -t ed25519 -C slopops@deploy -f key && agenix -e slopops-ssh-privkey.age < key
+  "slopops-ssh-privkey.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.pizza
+  ];
   # CLAUDE_CODE_OAUTH_TOKEN=<the token from `claude setup-token`>, for the
   # review bot.
   "review-bot-claude-env.age".publicKeys = [

@@ -23,4 +23,6 @@ in
   systemd.services.gerrit-ci = lib.mkIf config.bjackman.gerritCi.enable {
     serviceConfig = limits;
   };
+  # The switch runs in a unit of its own, so this doesn't hold it back either.
+  systemd.services."slop-deploy@".serviceConfig = limits;
 }

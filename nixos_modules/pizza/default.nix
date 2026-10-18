@@ -13,6 +13,7 @@
     ../brendan.nix
     ../server.nix
     ../slop-probe.nix
+    ../slop-deploy.nix
     ../impermanence.nix
     ../transmission.nix
     ../filebrowser.nix
@@ -32,6 +33,7 @@
     ./tvheadend.nix
     ./claude.nix
     ./zigbee2mqtt.nix
+    ./slopops.nix
     # Don't load headless.nix, it disables all GPU stuff but we want GPU stuff
     # for Jellyfin.
     "${modulesPath}/profiles/minimal.nix"
@@ -52,6 +54,14 @@
   };
 
   networking.hostName = "pizza";
+
+  bjackman.slopDeploy = {
+    # The public half of secrets/slopops-ssh-privkey.age.
+    authorizedKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAZQAxET+z57+vXWFljeRdqdQw0fXSBRrB04eoxoN9z+ slopops@deploy";
+    # Gerrit's own copy, so that what may be deployed is what Gerrit says is on
+    # master, with nothing in between to lag behind it.
+    repoUrl = "/var/lib/private/gerrit/git/boxen.git";
+  };
 
   time.timeZone = "Europe/Zurich";
 
