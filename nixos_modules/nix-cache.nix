@@ -125,6 +125,12 @@ in
       };
     };
 
+    # What's worth keeping is rooted above; this clears what gerrit-ci leaves.
+    nix.gc = {
+      automatic = true;
+      dates = "weekly";
+    };
+
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ port ];
   };
 }
