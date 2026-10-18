@@ -61,14 +61,17 @@ in
         // args
       );
 
-    age.secrets = lib.genAttrs [
-      "slopbot-ssh-privkey"
-      "slopbot-probe-ssh-privkey"
-      "slopbot-authelia-password"
-    ] (name: {
-      file = ../secrets/${name}.age;
-      mode = "400";
-      owner = cfg.user;
-    });
+    age.secrets =
+      lib.genAttrs
+        [
+          "slopbot-ssh-privkey"
+          "slopbot-probe-ssh-privkey"
+          "slopbot-authelia-password"
+        ]
+        (name: {
+          file = ../secrets/${name}.age;
+          mode = "400";
+          owner = cfg.user;
+        });
   };
 }
