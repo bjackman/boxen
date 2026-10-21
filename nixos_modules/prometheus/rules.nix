@@ -498,5 +498,57 @@ in
         }
       ];
     }
+    {
+      name = "Heating";
+      rules = [
+        {
+          alert = "HeatingControllerDown";
+          annotations = {
+            description = ''
+              Prometheus can't scrape the heating controller on {{ $labels.instance }}.
+              The valves hold their last setpoints, so rooms drift but don't go cold.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Heating controller down (instance {{ $labels.instance }})";
+          };
+          expr = ''up{job="heating"} == 0'';
+          for = "10m";
+          labels.severity = "warning";
+        }
+        {
+          alert = "HeatingRoomUncontrolled";
+          annotations = {
+            description = ''
+              The heating controller can't act for {{ $labels.room }}: {{ $labels.status }}.
+              Its valve holds its last setpoint meanwhile.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Heating not controlling {{ $labels.room }}";
+          };
+          # active and valve_not_heating are both fine: the latter means the
+          # valve was switched off or to its own schedule on purpose.
+          expr = ''heating_room_status{status!~"active|valve_not_heating"} == 1'';
+          for = "1h";
+          labels.severity = "warning";
+        }
+        {
+          alert = "HeatingSetpointUnconfirmed";
+          annotations = {
+            description = ''
+              The valve in {{ $labels.room }} hasn't confirmed a setpoint for 30 minutes,
+              despite retries.
+                VALUE = {{ $value }}
+                LABELS = {{ $labels }}
+            '';
+            summary = "Heating setpoint unconfirmed in {{ $labels.room }}";
+          };
+          expr = "heating_valve_write_pending == 1";
+          for = "30m";
+          labels.severity = "warning";
+        }
+      ];
+    }
   ];
 }
