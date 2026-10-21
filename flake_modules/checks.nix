@@ -11,6 +11,7 @@
         ))
         // (mapAttrs (_: conf: conf.activationPackage) config.flake.homeConfigurations)
         // {
+          heating = pkgs.callPackage ../tests/heating.nix { };
           slop-deploy = pkgs.callPackage ../tests/slop-deploy.nix { };
         };
     };
