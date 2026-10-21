@@ -22,6 +22,8 @@ in
   ];
 
   bjackman.ports.gerrit = { };
+  # Gerrit's conventional port, and it ends up in every clone's remote URL.
+  bjackman.ports.gerrit-ssh.fixedPort = 29418;
 
   bjackman.iap.services.gerrit = {
     inherit port;

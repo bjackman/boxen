@@ -32,16 +32,15 @@ let
   };
 in
 {
-  imports = [ ./impermanence.nix ];
+  imports = [
+    ./impermanence.nix
+    ./ports.nix
+  ];
 
   options.bjackman.gerritSshPort = lib.mkOption {
     type = lib.types.port;
     readOnly = true;
-    # Not from bjackman.ports: those are allocated by position, so adding or
-    # removing any service shifts them - harmless for something reached through
-    # Caddy, and not for a port that ends up in every clone's remote URL.
-    # 29418 is Gerrit's conventional port.
-    default = 29418;
+    default = config.bjackman.ports.gerrit-ssh.port;
     description = "Port Gerrit serves git and its command interface on.";
   };
   options.bjackman.gerritProjects = lib.mkOption {
