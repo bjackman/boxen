@@ -170,6 +170,13 @@ in
     fw13
     hostKeys.pizza
   ];
+  # The heating controller's password for Mosquitto. Generated with:
+  # tr -dc A-Za-z0-9 </dev/urandom | head -c 32 | age -r ... -o mosquitto-heating-password.age
+  "mosquitto-heating-password.age".publicKeys = [
+    chungito
+    fw13
+    hostKeys.pizza
+  ];
   "zigbee2mqtt-mqtt.yaml.age".publicKeys = [
     chungito
     fw13
