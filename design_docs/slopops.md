@@ -28,7 +28,7 @@ thing being contained is a confused agent deploying at a bad moment.
   the tip of master, or of a commit of master from the last 30 days, from the
   `slopops` account over SSH. The policy is checked on the host, by the root
   unit `slop-deploy@<commit>.service` that does the deploy. `tests/slop-deploy.nix`
-  checks it in a VM. pizza enables it.
+  checks it in a VM. pizza, norte and sandy enable it.
 - `slop-probe`, for observing the hosts, and Prometheus on pizza.
 - `claude remote-control` on pizza, which is how I already talk to the coding
   agents (`nixos_modules/pizza/claude.nix`).
@@ -101,16 +101,30 @@ needs a call from inside a session.
    unit, but the conversation shouldn't drop. The change takes effect when the
    service is next restarted on purpose.
 
+1. **Other hosts fetch master from Gerrit over git://.** Only pizza can read
+   Gerrit's repository from disk. `gerrit-git-daemon` serves `boxen` from it
+   read-only, unauthenticated, and only to the tailnet, so norte and sandy
+   check against what Gerrit has without credentials of their own. The GitHub
+   mirror would have served too, but it lags by up to an hour, and whoever
+   could push to it would decide what's deployable.
+
+1. **Each host builds itself.** norte and sandy evaluate their own configs, as
+   pizza does. Building elsewhere would mean trusting that host's word for
+   which system a commit is. norte substitutes what nix-cache-warm has built;
+   sandy, being away from home, uses cache.nixos.org and builds the rest.
+
 1. **Evaluating a deploy doesn't get to starve Gerrit.** Building pizza on
    pizza starts with a 1.7G evaluation next to Gerrit's JVM, so the deploy
    unit has the same `MemoryHigh`/`MemoryMax`, niceness and I/O class as
    gerrit-ci. As for gerrit-ci, those bound only the evaluation: builds run in
    nix-daemon, outside the unit. A pizza closure is mostly substituted rather
-   than built, so that's left alone until a deploy shows otherwise.
+   than built, so that's left alone until a deploy shows otherwise. norte and
+   sandy cap the evaluation too, below what their own services leave free.
 
 ## Phases
 
-1. **Interactive, pizza only.** Every deploy needs approval.
+1. **Interactive.** Every deploy needs approval. pizza first, then norte and
+   sandy.
 1. **Knowing what's running.** A probe for
    `/run/current-system/configuration-revision`, so that "pizza is three
    commits behind" doesn't need guessing from store paths.
@@ -119,7 +133,7 @@ needs a call from inside a session.
    approve.
 1. **Earned autonomy.** Auto-approve the ordinary case (the tip passed CI, the
    host is healthy before and after) and keep the prompt for rollbacks and
-   anything unusual. Then norte.
+   anything unusual.
 
 ## Open questions
 
@@ -129,8 +143,8 @@ needs a call from inside a session.
 1. **The real build.** The VM test fakes it: each fixture commit names a system
    already in the VM's store. `nix build` of the flake at the commit first runs
    for real on pizza.
-1. **norte.** It can't read Gerrit's repository from disk, so its deploy unit
-   needs another way to fetch master, and an evaluation on a Pi is slow.
+1. **Evaluating on a Pi.** Whether norte's and sandy's caps leave the
+   evaluation enough, and how slow it is, is untested until the first deploy.
 1. **Memory and history.** The hosts' journals are the record of what was
    deployed. Whether the agent's own notes between sessions are worth having
    is something to find out by using it.
