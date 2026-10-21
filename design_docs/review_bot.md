@@ -82,9 +82,24 @@ that is needed if the agent fetches its review instead of being sent it.
 1. **It votes `Code-Review` ±1.** -1 with findings, +1 without. The vote is
    what shows "reviewed" in the UI: it isn't copied to a patch set with code
    changes, so a current patch set without it hasn't been reviewed.
-   `Code-Review` because it needs no configuration and can't affect
-   submission: the requirement is `label:Code-Review=MAX AND
-   -label:Code-Review=MIN`, which only a +2 satisfies and only a -2 blocks.
+   `Code-Review` because ±1 can't affect submission: the requirement is
+   `label:Code-Review=MAX AND -label:Code-Review=MIN`, which only a +2
+   satisfies and only a -2 blocks.
+
+1. **Flake updates it approves outright.** The reviewer also says whether the
+   change is a flake update: inputs bumped in `flake.lock`, and nothing else
+   but what the bump makes necessary, like a hash, a version-specific
+   workaround or an option renamed upstream. One with no findings gets +2
+   instead of +1, and with `Verified` the CI runner then submits it. Whether
+   an update is good is the checks' call, not a reader's. The reviewer is told
+   what's at stake and asked to check that every input is still locked to the
+   source it names.
+
+   That's the reviewer's judgement alone, so a prompt injection in the diff
+   could get a change approved; CI still has to pass. The grant is
+   `Code-Review -1..+2` for a `review` group holding only `review-bot`, so
+   it's still Gerrit that refuses a +2 from anyone else, but nothing in Gerrit
+   limits the bot's +2 to flake updates.
 
 1. **Up to five rounds, then it's mine.** While it's a reviewer, every new
    patch set is reviewed, so after the agent answers a round the next happens

@@ -127,3 +127,20 @@ func TestFailureReason(t *testing.T) {
 		t.Errorf("failureReason() without JSON = %q, want stderr then stdout", got)
 	}
 }
+
+func TestVerdict(t *testing.T) {
+	for _, tc := range []struct {
+		findings    int
+		flakeUpdate bool
+		want        int
+	}{
+		{0, false, 1},
+		{2, false, -1},
+		{0, true, 2},
+		{1, true, -1},
+	} {
+		if got := verdict(tc.findings, tc.flakeUpdate); got != tc.want {
+			t.Errorf("verdict(%d, %v) = %d, want %d", tc.findings, tc.flakeUpdate, got, tc.want)
+		}
+	}
+}

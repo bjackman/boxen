@@ -308,12 +308,13 @@ work. Buildbot wins the tiebreak on packaging, not on merit.
    reasons that have nothing to do with the change.
 
 1. **The runner submits what's ready, and only onto the commit it checked.**
-   Ready means `is:submittable` - my `Code-Review+2` and `Verified+1`, so the
-   +2 is what says "ship it when it's green" - and neither WIP nor private,
-   which is the way to hold one back. A change in a stack only goes when every
-   change beneath it is ready too, and the bottom one's parent is the tip of
-   its branch. Gerrit already refuses to submit a change over an unsubmittable
-   ancestor; the tip condition is the runner's own. The project rebases if
+   Ready means `is:submittable` - a `Code-Review+2` (mine, or `review-bot`'s on
+   a flake update) and `Verified+1`, so the +2 is what says "ship it when it's
+   green" - and neither WIP nor private, which is the way to hold one back. A
+   change in a stack only goes when every change beneath it is ready too, and
+   the bottom one's parent is the tip of its branch. Gerrit already refuses to
+   submit a change over an unsubmittable ancestor; the tip condition is the
+   runner's own. The project rebases if
    necessary on submit, so a green stack on a stale base would otherwise land
    as a tree nothing ever built, with nobody looking. A stale stack
    sits until it's rebased, which makes new patch sets and so a fresh check.

@@ -221,10 +221,7 @@ func (r *reviewer) review(ctx context.Context, change gerrit.Change) error {
 	}
 
 	comments := place(result.Findings, in.files, r.repoPath)
-	vote := 1
-	if len(result.Findings) > 0 {
-		vote = -1
-	}
+	vote := verdict(len(result.Findings), result.FlakeUpdate)
 	msg := review.RoundMessage(round, *maxRounds) + " " + result.Summary
 	if err := r.client.Review(change.Number, patchSet.Number, gerrit.ReviewInput{
 		Message:  msg,
@@ -265,6 +262,20 @@ type inputs struct {
 	// The files the change leaves in the tree, which are the ones a finding
 	// can be placed on.
 	files []string
+}
+
+// verdict is the vote for a review with the given number of findings. A clean
+// flake update is approved outright, since nobody reads a flake.lock diff;
+// anything else still needs a human's +2.
+func verdict(findings int, flakeUpdate bool) int {
+	switch {
+	case findings > 0:
+		return -1
+	case flakeUpdate:
+		return 2
+	default:
+		return 1
+	}
 }
 
 func (r *reviewer) prepareInputs(ctx context.Context) (inputs, error) {
@@ -318,6 +329,16 @@ func buildPrompt(change gerrit.Change, round, maxRounds int, in inputs) string {
 			"Review only this change: a problem in those belongs on the change that introduces it.\n\n",
 			in.seriesPath)
 	}
+	b.WriteString("Set flake_update to true only if the change is a flake update: it updates " +
+		"inputs in flake.lock, and everything else it changes is a direct, mechanical consequence " +
+		"of that, such as a source or vendor hash, a version-specific workaround or override " +
+		"adjusted or dropped, or an option renamed upstream. Anything that would be worth a " +
+		"human's look on its own, such as a new feature, a behaviour change or a refactor, means " +
+		"false. If flake_update is true and you raise no findings, the change is approved " +
+		"outright and can be submitted without a human reading it, so also check that the lock " +
+		"update is a plain one: each input's locked source is the one its original names, rather " +
+		"than another owner, repository or URL, and no inputs appear or disappear that flake.nix " +
+		"and the inputs' own flakes don't account for.\n\n")
 	b.WriteString("Look for bugs, things that won't build or evaluate, behaviour that doesn't " +
 		"match the commit message, design problems, and breaches of CLAUDE.md. Read the code " +
 		"to confirm a suspicion before you raise it. Leave out matters of taste, and don't pad: " +
@@ -358,8 +379,9 @@ type finding struct {
 }
 
 type result struct {
-	Summary  string    `json:"summary"`
-	Findings []finding `json:"findings"`
+	Summary     string    `json:"summary"`
+	Findings    []finding `json:"findings"`
+	FlakeUpdate bool      `json:"flake_update"`
 }
 
 const resultSchema = `{
@@ -377,9 +399,10 @@ const resultSchema = `{
         },
         "required": ["file", "line", "message"]
       }
-    }
+    },
+    "flake_update": {"type": "boolean"}
   },
-  "required": ["summary", "findings"]
+  "required": ["summary", "findings", "flake_update"]
 }`
 
 // runClaude reviews in a session that can read the checkout and the inputs and
