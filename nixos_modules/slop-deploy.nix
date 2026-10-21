@@ -203,6 +203,9 @@ in
     systemd.services."slop-deploy@" = {
       description = "Deploy commit %i of ${cfg.branch}";
       restartIfChanged = false;
+      # As root it would otherwise build in this unit, under whatever limits a
+      # host puts on the evaluation.
+      environment.NIX_REMOTE = "daemon";
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${lib.getExe run} %i";
