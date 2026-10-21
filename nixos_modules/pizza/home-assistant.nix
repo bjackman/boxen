@@ -11,9 +11,19 @@ in
     ../ports.nix
     ../iap.nix
     ../impermanence.nix
+    ./mosquitto.nix
   ];
 
   bjackman.ports.home-assistant.fixedPort = 8123;
+
+  bjackman.mosquitto.users.home-assistant = {
+    passwordFile = config.age.secrets.mosquitto-home-assistant-password.path;
+    acl = [ "readwrite #" ];
+  };
+  age.secrets.mosquitto-home-assistant-password = {
+    file = ../../secrets/mosquitto-home-assistant-password.age;
+    mode = "400";
+  };
 
   services.home-assistant = {
     enable = true;

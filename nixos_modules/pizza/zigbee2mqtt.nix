@@ -5,41 +5,22 @@
 }:
 let
   cfg = config.services.zigbee2mqtt;
-  mqttPort = 1883;
 in
 {
   imports = [
     ../ports.nix
     ../iap.nix
     ../impermanence.nix
+    ./mosquitto.nix
   ];
 
-  services.mosquitto = {
-    enable = true;
-    listeners = [
-      {
-        address = "127.0.0.1";
-        port = mqttPort;
-        settings.listener_allow_anonymous = true;
-        acl = [ "topic read #" ];
-        users.zigbee2mqtt = {
-          passwordFile = config.age.secrets.mosquitto-zigbee2mqtt-password.path;
-          acl = [ "readwrite #" ];
-        };
-        users.home-assistant = {
-          passwordFile = config.age.secrets.mosquitto-home-assistant-password.path;
-          acl = [ "readwrite #" ];
-        };
-      }
-    ];
+  bjackman.mosquitto.users.zigbee2mqtt = {
+    passwordFile = config.age.secrets.mosquitto-zigbee2mqtt-password.path;
+    acl = [ "readwrite #" ];
   };
 
   age.secrets.mosquitto-zigbee2mqtt-password = {
     file = ../../secrets/mosquitto-zigbee2mqtt-password.age;
-    mode = "400";
-  };
-  age.secrets.mosquitto-home-assistant-password = {
-    file = ../../secrets/mosquitto-home-assistant-password.age;
     mode = "400";
   };
 
@@ -55,7 +36,7 @@ in
     settings = {
       version = 5;
       mqtt = {
-        server = "mqtt://127.0.0.1:${toString mqttPort}";
+        server = "mqtt://127.0.0.1:${toString config.bjackman.mosquitto.port}";
         user = "zigbee2mqtt";
         password = "!${config.age.secrets.zigbee2mqtt-mqtt.path} password";
       };
@@ -143,12 +124,6 @@ in
       directory = cfg.dataDir;
       user = "zigbee2mqtt";
       group = "zigbee2mqtt";
-      mode = "0700";
-    }
-    {
-      directory = config.services.mosquitto.dataDir;
-      user = "mosquitto";
-      group = "mosquitto";
       mode = "0700";
     }
   ];
