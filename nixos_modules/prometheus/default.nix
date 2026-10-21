@@ -25,6 +25,10 @@ in
     # the port on tailscale0.
     listenAddress = "0.0.0.0";
     webExternalUrl = config.bjackman.iap.services.prometheus.url;
+    retentionTime = "2y";
+    # Backstop against series churn: drop the oldest blocks rather than fill
+    # the disk /persistent shares with /nix.
+    extraFlags = [ "--storage.tsdb.retention.size=20GB" ];
     scrapeConfigs =
       let
         # Given the name of an exporter configured via
