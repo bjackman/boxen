@@ -87,6 +87,15 @@ in
             in
             lib.concatMap nodeTargets nodes;
         }
+        {
+          job_name = "prometheus";
+          static_configs = [
+            {
+              targets = [ "localhost:${toString config.services.prometheus.port}" ];
+              labels.instance = config.networking.hostName;
+            }
+          ];
+        }
         # Note the whole point of mDNS (Avahi) is supposed to be service
         # discovery - Prometheus's service discovery mechanism doesn't natively
         # support it but there are bridges. It isn't really necessary to
