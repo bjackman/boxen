@@ -162,14 +162,6 @@ in
     fw13
     hostKeys.pizza
   ];
-  # Home Assistant's password for Mosquitto. HA only takes it through its MQTT
-  # integration's setup UI, so it's entered there by hand. Generated with:
-  # tr -dc A-Za-z0-9 </dev/urandom | head -c 32 | age -r ... -o mosquitto-home-assistant-password.age
-  "mosquitto-home-assistant-password.age".publicKeys = [
-    chungito
-    fw13
-    hostKeys.pizza
-  ];
   # The heating controller's password for Mosquitto. Generated with:
   # tr -dc A-Za-z0-9 </dev/urandom | head -c 32 | age -r ... -o mosquitto-heating-password.age
   "mosquitto-heating-password.age".publicKeys = [
