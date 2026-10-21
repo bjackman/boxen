@@ -26,12 +26,20 @@ in
           passwordFile = config.age.secrets.mosquitto-zigbee2mqtt-password.path;
           acl = [ "readwrite #" ];
         };
+        users.home-assistant = {
+          passwordFile = config.age.secrets.mosquitto-home-assistant-password.path;
+          acl = [ "readwrite #" ];
+        };
       }
     ];
   };
 
   age.secrets.mosquitto-zigbee2mqtt-password = {
     file = ../../secrets/mosquitto-zigbee2mqtt-password.age;
+    mode = "400";
+  };
+  age.secrets.mosquitto-home-assistant-password = {
+    file = ../../secrets/mosquitto-home-assistant-password.age;
     mode = "400";
   };
 

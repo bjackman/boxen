@@ -33,6 +33,7 @@
     ./tvheadend.nix
     ./claude.nix
     ./zigbee2mqtt.nix
+    ./home-assistant.nix
     ./slopops.nix
     # Don't load headless.nix, it disables all GPU stuff but we want GPU stuff
     # for Jellyfin.
