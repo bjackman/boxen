@@ -46,6 +46,7 @@ in
         ((pkgs.formats.yaml { }).generate "declared-devices.yaml" {
           "0xf044d3fffec64b85".friendly_name = "bedroom_climate";
           "0xf044d3fffec5f5bb".friendly_name = "living_room_climate";
+          "0xf044d3fffe4ac6ea".friendly_name = "bedroom_radiator";
         })
       ];
       serial = {
@@ -54,7 +55,7 @@ in
       };
       availability = {
         enabled = true;
-        # The SNZB-02Ps report temperature and humidity at least hourly.
+        # The battery devices all report their measurements at least hourly.
         passive.timeout = 180;
       };
       frontend = {
