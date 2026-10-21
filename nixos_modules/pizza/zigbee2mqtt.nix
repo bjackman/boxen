@@ -67,6 +67,9 @@ in
       };
       advanced = {
         log_output = [ "console" ];
+        # Replayed state would look like fresh readings to the heating
+        # controller, hiding a sensor that has gone quiet.
+        cache_state_send_on_startup = false;
         # configuration.yaml is overwritten on every start, so nothing can be
         # left as GENERATE for zigbee2mqtt to fill in there.
         network_key = "!${config.age.secrets.zigbee2mqtt-secret.path} network_key";
