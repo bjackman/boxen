@@ -3,7 +3,9 @@
   imports = [
     ./brendan.nix
     ./common.nix
+    ./iap.nix
     ./server.nix
+    ./slop-probe.nix
     ./tailscale-exit-node.nix
     "${modulesPath}/installer/sd-card/sd-image-aarch64.nix"
     "${modulesPath}/profiles/headless.nix"

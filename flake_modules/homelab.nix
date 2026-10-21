@@ -10,6 +10,7 @@
     nodes = {
       pizza = config.flake.nixosConfigurations.pizza.config;
       norte = config.flake.nixosConfigurations.norte.config;
+      sandy = config.flake.nixosConfigurations.sandy.config;
     };
     # And this is for cases where we just want "the machine running
     # the X server".

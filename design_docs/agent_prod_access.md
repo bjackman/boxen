@@ -170,10 +170,10 @@ does). Worth revisiting only if an agent ever runs somewhere shell-less.
    as everything else, and it ratchets — each investigation that hits a wall
    makes the next one cheaper.
 
-1. **Scope is `homelab.nodes` — pizza and norte.** Not chungito: it's my
+1. **Scope is `homelab.nodes` — pizza, norte and sandy.** Not chungito: it's my
    workstation and it's slopbox's own hypervisor, so a probe into it is a
-   containment hole rather than a monitoring feature. Not sandy, until there's a
-   reason.
+   containment hole rather than a monitoring feature. sandy joined so that
+   slopops (`slopops.md`) can see how a deploy there went.
 
 1. **Discovery is `agentHostContext` plus a skill.** A paragraph in
    `hm_modules/slopbox.nix` saying the command exists and what it's for; a
