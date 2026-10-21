@@ -7,9 +7,10 @@
 { lib, config, ... }:
 let
   cfg = config.bjackman.ports;
-  portMapping =
-    with lib;
-    listToAttrs (imap0 (i: name: nameValuePair name (9000 + i)) (attrNames cfg));
+  allocated = lib.filter (name: cfg.${name}.fixedPort == null) (lib.attrNames cfg);
+  portMapping = with lib; listToAttrs (imap0 (i: name: nameValuePair name (9000 + i)) allocated);
+  byPort = lib.groupBy (name: toString cfg.${name}.port) (lib.attrNames cfg);
+  clashes = lib.filterAttrs (_: names: lib.length names > 1) byPort;
 in
 {
   options.bjackman.ports = lib.mkOption {
@@ -17,15 +18,33 @@ in
       with lib.types;
       attrsOf (
         submodule (
-          { name, ... }:
+          { name, config, ... }:
           {
+            options.fixedPort = lib.mkOption {
+              type = types.nullOr types.port;
+              default = null;
+              description = ''
+                Port to use instead of an allocated one, for a service that
+                clients expect on its well-known port. It doesn't move anyone
+                else's allocation.
+              '';
+            };
             options.port = lib.mkOption {
               type = types.int;
-              default = portMapping.${name};
+              default = if config.fixedPort != null then config.fixedPort else portMapping.${name};
               readOnly = true;
             };
           }
         )
       );
   };
+
+  config.assertions = [
+    {
+      assertion = clashes == { };
+      message = "bjackman.ports has services sharing a port: ${
+        lib.concatStringsSep "; " (lib.mapAttrsToList (port: names: "${port}: ${toString names}") clashes)
+      }";
+    }
+  ];
 }

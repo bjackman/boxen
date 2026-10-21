@@ -17,7 +17,8 @@ in
   };
 
   bjackman.iap.services = {
-    inherit (ports) radarr sonarr;
+    radarr.port = ports.radarr.port;
+    sonarr.port = ports.sonarr.port;
   };
 
   users.groups.arr-api = { };
