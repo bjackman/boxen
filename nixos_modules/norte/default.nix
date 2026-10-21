@@ -14,6 +14,7 @@
     ../brendan.nix
     ../server.nix
     ../slop-probe.nix
+    ../slop-deploy.nix
     ../common.nix
     ../users.nix
     ../node-exporter.nix
@@ -35,6 +36,8 @@
   networking.hostName = "norte";
 
   bjackman.nixCache.use = true;
+
+  bjackman.slopDeploy.enable = true;
 
   zramSwap.enable = true;
 
@@ -214,6 +217,16 @@
   };
 
   powerManagement.powertop.enable = true;
+
+  # norte has had at least 4.4G available, so this leaves its services over 1G.
+  # The switch runs in a unit of its own, so this doesn't hold it back.
+  systemd.services."slop-deploy@".serviceConfig = {
+    MemoryHigh = "2500M";
+    MemoryMax = "3G";
+    MemorySwapMax = "1G";
+    Nice = 10;
+    IOSchedulingClass = "idle";
+  };
 
   system.stateVersion = "25.11";
 }
