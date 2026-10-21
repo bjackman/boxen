@@ -28,9 +28,9 @@ in
   };
 
   home.file.".claude/settings.json".source = (pkgs.formats.json { }).generate "claude-settings.json" (
-    lib.importJSON ../hm_files/common/claude/settings.json
-    // {
+    lib.recursiveUpdate (lib.importJSON ../hm_files/common/claude/settings.json) {
       skipDangerousModePermissionPrompt = true;
+      permissions.allow = [ "mcp__claude-code-remote__send_message" ];
     }
   );
 
@@ -76,7 +76,8 @@ in
     Gerrit's `refs/for/master`, adds me as reviewer, and prints the change URL.
     Running it again uploads a new patch set. Amend the commit feedback is
     about rather than stacking fixups on top. You cannot push to master, and
-    shouldn't try. Never deploy anything.
+    shouldn't try. Never deploy anything yourself: when I ask for a deploy, send
+    the request to the `pizza: slopops` session, which deploys what has merged.
 
     Before telling me a change is ready, run `slop-review` in the worktree. It
     has the review bot review the topic's open changes, waits for it, and
