@@ -231,6 +231,15 @@ in
         fi
         expect "$(req PUT /a/groups/ci/members/ci-bot)" 201 200
 
+        # Exists whether or not the bot does, because project.config names it.
+        if [ "$(req GET /a/groups/review)" = 404 ]; then
+          expect "$(req PUT /a/groups/review '{"description": "Accounts that may vote Code-Review+2 without being administrators."}')" 201
+          expect "$(req DELETE "/a/groups/review/members/${admin}")" 204 404
+        fi
+        ${lib.optionalString config.bjackman.reviewBot.enable ''
+          expect "$(req PUT /a/groups/review/members/review-bot)" 201 200
+        ''}
+
 
         # A project's configuration - its ACLs, its labels and its submit
         # requirements - is a file on refs/meta/config, so it's a file in the
