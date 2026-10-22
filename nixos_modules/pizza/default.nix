@@ -58,6 +58,7 @@
   networking.hostName = "pizza";
 
   bjackman.slopDeploy = {
+    enable = true;
     # The public half of secrets/slopops-ssh-privkey.age.
     authorizedKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAZQAxET+z57+vXWFljeRdqdQw0fXSBRrB04eoxoN9z+ slopops@deploy";
     # Gerrit's own copy, so that what may be deployed is what Gerrit says is on

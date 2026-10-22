@@ -117,6 +117,8 @@ let
 in
 {
   options.bjackman.slopDeploy = {
+    enable = lib.mkEnableOption "deploys of this host by an agent";
+
     user = lib.mkOption {
       type = lib.types.str;
       default = "slopops";
@@ -171,7 +173,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf cfg.enable {
     users.users.${cfg.user} = {
       isSystemUser = true;
       group = cfg.user;

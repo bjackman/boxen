@@ -24,5 +24,7 @@ in
     serviceConfig = limits;
   };
   # The switch runs in a unit of its own, so this doesn't hold it back either.
-  systemd.services."slop-deploy@".serviceConfig = limits;
+  systemd.services."slop-deploy@" = lib.mkIf config.bjackman.slopDeploy.enable {
+    serviceConfig = limits;
+  };
 }

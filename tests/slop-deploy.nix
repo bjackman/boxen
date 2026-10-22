@@ -119,6 +119,7 @@ pkgs.testers.runNixOSTest (
 
           bjackman.slopProbe.authorizedKey = sshKeys.snakeOilPublicKey;
           bjackman.slopDeploy = {
+            enable = true;
             authorizedKey = sshKeys.snakeOilPublicKey;
             repoUrl = repoPath;
             build = pkgs.writeShellScript "slop-deploy-fixture-build" ''

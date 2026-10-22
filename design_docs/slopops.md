@@ -24,11 +24,11 @@ thing being contained is a confused agent deploying at a bad moment.
 
 ### What exists
 
-- `nixos_modules/slop-deploy.nix`. A host that imports it accepts a deploy of
+- `nixos_modules/slop-deploy.nix`. A host that enables it accepts a deploy of
   the tip of master, or of a commit of master from the last 30 days, from the
   `slopops` account over SSH. The policy is checked on the host, by the root
   unit `slop-deploy@<commit>.service` that does the deploy. `tests/slop-deploy.nix`
-  checks it in a VM. No host imports it yet; this series enables it on pizza.
+  checks it in a VM. pizza enables it.
 - `slop-probe`, for observing the hosts, and Prometheus on pizza.
 - `claude remote-control` on pizza, which is how I already talk to the coding
   agents (`nixos_modules/pizza/claude.nix`).
