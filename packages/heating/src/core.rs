@@ -108,6 +108,10 @@ pub struct RoomSnapshot {
     pub reported_setpoint: Option<f64>,
     pub valve_temperature: Option<f64>,
     pub valve_mode: Option<String>,
+    pub valve_heating: Option<bool>,
+    pub valve_heating_changes: u64,
+    pub sensor_online: bool,
+    pub valve_online: bool,
     pub error: Option<f64>,
     pub proportional: Option<f64>,
     pub offset: f64,
@@ -163,6 +167,8 @@ struct Room {
     reported_setpoint: Option<f64>,
     valve_mode: Option<String>,
     valve_temperature: Option<f64>,
+    valve_heating: Option<bool>,
+    valve_heating_changes: u64,
     /// The setpoint the valve should have: what we last wrote, or what it was
     /// turned to.
     desired: Option<f64>,
@@ -288,6 +294,13 @@ impl Room {
         }
         if let Some(temperature) = number(state, "local_temperature") {
             self.valve_temperature = Some(temperature);
+        }
+        if let Some(running) = state.get("running_state").and_then(Value::as_str) {
+            let heating = running == "heat";
+            if self.valve_heating.is_some_and(|was| was != heating) {
+                self.valve_heating_changes += 1;
+            }
+            self.valve_heating = Some(heating);
         }
         let Some(setpoint) = number(state, "occupied_heating_setpoint") else {
             return;
@@ -522,6 +535,8 @@ impl Controller {
                     reported_setpoint: None,
                     valve_mode: None,
                     valve_temperature: None,
+                    valve_heating: None,
+                    valve_heating_changes: 0,
                     desired: None,
                     pending: None,
                     last_change: None,
@@ -697,6 +712,10 @@ impl Controller {
                         reported_setpoint: room.reported_setpoint,
                         valve_temperature: room.valve_temperature,
                         valve_mode: room.valve_mode.clone(),
+                        valve_heating: room.valve_heating,
+                        valve_heating_changes: room.valve_heating_changes,
+                        sensor_online: room.sensor_online,
+                        valve_online: room.valve_online,
                         error: law.map(|(error, _, _)| error),
                         proportional: law.map(|(_, proportional, _)| proportional),
                         offset: room.offset,

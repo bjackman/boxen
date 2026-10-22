@@ -400,6 +400,95 @@ pub fn render_metrics(published: &Published, now: Instant) -> String {
         rooms,
         |r| Some(r.knob_turns as f64),
     );
+    m.rooms(
+        "heating_room_error_celsius",
+        "gauge",
+        "Effective target minus room temperature.",
+        rooms,
+        |r| r.error,
+    );
+    m.rooms(
+        "heating_proportional_term_celsius",
+        "gauge",
+        "Kp times the error.",
+        rooms,
+        |r| r.proportional,
+    );
+    m.rooms(
+        "heating_learned_offset_celsius",
+        "gauge",
+        "Integral term: what the setpoint needs on top of target and proportional term.",
+        rooms,
+        |r| Some(r.offset),
+    );
+    m.rooms(
+        "heating_valve_setpoint_computed_celsius",
+        "gauge",
+        "Setpoint the control law asks for now, before rate limiting.",
+        rooms,
+        |r| r.computed_setpoint,
+    );
+    m.rooms(
+        "heating_sensor_online",
+        "gauge",
+        "Whether zigbee2mqtt reports the room sensor online.",
+        rooms,
+        |r| Some(f64::from(u8::from(r.sensor_online))),
+    );
+    m.rooms(
+        "heating_valve_online",
+        "gauge",
+        "Whether zigbee2mqtt reports the valve online.",
+        rooms,
+        |r| Some(f64::from(u8::from(r.valve_online))),
+    );
+    m.rooms(
+        "heating_valve_heating",
+        "gauge",
+        "Whether the valve reports itself heating rather than idle.",
+        rooms,
+        |r| r.valve_heating.map(|h| f64::from(u8::from(h))),
+    );
+    m.rooms(
+        "heating_valve_heating_changes_total",
+        "counter",
+        "Times the valve switched between heating and idle.",
+        rooms,
+        |r| Some(r.valve_heating_changes as f64),
+    );
+    m.family(
+        "heating_valve_mode",
+        "gauge",
+        "1 for the valve's current system mode.",
+    );
+    for room in rooms {
+        if let Some(mode) = &room.valve_mode {
+            let mode = if mode.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
+                mode.as_str()
+            } else {
+                "other"
+            };
+            m.sample(
+                "heating_valve_mode",
+                &format!("room=\"{}\",mode=\"{mode}\"", room.name),
+                1,
+            );
+        }
+    }
+    m.family("heating_param", "gauge", "Current tuning parameters.");
+    let p = &snapshot.params;
+    for (name, value) in [
+        ("kp", p.kp),
+        ("ki", p.ki),
+        ("deadband", p.deadband),
+        ("integration_band", p.integration_band),
+        ("step_interval_mins", p.step_interval_mins as f64),
+        ("min_offset", p.min_offset),
+        ("max_offset", p.max_offset),
+        ("override_mins", p.override_mins as f64),
+    ] {
+        m.sample("heating_param", &format!("name=\"{name}\""), value);
+    }
     m.0
 }
 
@@ -532,6 +621,16 @@ mod tests {
             r#"heating_room_status{room="bedroom",status="valve_not_heating"} 1"#,
             r#"heating_room_status{room="bedroom",status="active"} 0"#,
             r#"heating_knob_adjustment_celsius{room="bedroom"} 0"#,
+            r#"heating_room_error_celsius{room="bedroom"} 0.5"#,
+            r#"heating_proportional_term_celsius{room="bedroom"} 0.5"#,
+            r#"heating_learned_offset_celsius{room="bedroom"} 0"#,
+            r#"heating_valve_setpoint_computed_celsius{room="bedroom"} 20.5"#,
+            r#"heating_sensor_online{room="bedroom"} 1"#,
+            r#"heating_valve_online{room="bedroom"} 1"#,
+            r#"heating_valve_heating{room="bedroom"} 0"#,
+            r#"heating_valve_heating_changes_total{room="bedroom"} 0"#,
+            r#"heating_valve_mode{room="bedroom",mode="other"} 1"#,
+            r#"heating_param{name="kp"} 1"#,
         ] {
             assert!(
                 text.lines().any(|l| l == line),

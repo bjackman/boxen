@@ -160,11 +160,15 @@ schedule should be policy (UI) or code.
   One page with each room's state, a target form and the tuning form. POSTs
   with a `Sec-Fetch-Site` other than `same-origin` or `none` are refused, since
   the IAP authenticates by cookie.
-- **Metrics:** `/metrics`, scraped by Prometheus as job `heating`:
-  `heating_room_status` (one-hot by status), targets, room and valve
-  temperatures, wanted and reported setpoints, knob adjustment, and counters
-  of writes, retries and knob turns. Alerts: `HeatingControllerDown`,
-  `HeatingRoomUncontrolled`, `HeatingSetpointUnconfirmed`.
+- **Metrics:** `/metrics`, scraped by Prometheus as job `heating`. Every input
+  and output of the control loop: `heating_room_status` (one-hot by status),
+  targets, room and valve temperatures, sensor and valve availability, valve
+  mode and whether it's heating, the error, proportional term and learned
+  offset, the computed, wanted and reported setpoints, the tuning parameters,
+  and counters of writes, retries, knob turns and heating/idle switches (for
+  valve thrash). Alerts:
+  `HeatingControllerDown`, `HeatingRoomUncontrolled`,
+  `HeatingSetpointUnconfirmed`.
 - **Port:** 9123, as a `bjackman.ports` fixed port, because a new allocated
   name renumbers every port that sorts after it.
 

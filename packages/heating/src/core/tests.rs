@@ -870,3 +870,24 @@ fn learns_from_the_droop_the_proportional_term_leaves() {
     h.c.tick(mins(20));
     assert_eq!(h.room(mins(20)).offset, 0.375);
 }
+
+#[test]
+fn counts_the_valve_switching_between_heating_and_idle() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    for (s, running) in [
+        (0, "idle"),
+        (1, "heat"),
+        (2, "heat"),
+        (3, "idle"),
+        (4, "heat"),
+    ] {
+        h.valve_state(
+            secs(s),
+            json!({"occupied_heating_setpoint": 20.0, "system_mode": "heat", "running_state": running}),
+        );
+    }
+    let room = h.room(secs(4));
+    assert_eq!(room.valve_heating, Some(true));
+    assert_eq!(room.valve_heating_changes, 3);
+}
