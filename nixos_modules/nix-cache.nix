@@ -143,7 +143,7 @@ in
     (lib.mkIf cfg.use {
       nix.settings = {
         extra-substituters = [
-          "http://${server.networking.hostName}:${toString server.bjackman.ports.nix-cache.port}"
+          "http://${server.networking.hostName}.bonito-coho.ts.net:${toString server.bjackman.ports.nix-cache.port}"
         ];
         extra-trusted-public-keys = [ "pizza-1:7tCSYeyOZBVgcihlNuhExrjEc9a/xG6lj5b9pj3LylQ=" ];
       };
