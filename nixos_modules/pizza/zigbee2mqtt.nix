@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -42,13 +43,22 @@ in
       };
       # Devices declared here keep these names: zigbee2mqtt writes frontend
       # renames only to the first file, minus anything a later file defines.
+      # Their state is retained so that a client gets it as soon as it
+      # subscribes; last_seen tells it how old that state is.
       devices = [
         "devices.yaml"
-        ((pkgs.formats.yaml { }).generate "declared-devices.yaml" {
-          "0xf044d3fffec64b85".friendly_name = "bedroom_climate";
-          "0xf044d3fffec5f5bb".friendly_name = "living_room_climate";
-          "0xf044d3fffe4ac6ea".friendly_name = "bedroom_radiator";
-        })
+        ((pkgs.formats.yaml { }).generate "declared-devices.yaml" (
+          lib.mapAttrs
+            (_: name: {
+              friendly_name = name;
+              retain = true;
+            })
+            {
+              "0xf044d3fffec64b85" = "bedroom_climate";
+              "0xf044d3fffec5f5bb" = "living_room_climate";
+              "0xf044d3fffe4ac6ea" = "bedroom_radiator";
+            }
+        ))
       ];
       serial = {
         port = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_6407f13d16f9ef11b12862135c2a50c9-if00-port0";
@@ -67,9 +77,7 @@ in
       };
       advanced = {
         log_output = [ "console" ];
-        # Replayed state would look like fresh readings to the heating
-        # controller, hiding a sensor that has gone quiet.
-        cache_state_send_on_startup = false;
+        last_seen = "epoch";
         # configuration.yaml is overwritten on every start, so nothing can be
         # left as GENERATE for zigbee2mqtt to fill in there.
         network_key = "!${config.age.secrets.zigbee2mqtt-secret.path} network_key";

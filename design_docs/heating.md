@@ -114,10 +114,13 @@ leaves the valve alone, and the room status says why:
 | `sensor_stale` | No room reading for 2 hours (the SNZB-02P reports at least hourly) |
 | `active` | Controlling |
 
-Device state isn't retained, so on every connection the controller asks the
-valves for theirs with a `/get`, and waits for the first room reading.
-zigbee2mqtt is set not to replay its cache when it starts, because a replayed
-reading would look fresh and hide a dead sensor.
+zigbee2mqtt retains the devices' state and stamps it with `last_seen`, when
+it last heard from the device. So the controller gets each sensor's last
+reading as soon as it subscribes, and judges its age from `last_seen` rather
+than from when the message arrived: a reading retained or replayed from a
+sensor that has since died is stale, not fresh. A message without `last_seen`
+counts from its arrival. On every connection the controller also asks the
+valves for their state with a `/get`.
 
 ### Writes
 
