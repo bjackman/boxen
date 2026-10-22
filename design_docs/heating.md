@@ -86,7 +86,8 @@ where error is the effective target minus the room temperature.
 - It changes at most once per `step_interval` (20 minutes), and only when the
   rounded value changes.
 
-_Revisit:_ the gains are guesses. A thermal model of the room, fed with
+_Revisit:_ the gains are guesses; the Climate dashboard's "Heating" panels
+show every term to tune them by. A thermal model of the room, fed with
 outdoor and neighbouring-room temperatures, could replace the learned offset
 with feedforward and detect open doors and windows from its prediction error.
 The plan is to fit one offline from collected data before building it in.
@@ -166,7 +167,7 @@ schedule should be policy (UI) or code.
   mode and whether it's heating, the error, proportional term and learned
   offset, the computed, wanted and reported setpoints, the tuning parameters,
   and counters of writes, retries, knob turns and heating/idle switches (for
-  valve thrash). Alerts:
+  valve thrash). They're on the Climate dashboard's "Heating" panels. Alerts:
   `HeatingControllerDown`, `HeatingRoomUncontrolled`,
   `HeatingSetpointUnconfirmed`.
 - **Port:** 9123, as a `bjackman.ports` fixed port, because a new allocated
@@ -180,5 +181,4 @@ schedule should be policy (UI) or code.
   or hourly, which is coarse for this loop). The controller could reconcile
   these at startup.
 - A schedule.
-- A dashboard. The metrics are there.
 - The living room has a sensor but no valve.
