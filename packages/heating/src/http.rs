@@ -81,8 +81,10 @@ async fn set_target(State(state): State<AppState>, Form(form): Form<TargetForm>)
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ParamsForm {
+    kp: f64,
+    ki: f64,
     deadband: f64,
-    step: f64,
+    integration_band: f64,
     step_interval_mins: u64,
     min_offset: f64,
     max_offset: f64,
@@ -91,8 +93,10 @@ struct ParamsForm {
 
 async fn set_params(State(state): State<AppState>, Form(form): Form<ParamsForm>) -> Response {
     let params = Params {
+        kp: form.kp,
+        ki: form.ki,
         deadband: form.deadband,
-        step: form.step,
+        integration_band: form.integration_band,
         step_interval_mins: form.step_interval_mins,
         min_offset: form.min_offset,
         max_offset: form.max_offset,
@@ -146,6 +150,7 @@ fn render_room(room: &RoomSnapshot, elapsed: Duration, out: &mut String) {
 <tr><th>Status</th><td>{status}</td></tr>
 <tr><th>Room</th><td>{temperature}{age}</td></tr>
 <tr><th>Target</th><td>{target:.1} °C, knob {knob}, so aiming for {effective:.1} °C</td></tr>
+<tr><th>Control</th><td>{control}</td></tr>
 <tr><th>Valve setpoint</th><td>wanted {desired}, reported {reported}{pending}</td></tr>
 <tr><th>Valve</th><td>{valve_temperature}, mode {mode}</td></tr>
 <tr><th>Counts</th><td>{writes} writes, {retries} retries, {knob_turns} knob turns</td></tr>
@@ -158,6 +163,16 @@ fn render_room(room: &RoomSnapshot, elapsed: Duration, out: &mut String) {
 </section>
 "#,
         status = room.status.as_str(),
+        control = match (room.error, room.proportional, room.computed_setpoint) {
+            (Some(error), Some(proportional), Some(setpoint)) => format!(
+                "error {error:+.1} °C, proportional {proportional:+.1} °C, learned offset {:+.2} °C, so setpoint {setpoint:.1} °C",
+                room.offset
+            ),
+            _ => format!(
+                "learned offset {:+.2} °C, no reading to act on",
+                room.offset
+            ),
+        },
         temperature = temperature(room.temperature),
         age = age.map_or_else(String::new, |age| format!(", {} ago", minutes(age))),
         target = room.target,
@@ -215,8 +230,10 @@ section { margin-bottom: 2em; }
         r#"<h2>Tuning</h2>
 <form method="post" action="/params">
 <table>
+<tr><th><label for="kp">Kp (°C per °C off target)</label></th><td><input id="kp" name="kp" type="number" step="0.05" value="{}"></td></tr>
+<tr><th><label for="ki">Ki (°C per °C off target, per interval)</label></th><td><input id="ki" name="ki" type="number" step="0.05" value="{}"></td></tr>
 <tr><th><label for="deadband">Deadband (°C)</label></th><td><input id="deadband" name="deadband" type="number" step="0.1" value="{}"></td></tr>
-<tr><th><label for="step">Step (°C)</label></th><td><input id="step" name="step" type="number" step="0.5" value="{}"></td></tr>
+<tr><th><label for="integration_band">Integration band (°C)</label></th><td><input id="integration_band" name="integration_band" type="number" step="0.1" value="{}"></td></tr>
 <tr><th><label for="step_interval_mins">Step interval (min)</label></th><td><input id="step_interval_mins" name="step_interval_mins" type="number" value="{}"></td></tr>
 <tr><th><label for="min_offset">Min offset (°C)</label></th><td><input id="min_offset" name="min_offset" type="number" step="0.5" value="{}"></td></tr>
 <tr><th><label for="max_offset">Max offset (°C)</label></th><td><input id="max_offset" name="max_offset" type="number" step="0.5" value="{}"></td></tr>
@@ -227,7 +244,14 @@ section { margin-bottom: 2em; }
 </body>
 </html>
 "#,
-        p.deadband, p.step, p.step_interval_mins, p.min_offset, p.max_offset, p.override_mins
+        p.kp,
+        p.ki,
+        p.deadband,
+        p.integration_band,
+        p.step_interval_mins,
+        p.min_offset,
+        p.max_offset,
+        p.override_mins
     );
     out
 }
@@ -408,7 +432,7 @@ mod tests {
         let mut controller = Controller::new(&config, &Persisted::default());
         let start = Duration::ZERO;
         controller.connected(start);
-        let valve = json!({"occupied_heating_setpoint": 20.0, "system_mode": "<script>", "local_temperature": 23.0});
+        let valve = json!({"occupied_heating_setpoint": 20.0, "system_mode": "<script>", "local_temperature": 23.0, "running_state": "idle"});
         controller.message(
             start,
             Duration::ZERO,
@@ -599,8 +623,8 @@ mod tests {
     async fn partial_params_never_reach_the_controller() {
         for body in [
             "deadband=0.5",
-            "deadband=0.5&step=0.5&step_interval_mins=30&min_offset=-3&max_offset=5",
-            "deadband=0.5&step=0.5&step_interval_mins=30&min_offset=-3&max_offset=5&override_mins=60&typo=1",
+            "kp=1.5&ki=0.1&deadband=0.5&integration_band=1.5&step_interval_mins=30&min_offset=-3&max_offset=5",
+            "kp=1.5&ki=0.1&deadband=0.5&integration_band=1.5&step_interval_mins=30&min_offset=-3&max_offset=5&override_mins=60&typo=1",
         ] {
             let (app, mut seen) = app(Ok(()));
             let response = app.oneshot(post("/params", body, None)).await.unwrap();
@@ -616,15 +640,17 @@ mod tests {
     #[tokio::test]
     async fn sets_params() {
         let (app, mut seen) = app(Ok(()));
-        let form = "deadband=0.5&step=0.5&step_interval_mins=30&min_offset=-3&max_offset=5&override_mins=60";
+        let form = "kp=1.5&ki=0.1&deadband=0.5&integration_band=1.5&step_interval_mins=30&min_offset=-3&max_offset=5&override_mins=60";
         let response = app
             .oneshot(post("/params", form, Some("same-origin")))
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::SEE_OTHER);
         let expected = Params {
+            kp: 1.5,
+            ki: 0.1,
             deadband: 0.5,
-            step: 0.5,
+            integration_band: 1.5,
             step_interval_mins: 30,
             min_offset: -3.0,
             max_offset: 5.0,

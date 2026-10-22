@@ -54,7 +54,7 @@ pkgs.testers.runNixOSTest {
     machine.wait_for_unit("heating.service")
     machine.wait_until_succeeds("curl -sf ${url}/metrics | grep -qx 'heating_mqtt_connected 1'")
 
-    with subtest("a cold room gets a higher setpoint"):
+    with subtest("a room 5 degrees cold gets a setpoint 5 degrees above target"):
         machine.succeed(
             "systemd-run --unit=watch-valve sh -c "
             "'${pkgs.coreutils}/bin/stdbuf -oL ${pkgs.mosquitto}/bin/mosquitto_sub -h 127.0.0.1 -v -t zigbee2mqtt/bedroom_radiator/set -t test/ping >/tmp/valve.log'"
@@ -66,7 +66,7 @@ pkgs.testers.runNixOSTest {
         machine.succeed(f"mosquitto_pub -h 127.0.0.1 -t zigbee2mqtt/bedroom_radiator -m '{valve}'")
         machine.succeed("""mosquitto_pub -h 127.0.0.1 -t zigbee2mqtt/bedroom_climate -m '{"temperature": 15}'""")
         machine.wait_until_succeeds(
-            """grep -qx 'zigbee2mqtt/bedroom_radiator/set {"occupied_heating_setpoint":20.5}' /tmp/valve.log"""
+            """grep -qx 'zigbee2mqtt/bedroom_radiator/set {"occupied_heating_setpoint":25.0}' /tmp/valve.log"""
         )
         metrics = machine.succeed("curl -sf ${url}/metrics")
         assert 'heating_room_status{room="bedroom",status="active"} 1' in metrics, metrics

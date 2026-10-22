@@ -85,11 +85,18 @@ impl Limits {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields, default)]
 pub struct Params {
-    /// How far the room may be from its target before the setpoint moves.
+    /// Setpoint change per °C the room is off its target.
+    pub kp: f64,
+    /// Learned-offset change per °C off target, each step interval.
+    pub ki: f64,
+    /// How far the room may be from its target before the learned offset moves.
     pub deadband: f64,
-    /// How far the setpoint moves at a time.
-    pub step: f64,
-    /// Minimum time between automatic setpoint changes.
+    /// How far the room may be from its target for the learned offset to move.
+    /// Bigger errors come from cold starts, target changes and open doors, and
+    /// are left to the proportional term rather than winding up the offset.
+    pub integration_band: f64,
+    /// Minimum time between setpoint changes, and between updates of the
+    /// learned offset.
     pub step_interval_mins: u64,
     /// The setpoint is kept within these offsets of the room's effective target.
     pub min_offset: f64,
@@ -101,8 +108,10 @@ pub struct Params {
 impl Default for Params {
     fn default() -> Self {
         Self {
+            kp: 1.0,
+            ki: 0.25,
             deadband: 0.3,
-            step: 0.5,
+            integration_band: 2.5,
             step_interval_mins: 20,
             min_offset: -4.0,
             max_offset: 6.0,
@@ -112,6 +121,18 @@ impl Default for Params {
 }
 
 impl Params {
+    /// Parses params saved by any version, dropping fields it doesn't know,
+    /// such as ones an older version had.
+    pub fn from_saved(saved: serde_json::Value) -> anyhow::Result<Self> {
+        let known = serde_json::to_value(Params::default()).context("listing params")?;
+        let mut fields = match saved {
+            serde_json::Value::Object(fields) => fields,
+            other => anyhow::bail!("saved params aren't an object: {other}"),
+        };
+        fields.retain(|name, _| known.get(name).is_some());
+        serde_json::from_value(serde_json::Value::Object(fields)).context("parsing saved params")
+    }
+
     pub fn step_interval(&self) -> Duration {
         Duration::from_secs(self.step_interval_mins * 60)
     }
@@ -126,8 +147,16 @@ impl Params {
             "deadband must be between 0 and 5 °C"
         );
         ensure!(
-            self.step.is_finite() && (0.5..=5.0).contains(&self.step),
-            "step must be between 0.5 and 5 °C"
+            self.kp.is_finite() && (0.0..=10.0).contains(&self.kp),
+            "kp must be between 0 and 10"
+        );
+        ensure!(
+            self.ki.is_finite() && (0.0..=5.0).contains(&self.ki),
+            "ki must be between 0 and 5"
+        );
+        ensure!(
+            self.integration_band.is_finite() && (0.0..=10.0).contains(&self.integration_band),
+            "integration band must be between 0 and 10 °C"
         );
         ensure!(
             (1..=24 * 60).contains(&self.step_interval_mins),
@@ -254,9 +283,23 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unknown_fields() {
-        let mut value = serde_json::json!({"deadband": 0.3, "typo": 1});
-        assert!(serde_json::from_value::<Params>(value.take()).is_err());
+    fn rejects_unknown_fields_in_the_config() {
+        let mqtt = serde_json::json!({
+            "host": "127.0.0.1", "port": 1883, "client_id": "heating", "username": "heating",
+            "password_file_path": "/dev/null", "base_topic": "zigbee2mqtt", "typo": 1
+        });
+        assert!(serde_json::from_value::<MqttConfig>(mqtt).is_err());
+        let typo = serde_json::json!({"kpp": 1.0});
+        assert!(serde_json::from_value::<Params>(typo).is_err());
+    }
+
+    #[test]
+    fn saved_params_from_an_older_version_still_load() {
+        let old = Params::from_saved(serde_json::json!({"deadband": 0.5, "step": 0.5})).unwrap();
+        assert_eq!(old.deadband, 0.5);
+        assert_eq!(old.kp, Params::default().kp);
+        assert!(Params::from_saved(serde_json::json!([1])).is_err());
+        assert!(Params::from_saved(serde_json::json!({"kp": "high"})).is_err());
     }
 
     #[test]
@@ -309,7 +352,11 @@ mod tests {
                 ..Params::default()
             },
             Params {
-                step: 0.1,
+                kp: -1.0,
+                ..Params::default()
+            },
+            Params {
+                ki: f64::NAN,
                 ..Params::default()
             },
             Params {

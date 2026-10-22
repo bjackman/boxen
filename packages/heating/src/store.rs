@@ -57,6 +57,7 @@ impl Store {
 
 #[cfg(test)]
 pub mod tests {
+    use std::collections::BTreeMap;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -96,10 +97,25 @@ pub mod tests {
         let persisted = Persisted {
             targets: [("bedroom".to_owned(), 19.5)].into_iter().collect(),
             params: Some(Params::default()),
+            offsets: BTreeMap::new(),
         };
         store.save(&persisted).unwrap();
         assert_eq!(store.load(), persisted);
         assert!(!dir.path().join("state.tmp").exists());
+    }
+
+    #[test]
+    fn loads_state_saved_by_an_older_version() {
+        let dir = TempDir::new();
+        let path = dir.path().join("state.json");
+        fs::write(
+            &path,
+            r#"{"targets": {"bedroom": 22.0}, "params": {"deadband": 0.3, "step": 0.5, "step_interval_mins": 20}}"#,
+        )
+        .unwrap();
+        let loaded = Store::new(path).load();
+        assert_eq!(loaded.targets["bedroom"], 22.0);
+        assert_eq!(loaded.params.unwrap().step_interval_mins, 20);
     }
 
     #[test]

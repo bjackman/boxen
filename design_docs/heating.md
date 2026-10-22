@@ -60,24 +60,36 @@ because there is no schedule yet.
 
 ### The control law
 
-The simplest outer loop that meets the goals: an integrating controller with
-fixed steps.
+A proportional term plus a learned offset (an integral term):
 
-- If the room is more than `deadband` (0.3 °C) below its target, raise the
-  valve's setpoint by `step` (0.5 °C); if it is more than `deadband` above,
-  lower it.
-- At most once per `step_interval` (20 minutes). Rooms and radiators react on
-  that timescale, and every write costs valve battery.
-- Keep the setpoint within `min_offset`..`max_offset` (−4..+6 °C) of the
-  target, which bounds windup, and within the valve's absolute limits
-  (5..30 °C), which win if the two disagree.
-- Only whole and half degrees, as the TRVZB uses.
+> setpoint = effective target + `kp` × error + learned offset
 
-_Revisit:_ this will likely oscillate slowly, overshooting when the room is
-slow to respond. The metrics expose the wanted setpoint, the reported setpoint
-and the room temperature to judge that. A proportional term, or a smaller step
-near the target, are the obvious next steps. The simulated room in the core's
-tests stays within ±1.5 °C on its second day, but the simulation is crude.
+where error is the effective target minus the room temperature.
+
+- The proportional term (`kp`, 1) reacts to how far off the room is now: a
+  room 2 °C cold gets a setpoint 2 °C above target straight away, so the valve
+  opens.
+- The learned offset is what the setpoint needs on top of that to hold the
+  room at target. It mostly makes up for the valve's sensor sitting in the
+  radiator's warmth. Once per `step_interval` it moves by `ki` (0.25) × error,
+  but only while the room is outside the `deadband` (0.3 °C) and inside the
+  `integration_band` (2.5 °C), and not while the setpoint is pinned at the limit
+  the error pushes it towards. So cold starts, target changes and open doors,
+  which make big errors, are left to the proportional term rather than winding
+  up the offset. The band has to be wider than the error the proportional
+  term alone settles at, about half the valve sensor's warmth over the room
+  with `kp` 1, or the offset never starts learning. It's saved with the
+  settings, so a restart doesn't relearn it.
+- The setpoint is kept within `min_offset`..`max_offset` (−4..+6 °C) of the
+  target, and within the valve's absolute limits (5..30 °C), which win if the
+  two disagree. Only whole and half degrees, as the TRVZB uses.
+- It changes at most once per `step_interval` (20 minutes), and only when the
+  rounded value changes.
+
+_Revisit:_ the gains are guesses. A thermal model of the room, fed with
+outdoor and neighbouring-room temperatures, could replace the learned offset
+with feedforward and detect open doors and windows from its prediction error.
+The plan is to fit one offline from collected data before building it in.
 
 ### The knob
 

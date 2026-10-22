@@ -181,7 +181,7 @@ fn waits_for_the_valve_then_acts_at_once() {
     h.c.connected(secs(0));
     assert!(writes(&h.sensor(secs(0), 18.0)).is_empty());
     assert_eq!(h.room(secs(0)).status, Status::WaitingForValve);
-    assert_eq!(writes(&h.valve(secs(10), 20.0)), [20.5]);
+    assert_eq!(writes(&h.valve(secs(10), 20.0)), [22.0]);
 }
 
 #[test]
@@ -206,22 +206,23 @@ fn the_first_valve_report_is_where_it_starts_not_a_knob_turn() {
 }
 
 #[test]
-fn steps_up_when_the_room_is_cold() {
+fn raises_the_setpoint_by_kp_times_how_cold_the_room_is() {
     let mut h = Harness::new();
-    assert_eq!(writes(&h.ready(secs(0), 20.0, 18.0)), [20.5]);
+    // target 20, room 18, kp 1: 20 + 2.
+    assert_eq!(writes(&h.ready(secs(0), 20.0, 18.0)), [22.0]);
     let room = h.room(secs(0));
     assert!(room.write_pending);
     assert_eq!(room.writes, 1);
 }
 
 #[test]
-fn steps_down_when_the_room_is_warm() {
+fn lowers_the_setpoint_by_kp_times_how_warm_the_room_is() {
     let mut h = Harness::new();
-    assert_eq!(writes(&h.ready(secs(0), 20.0, 22.0)), [19.5]);
+    assert_eq!(writes(&h.ready(secs(0), 20.0, 22.0)), [18.0]);
 }
 
 #[test]
-fn holds_within_the_deadband() {
+fn ignores_errors_too_small_to_move_the_setpoint_half_a_degree() {
     let mut h = Harness::new();
     assert!(writes(&h.ready(secs(0), 20.0, 19.8)).is_empty());
     assert!(writes(&h.ready(secs(0), 20.0, 20.2)).is_empty());
@@ -230,22 +231,22 @@ fn holds_within_the_deadband() {
 #[test]
 fn steps_at_most_once_per_interval() {
     let mut h = Harness::new();
-    assert_eq!(writes(&h.ready(secs(0), 20.0, 18.0)), [20.5]);
-    h.valve(secs(5), 20.5);
-    assert!(writes(&h.sensor(mins(19), 18.0)).is_empty());
+    assert_eq!(writes(&h.ready(secs(0), 20.0, 18.0)), [22.0]);
+    h.valve(secs(5), 22.0);
+    assert!(writes(&h.sensor(mins(19), 17.0)).is_empty());
     assert_eq!(h.c.next_deadline(mins(19)), Some(mins(20)));
-    assert_eq!(writes(&h.c.tick(mins(20))), [21.0]);
+    assert_eq!(writes(&h.c.tick(mins(20))), [23.0]);
 }
 
 #[test]
 fn a_matching_report_confirms_the_write() {
     let mut h = Harness::new();
     h.ready(secs(0), 20.0, 18.0);
-    h.valve(secs(3), 20.5);
+    h.valve(secs(3), 22.0);
     let room = h.room(secs(3));
     assert!(!room.write_pending);
     assert_eq!(room.knob_turns, 0);
-    assert_eq!(room.reported_setpoint, Some(20.5));
+    assert_eq!(room.reported_setpoint, Some(22.0));
 }
 
 #[test]
@@ -256,7 +257,7 @@ fn a_report_of_the_old_setpoint_is_not_a_knob_turn() {
     let room = h.room(secs(3));
     assert!(room.write_pending);
     assert_eq!(room.knob_turns, 0);
-    assert_eq!(room.desired_setpoint, Some(20.5));
+    assert_eq!(room.desired_setpoint, Some(22.0));
 }
 
 #[test]
@@ -265,7 +266,7 @@ fn an_unconfirmed_write_is_retried_after_the_timeout() {
     h.ready(secs(0), 20.0, 18.0);
     assert_eq!(h.c.next_deadline(secs(0)), Some(mins(5)));
     assert!(writes(&h.c.tick(mins(4))).is_empty());
-    assert_eq!(writes(&h.c.tick(mins(5))), [20.5]);
+    assert_eq!(writes(&h.c.tick(mins(5))), [22.0]);
     assert_eq!(h.room(mins(5)).retries, 1);
     assert_eq!(h.c.next_deadline(mins(5)), Some(mins(10)));
 }
@@ -277,7 +278,7 @@ fn never_steps_while_a_write_is_unconfirmed() {
     for m in (5..=60).step_by(5) {
         let mut actions = h.sensor(mins(m), 18.0);
         actions.extend(h.c.tick(mins(m)));
-        assert_eq!(writes(&actions), [20.5], "at {m} minutes");
+        assert_eq!(writes(&actions), [22.0], "at {m} minutes");
     }
 }
 
@@ -290,7 +291,7 @@ fn does_not_retry_while_the_valve_is_offline() {
     assert_eq!(h.room(mins(5)).status, Status::ValveOffline);
     assert_eq!(
         writes(&h.availability(mins(7), VALVE, r#"{"state":"online"}"#)),
-        [20.5]
+        [22.0]
     );
 }
 
@@ -300,7 +301,7 @@ fn does_not_retry_while_disconnected_and_retries_on_reconnecting() {
     h.ready(secs(0), 20.0, 18.0);
     h.c.disconnected(mins(1));
     assert!(writes(&h.c.tick(mins(5))).is_empty());
-    assert_eq!(writes(&h.c.connected(mins(8))), [20.5]);
+    assert_eq!(writes(&h.c.connected(mins(8))), [22.0]);
 }
 
 #[test]
@@ -324,11 +325,11 @@ fn a_knob_turn_adjusts_the_room_target_temporarily() {
 fn a_knob_turn_during_an_unconfirmed_write_is_relative_to_the_write() {
     let mut h = Harness::new();
     h.ready(secs(0), 20.0, 18.0);
-    h.valve(secs(30), 22.0);
+    h.valve(secs(30), 23.5);
     let room = h.room(secs(30));
     assert!(!room.write_pending);
     assert_eq!(room.override_delta, Some(1.5));
-    assert_eq!(room.desired_setpoint, Some(22.0));
+    assert_eq!(room.desired_setpoint, Some(23.5));
 }
 
 #[test]
@@ -339,7 +340,8 @@ fn the_valve_gets_time_to_act_on_a_knob_turn() {
     // Still cold relative to the new effective target of 21.
     assert!(writes(&h.sensor(mins(31), 19.9)).is_empty());
     assert_eq!(h.c.next_deadline(mins(31)), Some(mins(50)));
-    assert_eq!(writes(&h.c.tick(mins(50))), [21.5]);
+    // 21 + 1.1, plus the offset learned at 31 minutes from that 1.1, rounded.
+    assert_eq!(writes(&h.c.tick(mins(50))), [22.5]);
 }
 
 #[test]
@@ -378,14 +380,12 @@ fn a_knob_adjustment_expires() {
 fn freezes_when_the_room_reading_goes_stale_and_resumes_on_a_fresh_one() {
     let mut h = Harness::new();
     h.ready(secs(0), 20.0, 18.0);
-    h.valve(secs(5), 20.5);
-    assert_eq!(writes(&h.c.tick(mins(20))), [21.0]);
-    h.valve(mins(20), 21.0);
+    h.valve(secs(5), 22.0);
     // The sensor last reported at 0, so its reading is stale from 2h.
     assert_eq!(h.c.next_deadline(mins(100)), Some(mins(120)));
     assert!(writes(&h.c.tick(mins(120))).is_empty());
     assert_eq!(h.room(mins(120)).status, Status::SensorStale);
-    assert_eq!(writes(&h.sensor(mins(130), 18.0)), [21.5]);
+    assert_eq!(writes(&h.sensor(mins(130), 17.0)), [23.0]);
 }
 
 #[test]
@@ -398,7 +398,7 @@ fn freezes_while_the_sensor_is_offline() {
     assert_eq!(h.room(secs(1)).status, Status::SensorOffline);
     assert_eq!(
         writes(&h.availability(secs(2), SENSOR, r#"{"state":"online"}"#)),
-        [20.5]
+        [22.0]
     );
 }
 
@@ -422,7 +422,7 @@ fn leaves_the_valve_alone_unless_it_is_heating() {
     assert_eq!(h.room(secs(0)).status, Status::ValveNotHeating);
     let auto = json!({"occupied_heating_setpoint": 20.0, "system_mode": "auto"});
     assert!(writes(&h.valve_state(secs(1), auto)).is_empty());
-    assert_eq!(writes(&h.valve(secs(2), 20.0)), [20.5]);
+    assert_eq!(writes(&h.valve(secs(2), 20.0)), [22.0]);
 }
 
 #[test]
@@ -437,17 +437,13 @@ fn freezes_while_disconnected() {
 
 #[test]
 fn keeps_the_setpoint_within_the_offset_band() {
+    // target 20 with max_offset 6 and min_offset -4: 16-26.
     let mut h = Harness::new();
-    // target 20, max_offset 6: 26 is the most it may ask for.
-    assert!(writes(&h.ready(secs(0), 26.0, 15.0)).is_empty());
-
+    assert_eq!(writes(&h.ready(secs(0), 20.0, 10.0)), [26.0]);
     let mut h = Harness::new();
-    // Above the band and the room is fine: back into the band in one step.
-    assert_eq!(writes(&h.ready(secs(0), 28.0, 20.0)), [26.0]);
-
+    assert!(writes(&h.ready(secs(0), 26.0, 10.0)).is_empty());
     let mut h = Harness::new();
-    // target 20, min_offset -4.
-    assert!(writes(&h.ready(secs(0), 16.0, 25.0)).is_empty());
+    assert_eq!(writes(&h.ready(secs(0), 20.0, 30.0)), [16.0]);
 }
 
 #[test]
@@ -467,7 +463,8 @@ fn the_absolute_limits_win_over_the_offset_band() {
 #[test]
 fn writes_whole_and_half_degrees_only() {
     let mut h = Harness::new();
-    assert_eq!(writes(&h.ready(secs(0), 20.3, 18.0)), [21.0]);
+    // 20 + 1.7.
+    assert_eq!(writes(&h.ready(secs(0), 20.0, 18.3)), [21.5]);
 }
 
 #[test]
@@ -546,7 +543,7 @@ fn rooms_are_independent() {
             .as_bytes(),
     );
     assert!(writes(&actions).is_empty());
-    assert_eq!(h.room(secs(1)).desired_setpoint, Some(20.5));
+    assert_eq!(h.room(secs(1)).desired_setpoint, Some(22.0));
 }
 
 #[test]
@@ -570,11 +567,12 @@ fn setting_a_target_persists_it_and_cancels_the_knob() {
 fn a_new_target_waits_for_the_step_interval() {
     let mut h = Harness::new();
     h.ready(secs(0), 20.0, 18.0);
-    h.valve(secs(5), 20.5);
+    h.valve(secs(5), 22.0);
     let actions = h.c.set_target(mins(1), "bedroom", 15.0).unwrap();
     assert!(writes(&actions).is_empty());
     h.sensor(mins(19), 18.0);
-    assert_eq!(writes(&h.c.tick(mins(20))), [20.0]);
+    // 15 - 3.
+    assert_eq!(writes(&h.c.tick(mins(20))), [12.0]);
 }
 
 #[test]
@@ -600,7 +598,7 @@ fn setting_params_persists_them_and_rejects_bad_ones() {
     let actions = h.c.set_params(secs(0), params.clone()).unwrap();
     assert!(matches!(&actions[0], Action::Persist(p) if p.params.as_ref() == Some(&params)));
     let bad = Params {
-        step: 0.0,
+        kp: -1.0,
         ..Params::default()
     };
     assert!(h.c.set_params(secs(0), bad).is_err());
@@ -621,6 +619,7 @@ fn restores_persisted_settings_but_not_invalid_ones() {
             deadband: 0.5,
             ..Params::default()
         }),
+        offsets: BTreeMap::new(),
     };
     let h = Harness::with(config(), persisted);
     let snapshot = h.c.snapshot(secs(0));
@@ -631,9 +630,10 @@ fn restores_persisted_settings_but_not_invalid_ones() {
     let persisted = Persisted {
         targets: BTreeMap::new(),
         params: Some(Params {
-            step: -1.0,
+            kp: -1.0,
             ..Params::default()
         }),
+        offsets: BTreeMap::new(),
     };
     let h = Harness::with(config(), persisted);
     assert_eq!(h.c.snapshot(secs(0)).params, Params::default());
@@ -720,7 +720,7 @@ fn a_recent_retained_reading_is_used_at_once() {
     h.c.connected(secs(0));
     h.valve(secs(0), 20.0);
     let actions = h.sensor_seen(secs(1), 18.0, wall(secs(1)) - mins(10));
-    assert_eq!(writes(&actions), [20.5]);
+    assert_eq!(writes(&actions), [22.0]);
     assert_eq!(h.room(secs(1)).temperature_age, Some(mins(10)));
 }
 
@@ -740,7 +740,10 @@ fn staleness_counts_from_last_seen_not_arrival() {
     h.c.connected(secs(0));
     h.valve(secs(0), 20.0);
     h.sensor_seen(mins(5), 19.9, wall(mins(5)) - mins(90));
-    assert_eq!(h.c.next_deadline(mins(5)), Some(mins(35)));
+    // Past the learned offset's next update, the staleness is what's due.
+    h.c.tick(mins(25));
+    assert_eq!(h.c.next_deadline(mins(25)), Some(mins(35)));
+    assert_eq!(h.room(mins(34)).status, Status::Active);
     h.c.tick(mins(35));
     assert_eq!(h.room(mins(35)).status, Status::SensorStale);
 }
@@ -775,4 +778,95 @@ fn without_last_seen_a_reading_counts_from_arrival() {
     h.valve(secs(0), 20.0);
     h.sensor(mins(3), 19.9);
     assert_eq!(h.room(mins(10)).temperature_age, Some(mins(7)));
+}
+
+/// Valve at `setpoint` and the room at `temperature`, confirmed, so that the
+/// controller is settled at time 0.
+fn settled(setpoint: f64, temperature: f64) -> Harness {
+    let mut h = Harness::new();
+    for setpoint in writes(&h.ready(secs(0), setpoint, temperature)) {
+        h.valve(secs(1), setpoint);
+    }
+    h
+}
+
+#[test]
+fn learns_an_offset_when_the_room_sits_just_below_target() {
+    // 0.5 below target: outside the deadband, inside the integration band.
+    let mut h = settled(20.0, 19.5);
+    assert_eq!(h.room(secs(1)).desired_setpoint, Some(20.5));
+    for m in (20..=80).step_by(20) {
+        let mut actions = h.sensor(mins(m), 19.5);
+        actions.extend(h.c.tick(mins(m)));
+        for setpoint in writes(&actions) {
+            h.valve(mins(m), setpoint);
+        }
+    }
+    // 0.25 * 0.5 per interval, four intervals.
+    assert_eq!(h.room(mins(80)).offset, 0.5);
+    let actions = h.c.tick(mins(80));
+    assert!(writes(&actions).is_empty(), "already written: {actions:?}");
+    assert_eq!(h.room(mins(80)).desired_setpoint, Some(21.0));
+}
+
+#[test]
+fn does_not_learn_from_big_errors() {
+    let mut h = settled(20.0, 17.0);
+    for m in (20..=120).step_by(20) {
+        h.sensor(mins(m), 17.0);
+        h.c.tick(mins(m));
+    }
+    assert_eq!(h.room(mins(120)).offset, 0.0);
+}
+
+#[test]
+fn does_not_learn_within_the_deadband() {
+    let mut h = settled(20.0, 19.8);
+    for m in (20..=120).step_by(20) {
+        h.sensor(mins(m), 19.8);
+        h.c.tick(mins(m));
+    }
+    assert_eq!(h.room(mins(120)).offset, 0.0);
+}
+
+#[test]
+fn does_not_wind_up_while_the_setpoint_is_pinned() {
+    let mut config = config();
+    config.default_params.kp = 10.0;
+    let mut h = Harness::with(config, Persisted::default());
+    // 20 + 10 * 0.8 is past the band's 26.
+    for setpoint in writes(&h.ready(secs(0), 20.0, 19.2)) {
+        h.valve(secs(1), setpoint);
+    }
+    for m in (20..=120).step_by(20) {
+        h.sensor(mins(m), 19.2);
+        h.c.tick(mins(m));
+    }
+    assert_eq!(h.room(mins(120)).offset, 0.0);
+}
+
+#[test]
+fn the_learned_offset_is_saved_and_restored() {
+    let mut h = settled(20.0, 19.5);
+    let mut actions = h.sensor(mins(20), 19.5);
+    actions.extend(h.c.tick(mins(20)));
+    let saved = actions
+        .iter()
+        .find_map(|a| match a {
+            Action::Persist(p) => Some(p.clone()),
+            _ => None,
+        })
+        .expect("offset change wasn't saved");
+    assert_eq!(saved.offsets["bedroom"], 0.125);
+    let restored = Harness::with(config(), saved);
+    assert_eq!(restored.room(secs(0)).offset, 0.125);
+}
+
+#[test]
+fn learns_from_the_droop_the_proportional_term_leaves() {
+    // With kp 1, a valve sensor 3 °C warm leaves the room about 1.5 °C low.
+    let mut h = settled(21.5, 18.5);
+    h.sensor(mins(20), 18.5);
+    h.c.tick(mins(20));
+    assert_eq!(h.room(mins(20)).offset, 0.375);
 }

@@ -292,7 +292,7 @@ mod tests {
                 json!({"occupied_heating_setpoint": 20.0, "system_mode": "heat"}),
             );
             self.message("zigbee2mqtt/bedroom_climate", json!({"temperature": 18.0}));
-            assert_eq!(self.next_sent().await, set(20.5));
+            assert_eq!(self.next_sent().await, set(22.0));
         }
     }
 
@@ -309,7 +309,7 @@ mod tests {
         let mut rig = Rig::start();
         rig.cold_start().await;
         let virtual_start = Instant::now();
-        assert_eq!(rig.next_sent().await, set(20.5));
+        assert_eq!(rig.next_sent().await, set(22.0));
         assert_eq!(Instant::now() - virtual_start, Duration::from_secs(5 * 60));
         assert!(wall.elapsed() < Duration::from_secs(5));
         assert_eq!(rig.published.borrow().snapshot.rooms[0].retries, 1);
@@ -321,10 +321,11 @@ mod tests {
         rig.cold_start().await;
         rig.message(
             "zigbee2mqtt/bedroom_radiator",
-            json!({"occupied_heating_setpoint": 20.5, "system_mode": "heat"}),
+            json!({"occupied_heating_setpoint": 22.0, "system_mode": "heat"}),
         );
+        rig.message("zigbee2mqtt/bedroom_climate", json!({"temperature": 17.0}));
         let virtual_start = Instant::now();
-        assert_eq!(rig.next_sent().await, set(21.0));
+        assert_eq!(rig.next_sent().await, set(23.0));
         assert_eq!(Instant::now() - virtual_start, Duration::from_secs(20 * 60));
     }
 
@@ -345,7 +346,7 @@ mod tests {
         rig.cold_start().await;
         rig.message(
             "zigbee2mqtt/bedroom_radiator",
-            json!({"occupied_heating_setpoint": 20.5, "system_mode": "heat"}),
+            json!({"occupied_heating_setpoint": 22.0, "system_mode": "heat"}),
         );
         rig.published.changed().await.unwrap();
         tokio::time::sleep(Duration::from_secs(2 * 60 * 60 + 1)).await;

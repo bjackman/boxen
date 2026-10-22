@@ -33,8 +33,19 @@ pub enum Action {
 pub struct Persisted {
     #[serde(default)]
     pub targets: BTreeMap<String, f64>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "saved_params")]
     pub params: Option<Params>,
+    /// Each room's learned offset, so that it isn't relearned after a restart.
+    #[serde(default)]
+    pub offsets: BTreeMap<String, f64>,
+}
+
+fn saved_params<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<Params>, D::Error> {
+    Option::<Value>::deserialize(deserializer)?
+        .map(|saved| Params::from_saved(saved).map_err(serde::de::Error::custom))
+        .transpose()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -97,6 +108,10 @@ pub struct RoomSnapshot {
     pub reported_setpoint: Option<f64>,
     pub valve_temperature: Option<f64>,
     pub valve_mode: Option<String>,
+    pub error: Option<f64>,
+    pub proportional: Option<f64>,
+    pub offset: f64,
+    pub computed_setpoint: Option<f64>,
     pub write_pending: bool,
     pub writes: u64,
     pub retries: u64,
@@ -153,6 +168,11 @@ struct Room {
     desired: Option<f64>,
     pending: Option<PendingWrite>,
     last_change: Option<Time>,
+    /// The integral term: what the setpoint needs on top of target and
+    /// proportional term to hold the room at target. It mostly makes up for
+    /// the valve's sensor sitting in the radiator's warmth.
+    offset: f64,
+    last_integration: Option<Time>,
     writes: u64,
     retries: u64,
     knob_turns: u64,
@@ -323,6 +343,68 @@ impl Room {
         self.knob_turns += 1;
     }
 
+    /// The room's error, the proportional term, and the setpoint the control
+    /// law asks for now, if there's a reading to work from.
+    fn law(&self, params: &Params, limits: &Limits) -> Option<(f64, f64, f64)> {
+        let target = self.effective_target();
+        let error = target - self.reading?.temperature;
+        let proportional = params.kp * error;
+        let setpoint = self.clamp_setpoint(target + proportional + self.offset, params, limits);
+        Some((error, proportional, setpoint))
+    }
+
+    /// The lowest and highest setpoints allowed: the offset band, within the
+    /// absolute limits, which win if the band falls outside them.
+    fn setpoint_bounds(&self, params: &Params, limits: &Limits) -> (f64, f64) {
+        let target = self.effective_target();
+        let clamp = |x: f64| {
+            x.max(ceil_half(limits.setpoint_min))
+                .min(floor_half(limits.setpoint_max))
+        };
+        (
+            clamp(ceil_half(target + params.min_offset)),
+            clamp(floor_half(target + params.max_offset)),
+        )
+    }
+
+    /// Whole and half degrees within the setpoint bounds.
+    fn clamp_setpoint(&self, setpoint: f64, params: &Params, limits: &Limits) -> f64 {
+        let (low, high) = self.setpoint_bounds(params, limits);
+        round_half(setpoint).max(low).min(high)
+    }
+
+    /// Moves the learned offset once per step interval, while the room is
+    /// outside the deadband but within the integration band, and the setpoint
+    /// isn't already pinned at the limit the error pushes it towards. Returns
+    /// whether it changed.
+    fn integrate(&mut self, now: Time, params: &Params, limits: &Limits) -> bool {
+        let Some(last) = self.last_integration else {
+            self.last_integration = Some(now);
+            return false;
+        };
+        if now < last + params.step_interval() {
+            return false;
+        }
+        self.last_integration = Some(now);
+        let Some((error, proportional, _)) = self.law(params, limits) else {
+            return false;
+        };
+        if error.abs() <= params.deadband || error.abs() > params.integration_band {
+            return false;
+        }
+        let unclamped = self.effective_target() + proportional + self.offset;
+        let (low, high) = self.setpoint_bounds(params, limits);
+        if (error > 0.0 && unclamped >= high) || (error < 0.0 && unclamped <= low) {
+            return false;
+        }
+        let offset = (self.offset + params.ki * error).clamp(params.min_offset, params.max_offset);
+        let changed = offset != self.offset;
+        self.offset = offset;
+        changed
+    }
+
+    /// Returns the setpoint write it makes, if any, and whether the learned
+    /// offset changed.
     fn evaluate(
         &mut self,
         now: Time,
@@ -330,7 +412,7 @@ impl Room {
         params: &Params,
         limits: &Limits,
         base_topic: &str,
-    ) -> Option<Action> {
+    ) -> (Option<Action>, bool) {
         if let Some(pending) = &mut self.pending {
             if connected
                 && self.valve_online
@@ -343,43 +425,31 @@ impl Room {
                 pending.sent_at = now;
                 self.retries += 1;
                 let value = pending.value;
-                return Some(self.set_action(base_topic, value));
+                return (Some(self.set_action(base_topic, value)), false);
             }
-            return None;
+            return (None, false);
         }
         if self.status(now, connected, limits) != Status::Active {
-            return None;
+            return (None, false);
         }
+        let offset_changed = self.integrate(now, params, limits);
         if self
             .last_change
             .is_some_and(|last| now < last + params.step_interval())
         {
-            return None;
+            return (None, offset_changed);
         }
-        let desired = self.desired?;
-        let temperature = self.reading?.temperature;
-        let target = self.effective_target();
-        let error = target - temperature;
-
-        let mut next = desired;
-        if error > params.deadband {
-            next += params.step;
-        } else if error < -params.deadband {
-            next -= params.step;
-        }
-        // The absolute limits go last so that they win if the offset band
-        // falls outside them.
-        let next = round_half(next)
-            .max(ceil_half(target + params.min_offset))
-            .min(floor_half(target + params.max_offset))
-            .max(ceil_half(limits.setpoint_min))
-            .min(floor_half(limits.setpoint_max));
+        let (Some(desired), Some((error, proportional, next))) =
+            (self.desired, self.law(params, limits))
+        else {
+            return (None, offset_changed);
+        };
         if close(next, desired) {
-            return None;
+            return (None, offset_changed);
         }
         info!(
-            "{}: room {temperature} vs target {target}, setpoint {desired} -> {next}",
-            self.config.name
+            "{}: error {error:+.1}, proportional {proportional:+.1}, offset {:+.2}, setpoint {desired} -> {next}",
+            self.config.name, self.offset
         );
         self.pending = Some(PendingWrite {
             value: next,
@@ -389,7 +459,7 @@ impl Room {
         self.desired = Some(next);
         self.last_change = Some(now);
         self.writes += 1;
-        Some(self.set_action(base_topic, next))
+        (Some(self.set_action(base_topic, next)), offset_changed)
     }
 
     fn deadlines(&self, params: &Params, limits: &Limits) -> impl Iterator<Item = Time> {
@@ -400,6 +470,7 @@ impl Room {
             self.reading
                 .and_then(|r| r.stale_at(limits.sensor_stale_after())),
             self.last_change.map(|t| t + params.step_interval()),
+            self.last_integration.map(|t| t + params.step_interval()),
         ]
         .into_iter()
         .flatten()
@@ -437,6 +508,10 @@ impl Controller {
                     }
                     None => room.default_target,
                 };
+                let offset = match persisted.offsets.get(&room.name).copied() {
+                    Some(o) if o.is_finite() => o.clamp(params.min_offset, params.max_offset),
+                    _ => 0.0,
+                };
                 Room {
                     config: room.clone(),
                     target,
@@ -450,6 +525,8 @@ impl Controller {
                     desired: None,
                     pending: None,
                     last_change: None,
+                    offset,
+                    last_integration: None,
                     writes: 0,
                     retries: 0,
                     knob_turns: 0,
@@ -605,23 +682,30 @@ impl Controller {
             rooms: self
                 .rooms
                 .iter()
-                .map(|room| RoomSnapshot {
-                    name: room.config.name.clone(),
-                    status: room.status(now, self.connected, &self.limits),
-                    target: room.target,
-                    override_delta: room.knob.map(|k| k.delta),
-                    override_remaining: room.knob.map(|k| k.until.saturating_sub(now)),
-                    effective_target: room.effective_target(),
-                    temperature: room.reading.map(|r| r.temperature),
-                    temperature_age: room.reading.map(|r| r.age(now)),
-                    desired_setpoint: room.desired,
-                    reported_setpoint: room.reported_setpoint,
-                    valve_temperature: room.valve_temperature,
-                    valve_mode: room.valve_mode.clone(),
-                    write_pending: room.pending.is_some(),
-                    writes: room.writes,
-                    retries: room.retries,
-                    knob_turns: room.knob_turns,
+                .map(|room| {
+                    let law = room.law(&self.params, &self.limits);
+                    RoomSnapshot {
+                        name: room.config.name.clone(),
+                        status: room.status(now, self.connected, &self.limits),
+                        target: room.target,
+                        override_delta: room.knob.map(|k| k.delta),
+                        override_remaining: room.knob.map(|k| k.until.saturating_sub(now)),
+                        effective_target: room.effective_target(),
+                        temperature: room.reading.map(|r| r.temperature),
+                        temperature_age: room.reading.map(|r| r.age(now)),
+                        desired_setpoint: room.desired,
+                        reported_setpoint: room.reported_setpoint,
+                        valve_temperature: room.valve_temperature,
+                        valve_mode: room.valve_mode.clone(),
+                        error: law.map(|(error, _, _)| error),
+                        proportional: law.map(|(_, proportional, _)| proportional),
+                        offset: room.offset,
+                        computed_setpoint: law.map(|(_, _, setpoint)| setpoint),
+                        write_pending: room.pending.is_some(),
+                        writes: room.writes,
+                        retries: room.retries,
+                        knob_turns: room.knob_turns,
+                    }
                 })
                 .collect(),
         }
@@ -635,6 +719,11 @@ impl Controller {
                 .map(|room| (room.config.name.clone(), room.target))
                 .collect(),
             params: Some(self.params.clone()),
+            offsets: self
+                .rooms
+                .iter()
+                .map(|room| (room.config.name.clone(), room.offset))
+                .collect(),
         }
     }
 
@@ -650,10 +739,17 @@ impl Controller {
     fn evaluate(&mut self, now: Time) -> Vec<Action> {
         let (connected, params, limits, base_topic) =
             (self.connected, &self.params, &self.limits, &self.base_topic);
-        self.rooms
-            .iter_mut()
-            .filter_map(|room| room.evaluate(now, connected, params, limits, base_topic))
-            .collect()
+        let mut actions = Vec::new();
+        let mut offsets_changed = false;
+        for room in &mut self.rooms {
+            let (write, offset_changed) = room.evaluate(now, connected, params, limits, base_topic);
+            actions.extend(write);
+            offsets_changed |= offset_changed;
+        }
+        if offsets_changed {
+            actions.push(Action::Persist(self.persisted()));
+        }
+        actions
     }
 }
 
