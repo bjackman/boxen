@@ -6,11 +6,13 @@
   config,
   lib,
   pkgs,
+  homelab,
   ...
 }:
 let
   cfg = config.bjackman.slopDeploy;
   hostName = config.networking.hostName;
+  gerrit = homelab.servers.gerrit;
   mirrorPath = "/var/lib/slop-deploy/repo.git";
   switchUnit = "slop-deploy-switch";
 
@@ -127,6 +129,8 @@ in
 
     authorizedKey = lib.mkOption {
       type = lib.types.str;
+      # The public half of secrets/slopops-ssh-privkey.age.
+      default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAZQAxET+z57+vXWFljeRdqdQw0fXSBRrB04eoxoN9z+ slopops@deploy";
       description = ''
         SSH public key the agent deploys with. Keep it separate from the probe
         key: holding this one lets the holder change what the host runs.
@@ -135,6 +139,14 @@ in
 
     repoUrl = lib.mkOption {
       type = lib.types.str;
+      # Gerrit's own copy, so that what may be deployed is what Gerrit says is
+      # on master, with nothing in between to lag behind it.
+      default =
+        if gerrit.networking.hostName == hostName then
+          "/var/lib/private/gerrit/git/boxen.git"
+        else
+          "${gerrit.bjackman.gerritGitDaemon.url}/boxen.git";
+      defaultText = lib.literalMD "Gerrit's `boxen` repository";
       description = "Git repository whose branch decides what may be deployed.";
     };
 
