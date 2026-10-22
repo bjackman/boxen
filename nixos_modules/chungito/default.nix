@@ -73,6 +73,9 @@
   # hibernate path. Pin it to plain suspend.
   services.logind.settings.Login.SleepOperation = "suspend";
 
+  # Debugging resumes that come back with no outputs.
+  boot.kernelParams = [ "nvidia_modeset.debug=1" ];
+
   bjackman.impermanence.enable = true;
 
   # So that GDM and Gnome and stuff have a persistent monitors setup.
