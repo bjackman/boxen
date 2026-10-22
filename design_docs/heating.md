@@ -87,10 +87,8 @@ where error is the effective target minus the room temperature.
   rounded value changes.
 
 _Revisit:_ the gains are guesses; the Climate dashboard's "Heating" panels
-show every term to tune them by. A thermal model of the room, fed with
-outdoor and neighbouring-room temperatures, could replace the learned offset
-with feedforward and detect open doors and windows from its prediction error.
-The plan is to fit one offline from collected data before building it in.
+show every term to tune them by. The learned offset is meant to be replaced
+by a model of the room: see [Next: a model of the room](#next-a-model-of-the-room).
 
 ### The knob
 
@@ -172,6 +170,52 @@ schedule should be policy (UI) or code.
   `HeatingSetpointUnconfirmed`.
 - **Port:** 9123, as a `bjackman.ports` fixed port, because a new allocated
   name renumbers every port that sorts after it.
+
+## Next: a model of the room
+
+The learned offset is one number standing in for several things that change
+independently: how much warmer the valve's sensor runs than the room, heat
+lost to outside, which depends on the weather, and heat exchanged with the rest
+of the flat, which jumps when a door opens. It moves by at most `ki` × error
+per step, so it lags every change, and it can't tell an open window from a
+cold day. Learning during either winds it the wrong way.
+
+The plan is a grey-box model, the room as one thermal mass losing heat to
+outside and to the rest of the flat:
+
+> C · dT/dt = heat from the radiator − UA_out · (T − T_out) − UA_flat · (T − T_flat)
+
+At steady state that makes the offset the setpoint needs roughly linear in
+the temperature differences:
+
+> offset ≈ k_out · (target − T_out) + k_flat · (target − T_flat) + k₀
+
+which replaces the learned offset as feedforward, so a colder day raises the
+setpoint before the room has cooled. The proportional term stays, for whatever
+the model doesn't explain.
+
+- **Inputs:** T_out from MeteoSwiss's open data for Zürich-Fluntern
+  (`meteoswiss_air_temperature_celsius`, from `nixos_modules/pizza/meteoswiss.nix`).
+  It arrives about 25 minutes late, which doesn't matter for something that
+  moves this slowly. Global radiation is recorded alongside, in case sun
+  through the windows turns out to matter. T_flat is the living room's
+  sensor, the only other room measured so far.
+- **Data first:** fit the model offline, from Prometheus, once there are one
+  or two weeks of heating data, and only build it in if it predicts the room
+  well. MeteoSwiss's `ogd-smn_sma_t_recent.csv` has the outdoor side back to
+  1 January, but the room side only goes back as far as Prometheus keeps
+  data.
+- **Staying current:** in the controller, recursive least squares with a
+  forgetting factor keeps k_out, k_flat and k₀ up to date, seeded from the
+  offline fit and saved like the offset is now.
+- **Doors and windows (venting):** the model predicts how fast the room
+  should warm or cool given the valve's state. A room cooling much faster than
+  predicted is venting. Learning always stops while it is; what else happens
+  is a runtime setting, since which is better depends on the room: either
+  just that, keeping control as normal, or also turning the valve down to the
+  minimum until the room stops venting, to avoid heating the street.
+- _Revisit:_ the feedforward assumes a valve setpoint maps to a fixed heat
+  output, which the TRVZB's own regulation only roughly provides.
 
 ## Not done yet
 
