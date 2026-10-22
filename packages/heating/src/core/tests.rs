@@ -36,6 +36,11 @@ fn secs(s: u64) -> Time {
     Duration::from_secs(s)
 }
 
+/// The wall clock in the tests: a fixed epoch time plus the monotonic time.
+fn wall(at: Time) -> WallTime {
+    Duration::from_secs(1_800_000_000) + at
+}
+
 /// The setpoints written to the bedroom valve.
 fn writes(actions: &[Action]) -> Vec<f64> {
     actions
@@ -67,11 +72,24 @@ impl Harness {
 
     fn sensor(&mut self, at: Time, temperature: f64) -> Vec<Action> {
         let payload = json!({"temperature": temperature, "humidity": 55.0, "battery": 100, "linkquality": 40});
-        self.c.message(at, SENSOR, payload.to_string().as_bytes())
+        self.c
+            .message(at, wall(at), SENSOR, payload.to_string().as_bytes())
+    }
+
+    /// A sensor message saying zigbee2mqtt last heard from the sensor at
+    /// `last_seen`, as delivered when retained or replayed.
+    fn sensor_seen(&mut self, at: Time, temperature: f64, last_seen: WallTime) -> Vec<Action> {
+        let payload = json!({
+            "temperature": temperature,
+            "last_seen": last_seen.as_millis() as u64,
+        });
+        self.c
+            .message(at, wall(at), SENSOR, payload.to_string().as_bytes())
     }
 
     fn valve_state(&mut self, at: Time, state: Value) -> Vec<Action> {
-        self.c.message(at, VALVE, state.to_string().as_bytes())
+        self.c
+            .message(at, wall(at), VALVE, state.to_string().as_bytes())
     }
 
     fn valve(&mut self, at: Time, setpoint: f64) -> Vec<Action> {
@@ -88,8 +106,12 @@ impl Harness {
     }
 
     fn availability(&mut self, at: Time, topic: &str, payload: &str) -> Vec<Action> {
-        self.c
-            .message(at, &format!("{topic}/availability"), payload.as_bytes())
+        self.c.message(
+            at,
+            wall(at),
+            &format!("{topic}/availability"),
+            payload.as_bytes(),
+        )
     }
 
     /// Connected, with the valve at `setpoint` and the room at `temperature`.
@@ -480,7 +502,7 @@ fn ignores_garbage() {
         ("elsewhere/bedroom_climate", br#"{"temperature": 5}"#),
         ("zigbee2mqtt", br#"{"temperature": 5}"#),
     ] {
-        h.c.message(secs(1), topic, payload);
+        h.c.message(secs(1), wall(secs(1)), topic, payload);
     }
     let room = h.room(secs(1));
     assert_eq!(room.temperature, None);
@@ -517,6 +539,7 @@ fn rooms_are_independent() {
     assert_eq!(other.writes, 0);
     let actions = h.c.message(
         secs(1),
+        wall(secs(1)),
         "zigbee2mqtt/living_room_radiator",
         json!({"occupied_heating_setpoint": 17.0, "system_mode": "heat"})
             .to_string()
@@ -689,4 +712,67 @@ fn settles_a_simulated_room_without_oscillating_wildly() {
             && (target - 1.5..=target + 1.5).contains(&max),
         "second day ranged {min:.1}-{max:.1} °C"
     );
+}
+
+#[test]
+fn a_recent_retained_reading_is_used_at_once() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    h.valve(secs(0), 20.0);
+    let actions = h.sensor_seen(secs(1), 18.0, wall(secs(1)) - mins(10));
+    assert_eq!(writes(&actions), [20.5]);
+    assert_eq!(h.room(secs(1)).temperature_age, Some(mins(10)));
+}
+
+#[test]
+fn an_old_retained_reading_is_stale_at_once() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    h.valve(secs(0), 20.0);
+    let actions = h.sensor_seen(secs(1), 18.0, wall(secs(1)) - mins(180));
+    assert!(writes(&actions).is_empty());
+    assert_eq!(h.room(secs(1)).status, Status::SensorStale);
+}
+
+#[test]
+fn staleness_counts_from_last_seen_not_arrival() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    h.valve(secs(0), 20.0);
+    h.sensor_seen(mins(5), 19.9, wall(mins(5)) - mins(90));
+    assert_eq!(h.c.next_deadline(mins(5)), Some(mins(35)));
+    h.c.tick(mins(35));
+    assert_eq!(h.room(mins(35)).status, Status::SensorStale);
+}
+
+#[test]
+fn a_replayed_reading_does_not_revive_a_dead_sensor() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    h.valve(secs(0), 20.0);
+    h.sensor_seen(secs(0), 19.9, wall(secs(0)));
+    // zigbee2mqtt restarts three hours later and replays the same reading.
+    let actions = h.sensor_seen(mins(180), 15.0, wall(secs(0)));
+    assert!(writes(&actions).is_empty());
+    assert_eq!(h.room(mins(180)).status, Status::SensorStale);
+}
+
+#[test]
+fn a_last_seen_in_the_future_counts_as_new() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    h.valve(secs(0), 20.0);
+    h.sensor_seen(secs(0), 19.9, wall(secs(0)) + mins(60));
+    let room = h.room(secs(0));
+    assert_eq!(room.temperature_age, Some(Duration::ZERO));
+    assert_eq!(room.status, Status::Active);
+}
+
+#[test]
+fn without_last_seen_a_reading_counts_from_arrival() {
+    let mut h = Harness::new();
+    h.c.connected(secs(0));
+    h.valve(secs(0), 20.0);
+    h.sensor(mins(3), 19.9);
+    assert_eq!(h.room(mins(10)).temperature_age, Some(mins(7)));
 }

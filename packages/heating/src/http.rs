@@ -411,11 +411,13 @@ mod tests {
         let valve = json!({"occupied_heating_setpoint": 20.0, "system_mode": "<script>", "local_temperature": 23.0});
         controller.message(
             start,
+            Duration::ZERO,
             "zigbee2mqtt/bedroom_radiator",
             valve.to_string().as_bytes(),
         );
         controller.message(
             start,
+            Duration::ZERO,
             "zigbee2mqtt/bedroom_climate",
             br#"{"temperature": 19.5}"#,
         );

@@ -62,6 +62,12 @@ pub fn publish(controller: &Controller, start: Instant) -> Published {
     }
 }
 
+fn wall_clock() -> Duration {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+}
+
 async fn sleep_until_deadline(deadline: Option<Instant>) {
     match deadline {
         Some(deadline) => sleep_until(deadline).await,
@@ -117,7 +123,7 @@ pub async fn run<B: Broker>(
                     Some(BrokerEvent::Connected) => controller.connected(since_start()),
                     Some(BrokerEvent::Disconnected) => controller.disconnected(since_start()),
                     Some(BrokerEvent::Message { topic, payload }) => {
-                        controller.message(since_start(), &topic, &payload)
+                        controller.message(since_start(), wall_clock(), &topic, &payload)
                     }
                 };
                 let _ = perform(&mut broker, &store, actions);

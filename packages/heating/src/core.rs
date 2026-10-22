@@ -13,6 +13,9 @@ use crate::config::{Config, Limits, Params, RoomConfig};
 /// Monotonic time since the controller started.
 pub type Time = Duration;
 
+/// Wall-clock time since the Unix epoch.
+pub type WallTime = Duration;
+
 /// Setpoints closer together than this are the same setpoint. The TRVZB works
 /// in 0.5 °C steps.
 const TOLERANCE: f64 = 0.1;
@@ -103,7 +106,22 @@ pub struct RoomSnapshot {
 #[derive(Clone, Copy, Debug)]
 struct Reading {
     temperature: f64,
-    at: Time,
+    received: Time,
+    /// How old it already was when it arrived: zigbee2mqtt can deliver a
+    /// retained or replayed message long after the sensor sent it.
+    age_when_received: Duration,
+}
+
+impl Reading {
+    fn age(&self, now: Time) -> Duration {
+        self.age_when_received + now.saturating_sub(self.received)
+    }
+
+    fn stale_at(&self, stale_after: Duration) -> Option<Time> {
+        stale_after
+            .checked_sub(self.age_when_received)
+            .map(|left| self.received + left)
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -168,6 +186,17 @@ fn number(state: &Map<String, Value>, key: &str) -> Option<f64> {
     state.get(key)?.as_f64().filter(|n| n.is_finite())
 }
 
+/// How long ago zigbee2mqtt last heard from the device, from the epoch
+/// milliseconds it adds as last_seen. Zero without it, or if it's in the future.
+fn last_seen_age(state: &Map<String, Value>, wall: WallTime) -> Duration {
+    state
+        .get("last_seen")
+        .and_then(Value::as_u64)
+        .map_or(Duration::ZERO, |ms| {
+            wall.saturating_sub(Duration::from_millis(ms))
+        })
+}
+
 fn parse_state(payload: &[u8]) -> Option<Map<String, Value>> {
     match serde_json::from_slice(payload) {
         Ok(Value::Object(state)) => Some(state),
@@ -215,7 +244,7 @@ impl Room {
         }
         match self.reading {
             None => Status::WaitingForSensor,
-            Some(r) if now >= r.at + limits.sensor_stale_after() => Status::SensorStale,
+            Some(r) if r.age(now) >= limits.sensor_stale_after() => Status::SensorStale,
             Some(_) => Status::Active,
         }
     }
@@ -368,7 +397,8 @@ impl Room {
             self.knob.map(|k| k.until),
             self.pending
                 .map(|p| p.sent_at + limits.write_confirm_timeout()),
-            self.reading.map(|r| r.at + limits.sensor_stale_after()),
+            self.reading
+                .and_then(|r| r.stale_at(limits.sensor_stale_after())),
             self.last_change.map(|t| t + params.step_interval()),
         ]
         .into_iter()
@@ -470,7 +500,15 @@ impl Controller {
         Vec::new()
     }
 
-    pub fn message(&mut self, now: Time, topic: &str, payload: &[u8]) -> Vec<Action> {
+    /// `wall` is the current wall-clock time, for judging the age of what the
+    /// message reports.
+    pub fn message(
+        &mut self,
+        now: Time,
+        wall: WallTime,
+        topic: &str,
+        payload: &[u8],
+    ) -> Vec<Action> {
         self.expire_overrides(now);
         let device_topic = topic
             .strip_prefix(self.base_topic.as_str())
@@ -486,12 +524,13 @@ impl Controller {
                         if let Some(online) = parse_availability(payload) {
                             room.sensor_online = online;
                         }
-                    } else if let Some(temperature) =
-                        parse_state(payload).and_then(|state| number(&state, "temperature"))
+                    } else if let Some(state) = parse_state(payload)
+                        && let Some(temperature) = number(&state, "temperature")
                     {
                         room.reading = Some(Reading {
                             temperature,
-                            at: now,
+                            received: now,
+                            age_when_received: last_seen_age(&state, wall),
                         });
                     }
                 } else if device == room.config.valve {
@@ -574,7 +613,7 @@ impl Controller {
                     override_remaining: room.knob.map(|k| k.until.saturating_sub(now)),
                     effective_target: room.effective_target(),
                     temperature: room.reading.map(|r| r.temperature),
-                    temperature_age: room.reading.map(|r| now.saturating_sub(r.at)),
+                    temperature_age: room.reading.map(|r| r.age(now)),
                     desired_setpoint: room.desired,
                     reported_setpoint: room.reported_setpoint,
                     valve_temperature: room.valve_temperature,
