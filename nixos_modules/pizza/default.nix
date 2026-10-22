@@ -34,6 +34,7 @@
     ./claude.nix
     ./zigbee2mqtt.nix
     ./heating.nix
+    ./meteoswiss.nix
     ./slopops.nix
     # Don't load headless.nix, it disables all GPU stuff but we want GPU stuff
     # for Jellyfin.
