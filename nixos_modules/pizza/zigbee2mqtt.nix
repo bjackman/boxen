@@ -107,6 +107,10 @@ in
     mqttIgnoredTopics = [ "${cfg.settings.mqtt.base_topic}/bridge*" ];
     zigbee2MqttAvailability = true;
   };
+  systemd.services.prometheus-mqtt-exporter = {
+    wants = [ "mosquitto.service" ];
+    after = [ "mosquitto.service" ];
+  };
 
   age.secrets.zigbee2mqtt-secret = {
     file = ../../secrets/zigbee2mqtt-secret.yaml.age;
