@@ -140,3 +140,25 @@ transient.
   are only checked after connecting, so grep them out of the guides clone
   recyclarr just made under `rcdir/resources/trash-guides/git/official/docs/json`.
   Note `RECYCLARR_APP_DATA` is rejected outright by 8.x.
+
+- 2026-10-23: two unrelated firings on pizza.
+
+  1. 16:02-18:02: `github-mirror-boxen`, `nix-cache-warm`, `meteoswiss`,
+     `ddclient` all failed with connect timeouts to the internet, v4 and v6.
+     norte logged `network is unreachable` over the same window, while pizza's
+     LAN scrapes never gapped, so this was a house-wide WAN outage, not pizza.
+     Several units failing together with network errors is the tell.
+     Transient; the units recovered on their own.
+  1. After a reboot, `prometheus-mqtt-exporter` hit `start-limit-hit`: with
+     `Restart=always`/100ms it burned its 5 retries in the seconds before
+     mosquitto came up. Fixed by ordering it after `mosquitto.service`.
+
+  The alert history outlives `/api/v1/alerts`; query the unit states over a
+  range instead (narrow `step` enough to stay under 11k points):
+
+  ```bash
+  curl -s localhost:9090/api/v1/query_range \
+    --data-urlencode 'query=node_systemd_unit_state{state="failed"}==1' \
+    --data-urlencode start=$(date -d '-14 days' +%s) \
+    --data-urlencode end=$(date +%s) --data-urlencode step=300
+  ```
