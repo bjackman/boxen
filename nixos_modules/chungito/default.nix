@@ -94,6 +94,7 @@
       for sock in "''${socks[@]}"; do
         swaymsg -s "$sock" -t get_outputs | jq -e 'any(.[]; .active)' >/dev/null && exit 0
       done
+      echo "No active sway outputs, switching VT"
       vt=$(fgconsole)
       chvt 63
       sleep 2
