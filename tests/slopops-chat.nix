@@ -23,7 +23,11 @@ let
             content = [{"type": "text", "text": content}]
         if any(block.get("type") == "tool_result" for block in content):
             return [{"type": "text", "text": "Done."}], "end_turn"
-        match = re.search(r"touch ([\w.-]+)", json.dumps(content))
+        text = json.dumps(content)
+        # What the chat tells the agent when it resumes it after a restart.
+        if "restarted during your last turn" in text:
+            text = "touch after-restart"
+        match = re.search(r"touch ([\w.-]+)", text)
         if match and request.get("tools"):
             return [
                 {
@@ -250,9 +254,11 @@ pkgs.testers.runNixOSTest {
         machine.fail("test -e ${workPath}/denied")
         assert post("/api/approvals", {"id": approval["id"], "allow": True}) == "409"
 
-    with subtest("a restart cancels a pending approval and resumes the conversation"):
+    with subtest("a restart mid-turn tells the agent, which carries on, but only once"):
         assert post("/api/messages", {"text": "touch pending"}) == "200"
         approval = wait_for_event("stream", lambda e: e["kind"] == "approval" and "pending" in json.dumps(e["input"]))
+        session = json.loads(machine.succeed("cat ${homePath}/chat/session.json"))
+        assert session.get("sessionId"), session
         machine.succeed("systemctl restart slopops-chat.service")
         watch("stream-after-restart")
         wait_for_event(
@@ -261,18 +267,31 @@ pkgs.testers.runNixOSTest {
         )
         wait_for_event("stream-after-restart", lambda e: e["kind"] == "turnEnd" and not e["ok"])
         machine.fail("test -e ${workPath}/pending")
-        session = json.loads(machine.succeed("cat ${homePath}/chat/session.json"))
-        assert session.get("sessionId"), session
+
+        wait_for_event("stream-after-restart", lambda e: e["kind"] == "restarted")
+        approval = wait_for_event(
+            "stream-after-restart", lambda e: e["kind"] == "approval" and "after-restart" in json.dumps(e["input"])
+        )
+        machine.succeed("systemctl restart slopops-chat.service")
+        watch("stream-after-second-restart")
+        wait_for_event(
+            "stream-after-second-restart",
+            lambda e: e["kind"] == "decision" and e["id"] == approval["id"] and e["reason"] == "cancelled",
+        )
+        time.sleep(10)
+        restarts = [e for e in events("stream-after-second-restart") if e["kind"] == "restarted"]
+        assert len(restarts) == 1, restarts
+        assert not [e for e in events("stream-after-second-restart") if e["kind"] == "approval" and e["seq"] > approval["seq"]]
 
         assert post("/api/messages", {"text": "touch resumed"}) == "200"
-        approval = wait_for_event("stream-after-restart", lambda e: e["kind"] == "approval" and "resumed" in json.dumps(e["input"]))
+        approval = wait_for_event("stream-after-second-restart", lambda e: e["kind"] == "approval" and "resumed" in json.dumps(e["input"]))
         assert post("/api/approvals", {"id": approval["id"], "allow": True}) == "200"
         machine.wait_until_succeeds("test -e ${workPath}/resumed", timeout=120)
         assert json.loads(machine.succeed("cat ${homePath}/chat/session.json")) == session
 
     with subtest("a reset forgets the session"):
         assert post("/api/reset", {}) == "200"
-        wait_for_event("stream-after-restart", lambda e: e["kind"] == "reset")
+        wait_for_event("stream-after-second-restart", lambda e: e["kind"] == "reset")
         assert "sessionId" not in json.loads(machine.succeed("cat ${homePath}/chat/session.json"))
   '';
 }

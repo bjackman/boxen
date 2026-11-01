@@ -77,9 +77,13 @@ const events: ChatEvent[] = await readFile(eventsPath, "utf8").then(
 );
 const listeners = new Set<(event: ChatEvent) => void>();
 let turnOpen = false;
+let turnOpenedBy: "user" | "restarted" | null = null;
 
 function record(event: ChatEvent): void {
-  if (event.kind === "user") turnOpen = true;
+  if (event.kind === "user" || event.kind === "restarted") {
+    turnOpen = true;
+    turnOpenedBy = event.kind;
+  }
   if (event.kind === "turnEnd" || event.kind === "reset") turnOpen = false;
 }
 events.forEach(record);
@@ -100,8 +104,9 @@ function emit(body: ChatEventBody): void {
       emit({ kind: "decision", id: e.id, allow: false, reason: "cancelled" });
     }
   }
-  if (turnOpen) emit({ kind: "turnEnd", ok: false, error: "slopops-chat restarted during this turn." });
 }
+const interruptedTurnOpenedBy = turnOpen ? turnOpenedBy : null;
+if (turnOpen) emit({ kind: "turnEnd", ok: false, error: "slopops-chat restarted during this turn." });
 
 // Push notifications
 
@@ -317,6 +322,17 @@ function sendMessage(text: string): void {
   agent.inbox.push(text);
 }
 
+const restartNotice =
+  "slopops-chat, the service you run in, restarted during your last turn. Whatever you were running was " +
+  "killed, and any approval you were waiting for was cancelled, but a deploy you had started carries on " +
+  "without you. Find out how what you were doing ended, then carry on, or say what's left to do.";
+
+function resumeAfterRestart(): void {
+  agent = startAgent();
+  emit({ kind: "restarted" });
+  agent.inbox.push(restartNotice);
+}
+
 async function resetConversation(): Promise<void> {
   const old = agent;
   agent = null;
@@ -479,3 +495,10 @@ if (process.env.LISTEN_FDS === "1") {
   process.exit(1);
 }
 console.error("slopops-chat: listening");
+
+// Only once: if a resumed turn doesn't survive either, another resume would
+// likely go the same way.
+if (interruptedTurnOpenedBy === "user") resumeAfterRestart();
+else if (interruptedTurnOpenedBy === "restarted") {
+  notify("slopops", "slopops-chat restarted twice during a turn, so it has stopped.", "turn-end");
+}

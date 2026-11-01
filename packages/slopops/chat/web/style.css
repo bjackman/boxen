@@ -150,7 +150,7 @@ header {
   color: var(--error);
 }
 
-.reset {
+.divider {
   align-self: stretch;
   text-align: center;
   color: var(--muted);

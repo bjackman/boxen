@@ -142,7 +142,11 @@ function render(event: ChatEvent): void {
       break;
     case "reset":
       setBusy(false);
-      append(element("p", "reset", "New conversation"));
+      append(element("p", "divider", "New conversation"));
+      break;
+    case "restarted":
+      setBusy(true);
+      append(element("p", "divider", "slopops-chat restarted, so slopops is picking up where it left off"));
       break;
   }
 }
