@@ -73,9 +73,6 @@
   # hibernate path. Pin it to plain suspend.
   services.logind.settings.Login.SleepOperation = "suspend";
 
-  # Debugging resumes that come back with no outputs.
-  boot.kernelParams = [ "nvidia_modeset.debug=1" ];
-
   # nvidia-drm restores the console's pre-suspend modeset before the MST
   # topology is re-detected, the restore fails, and wlroots is often left with a
   # stale CRTC that makes every later commit fail with EINVAL. Switching VT away
