@@ -57,6 +57,7 @@
         # package and we can have Limmat build it.
         format = config.treefmt.build.check self;
         add-user = pkgs.callPackage ../packages/add-user.nix { };
+        update-deps = pkgs.callPackage ../packages/update-deps.nix { };
         deploy-tf-arr = pkgs.callPackage ../tf/arr/deploy.nix { inherit homelab; };
       };
     };
