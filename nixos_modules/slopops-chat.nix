@@ -83,7 +83,7 @@ in
         SLOPOPS_CHAT_USER = cfg.allowedUser;
         SLOPOPS_CHAT_VAPID_SUBJECT = cfg.vapidSubject;
       };
-      serviceConfig = import ./slopops-sandbox.nix // {
+      serviceConfig = {
         User = cfg.user;
         Group = config.users.users.${cfg.user}.group;
         ExecStart = lib.getExe' pkgs.bjackman.slopops "slopops-chat";
@@ -97,6 +97,29 @@ in
         # Claude Code keeps its sessions there, which resuming needs.
         BindPaths = [ config.users.users.${cfg.user}.home ];
         PrivateTmp = true;
+
+        # The agent may run any command without asking. A weak sandbox: what
+        # it can still reach includes the deploy key.
+        NoNewPrivileges = true;
+        RestrictSUIDSGID = true;
+        CapabilityBoundingSet = "";
+        PrivateDevices = true;
+        ProtectKernelTunables = true;
+        ProtectKernelModules = true;
+        ProtectKernelLogs = true;
+        ProtectControlGroups = true;
+        ProtectClock = true;
+        ProtectHostname = true;
+        ProtectProc = "invisible";
+        LockPersonality = true;
+        RestrictRealtime = true;
+        RestrictNamespaces = true;
+        SystemCallArchitectures = "native";
+        RestrictAddressFamilies = [
+          "AF_UNIX"
+          "AF_INET"
+          "AF_INET6"
+        ];
       };
     };
   };

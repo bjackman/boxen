@@ -1,14 +1,14 @@
 # slopops: an agent that deploys the homelab
 
-**Status: proposed, and being built alongside this document.** Sibling to
+**Status: in use, at phase 1.** Sibling to
 [`agent_prod_access.md`](agent_prod_access.md), which lets agents look at the
 homelab but not change it. This is the one change worth handing over:
 deploying what review has already put on master.
 
 ## Goals
 
-1. I can talk to an agent about the homelab's deploys from claude.ai/code or
-   the phone app: what's running where, what master is ahead by, whether the
+1. I can talk to an agent about the homelab's deploys from my phone or a
+   browser: what's running where, what master is ahead by, whether the
    last deploy is healthy. It can answer from the live hosts.
 1. It can deploy, and roll back, for real. At first every deploy waits for me
    to approve it. A rollback is a deploy of an earlier commit of master, so it
@@ -30,36 +30,27 @@ thing being contained is a confused agent deploying at a bad moment.
   unit `slop-deploy@<commit>.service` that does the deploy. `tests/slop-deploy.nix`
   checks it in a VM. pizza, norte and sandy enable it.
 - `slop-probe`, for observing the hosts, and Prometheus on pizza.
-- `claude remote-control` on pizza, which is how I already talk to the coding
-  agents (`nixos_modules/pizza/claude.nix`).
-
-### A session can be woken by a Routine
-
-`review_bot.md` found nothing that pushes a message into a running session,
-and locally that's still true: the CLI has no command for it. But a Routine (a
-schedule held by claude.ai) can be bound to a session, and its message arrives
-as a new turn. Tested on 2026-10-18 from a remote-control session on pizza: a
-message scheduled for 13:57:00 had arrived by 13:57:42. Routines normally fire
-at most hourly. Firing one when something happens, rather than on a schedule,
-needs a call from inside a session.
+- `claude remote-control` on pizza, which is how I talk to the coding agents
+  (`nixos_modules/pizza/claude.nix`).
 
 ## Decisions
 
-1. **slopops is a Remote Control session, and a chat page of its own.**
-   `slopops-remote-control` runs `claude remote-control` as `slopops` on pizza,
-   with its own login, home and mirror of boxen. On pizza that's the account
-   slop-deploy makes for deploys, which defaults its home to `/var/empty`;
-   pizza overrides it with a real one. claude.ai/code gives it a UI on web and
-   phone, notifications, resumable sessions and approval prompts.
+1. **slopops is a chat page of its own.** `packages/slopops/chat` is a
+   server on pizza that runs the agent through the Agent SDK, behind Caddy
+   and Authelia like the other services, with the review bot's long-lived
+   token. It keeps the conversation and its own approval prompts, and
+   notifies with Web Push. It runs as `slopops`, the account slop-deploy
+   makes for deploys, which defaults its home to `/var/empty`; pizza gives it
+   a real one, with the mirror of boxen in it.
 
-   But that session is tied to claude.ai. It needs an interactive login that
-   expires, and the only way to start a turn from outside is a Routine bound
-   to the session, which is janky. So the same agent also runs behind a chat
-   page, `packages/slopops/chat`: a server on pizza that runs it through the
-   Agent SDK, behind Caddy and Authelia like the other services, with the
-   review bot's long-lived token. It keeps the conversation and its own
-   approval prompts, and notifies with Web Push. It shares the account, the
-   mirror and `~/.claude`, so the same rules make deploys ask.
+   **Rejected: a Remote Control session**, as the coding agents are.
+   claude.ai/code would give it a UI on web and phone, notifications,
+   resumable sessions and approval prompts for nothing, and slopops started
+   out as one. But the session is tied to claude.ai. It needs an interactive
+   login that expires, and the only way to start a turn from outside is a
+   Routine bound to the session: a schedule held by claude.ai, firing at most
+   hourly. The chat server owns the conversation, so it can start a turn
+   itself.
 
 1. **Deploying is an MCP tool behind an approval prompt; nothing else asks.**
    `packages/slopops` is a small MCP server whose `deploy` tool runs a deploy
@@ -81,18 +72,17 @@ needs a call from inside a session.
 
    - Its instructions, and its judgement: they say never to use the key,
      `ssh` or `slop-deploy` to get round asking.
-   - A weak sandbox, `nixos_modules/slopops-sandbox.nix`, on both units. It
-     can't gain privileges, so `sudo` fails even on pizza, where `slopops` is
-     also the account slop-deploy lets start a deploy. It has no
-     capabilities, can't see other users' processes, and finds the system
-     read-only apart from its home.
+   - A weak sandbox, in the chat service's unit
+     (`nixos_modules/slopops-chat.nix`). It can't gain privileges, so `sudo`
+     fails even on pizza, where `slopops` is also the account slop-deploy
+     lets start a deploy. It has no capabilities, can't see other users'
+     processes, and finds the system read-only apart from its home.
    - Denying `slop-deploy` and `sudo` from Bash, as guard rails against a
      mistake rather than a boundary.
-   - On the chat page, answering a prompt is a request to the server, which
-     listens on a socket owned by root and Caddy's group. `slopops` can't open
-     it, so the agent can't approve its own deploy with `curl`. The server
-     also checks the user Authelia vouched for, and that a POST came from the
-     page.
+   - Answering a prompt is a request to the chat server, which listens on a
+     socket owned by root and Caddy's group. `slopops` can't open it, so the
+     agent can't approve its own deploy with `curl`. The server also checks
+     the user Authelia vouched for, and that a POST came from the page.
    - An `ask` rule holds even if the session is started with
      `--permission-mode bypassPermissions` (checked with Claude Code 2.1.300),
      so a stray flag on the service can't quietly turn the prompts off.
@@ -115,9 +105,11 @@ needs a call from inside a session.
 
 1. **The service doesn't restart when its own configuration changes.** pizza
    deploys pizza, so a deploy that changes the service would otherwise restart
-   the session that asked for it. The deploy itself survives that, being a
-   unit, but the conversation shouldn't drop. The change takes effect when the
-   service is next restarted on purpose.
+   the agent that asked for it. The deploy itself survives that, being a
+   unit, but the turn wouldn't. The change takes effect when the service is
+   next restarted on purpose. A restart that does cut a turn short is
+   followed by a message telling the agent so, once: if that turn is cut
+   short too, it waits for me.
 
 1. **Other hosts fetch master from Gerrit over git://.** Only pizza can read
    Gerrit's repository from disk. `gerrit-git-daemon` serves `boxen` from it
@@ -146,7 +138,7 @@ needs a call from inside a session.
 1. **Knowing what's running.** A probe for
    `/run/current-system/configuration-revision`, so that "pizza is three
    commits behind" doesn't need guessing from store paths.
-1. **Proactive.** An hourly Routine bound to the session asks it to check
+1. **Proactive.** The chat server asks the agent, on a timer, to check
    whether master has moved; if it has, the agent proposes a deploy for me to
    approve.
 1. **Earned autonomy.** Auto-approve the ordinary case (the tip passed CI, the
@@ -155,9 +147,6 @@ needs a call from inside a session.
 
 ## Open questions
 
-1. **How long a Routine's binding lasts.** It names one session. Whether that
-   survives the service restarting, or claude.ai archiving an idle session, is
-   untested.
 1. **The real build.** The VM test fakes it: each fixture commit names a system
    already in the VM's store. `nix build` of the flake at the commit first runs
    for real on pizza.
