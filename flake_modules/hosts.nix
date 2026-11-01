@@ -1,6 +1,7 @@
 {
   inputs,
   config,
+  lib,
   withSystem,
   ...
 }:
@@ -10,7 +11,45 @@
     ./homelab.nix
   ];
 
-  flake.nixosConfigurations =
+  options.bjackman.hosts = lib.mkOption { type = lib.types.raw; };
+
+  config.bjackman.hosts = {
+    chungito = {
+      system = "x86_64-linux";
+      modules = [
+        ../nixos_modules/chungito
+        { home-manager.users.brendan.imports = [ ../hm_modules/chungito.nix ]; }
+      ];
+    };
+    fw13 = {
+      system = "x86_64-linux";
+      modules = [
+        ../nixos_modules/fw13
+        { home-manager.users.brendan.imports = [ ../hm_modules/fw13.nix ]; }
+      ];
+    };
+    # Raspberry Pi 4B at my mum's place.
+    sandy = {
+      system = "aarch64-linux";
+      modules = [ ../nixos_modules/sandy.nix ];
+    };
+    # Thinkpad t480 at my place
+    pizza = {
+      system = "x86_64-linux";
+      modules = [ ../nixos_modules/pizza ];
+    };
+    norte = {
+      system = "aarch64-linux";
+      modules = [ ../nixos_modules/norte ];
+      # Raspberry Pi 5 with a Radxa SATA hat at my place.
+      # Note this is using a special nixosSystem helper. Raspberry Pi 5s
+      # are fucked up and someone made it work, so, well, we're gonna go
+      # with it.
+      builder = inputs.nixos-raspberrypi.lib.nixosSystem;
+    };
+  };
+
+  config.flake.nixosConfigurations =
     let
       mkNixosSystem =
         {
@@ -40,46 +79,12 @@
           }
         );
     in
-    {
-      chungito = mkNixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ../nixos_modules/chungito
-          { home-manager.users.brendan.imports = [ ../hm_modules/chungito.nix ]; }
-        ];
-      };
-      fw13 = mkNixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ../nixos_modules/fw13
-          { home-manager.users.brendan.imports = [ ../hm_modules/fw13.nix ]; }
-        ];
-      };
-      # Raspberry Pi 4B at my mum's place.
-      sandy = mkNixosSystem {
-        system = "aarch64-linux";
-        modules = [ ../nixos_modules/sandy.nix ];
-      };
-      # Thinkpad t480 at my place
-      pizza = mkNixosSystem {
-        system = "x86_64-linux";
-        modules = [ ../nixos_modules/pizza ];
-      };
-      norte = mkNixosSystem {
-        system = "aarch64-linux";
-        modules = [ ../nixos_modules/norte ];
-        # Raspberry Pi 5 with a Radxa SATA hat at my place.
-        # Note this is using a special nixosSystem helper. Raspberry Pi 5s
-        # are fucked up and someone made it work, so, well, we're gonna go
-        # with it.
-        builder = inputs.nixos-raspberrypi.lib.nixosSystem;
-      };
-    };
+    lib.mapAttrs (_: mkNixosSystem) config.bjackman.hosts;
 
   # This defines the configurations for machines using standalone
   # home-manager, which in my case means headless development VMs not running
   # NixOS. Otherwise the HM config is injected via the NixOS module.
-  flake.homeConfigurations = withSystem "x86_64-linux" (
+  config.flake.homeConfigurations = withSystem "x86_64-linux" (
     { pkgs, pkgsUnstable, ... }: {
       brendan = inputs.home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
