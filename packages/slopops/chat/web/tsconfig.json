@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2024",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": [],
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "rootDir": "..",
+    "outDir": "dist"
+  },
+  "files": ["app.ts"]
+}

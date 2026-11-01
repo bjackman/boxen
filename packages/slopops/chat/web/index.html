@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
+    <title>slopops</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>slopops</h1>
+      <span id="connection" role="status">Connecting…</span>
+      <div class="actions">
+        <button id="notifications" type="button" hidden>Enable notifications</button>
+        <button commandfor="reset-dialog" command="show-modal" type="button">New conversation</button>
+      </div>
+    </header>
+
+    <main id="log" role="log" aria-label="Conversation"></main>
+
+    <footer>
+      <form id="composer">
+        <label for="message" class="visually-hidden">Message</label>
+        <textarea id="message" name="text" placeholder="Message slopops" required></textarea>
+        <div class="actions">
+          <progress id="busy" aria-label="slopops is working" hidden></progress>
+          <button id="interrupt" type="button" hidden>Stop</button>
+          <button type="submit">Send</button>
+        </div>
+      </form>
+    </footer>
+
+    <dialog id="reset-dialog" closedby="any">
+      <form method="dialog">
+        <p>Start a new conversation? slopops forgets this one, and any approval it's waiting for is cancelled.</p>
+        <div class="actions">
+          <button value="cancel" autofocus>Cancel</button>
+          <button value="reset">Start over</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="approval-template">
+      <article class="approval">
+        <p class="title"></p>
+        <pre class="input"></pre>
+        <div class="actions">
+          <button type="button" value="deny">Deny</button>
+          <button type="button" value="allow">Approve</button>
+        </div>
+        <p class="outcome" hidden></p>
+      </article>
+    </template>
+  </body>
+</html>
