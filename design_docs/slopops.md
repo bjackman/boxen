@@ -61,27 +61,33 @@ needs a call from inside a session.
    approval prompts, and notifies with Web Push. It shares the account, the
    mirror and `~/.claude`, so the same rules make deploys ask.
 
-1. **Deploying is an MCP tool behind an approval prompt.** `packages/slopops`
-   is a small MCP server whose `deploy` tool runs a deploy and waits for it.
-   Its permission rule is `ask`, so every deploy appears on my phone with the
-   host and commit, and I approve or deny it. Observation is allowed without
-   asking: `slop-probe`, `git` on the mirror, Prometheus, and read-only
-   filters to pipe them through. Anything else asks too. Unlike the coding
-   sessions it doesn't run with `bypassPermissions`.
+1. **Deploying is an MCP tool behind an approval prompt; nothing else asks.**
+   `packages/slopops` is a small MCP server whose `deploy` tool runs a deploy
+   and waits for it. Its permission rule is `ask`, so every deploy appears on
+   my phone with the host and commit, and I approve or deny it. Every other
+   command is allowed outright.
+
+   **Rejected: allowing only read-only commands.** The agent's commands
+   rarely fit a list: nearly every one combined an allowed command with
+   `echo`, a ref listing or a loop, so it asked about everything. And each
+   entry needed checking for a way to run or write something: even
+   `git branch -a -m` renames a branch.
 
 1. **The approval prompt is about judgement; the host is the boundary.** The
-   prompt is enforced by Claude Code, not by anything the agent can't touch.
-   The deploy key is `/run/agenix/slopops-ssh-privkey`, readable by `slopops`,
-   which is the account the agent runs as. What keeps it from being used
-   without asking is only that every command able to use it asks first:
+   prompt is enforced by Claude Code and by the agent following its
+   instructions, not by anything the agent can't touch. The deploy key is
+   `/run/agenix/slopops-ssh-privkey`, readable by `slopops`, the account the
+   agent runs as, and Bash can run anything. What keeps it to the tool is:
 
-   - The allowed commands can't use it. The `slop-probe` rules are anchored on
-     the host (`slop-probe pizza …`), because the client's own flags, given
-     before the host, override its wrapper's and could point it at the deploy
-     key. After the host they're probe options, which the host refuses. `git fetch` is allowed only bare, since `--upload-pack` runs a command.
-   - The ways round the tool are denied rather than left to ask: `slop-deploy`
-     from Bash, and `sudo`, since on pizza `slopops` is also the account
-     slop-deploy lets start a deploy.
+   - Its instructions, and its judgement: they say never to use the key,
+     `ssh` or `slop-deploy` to get round asking.
+   - A weak sandbox, `nixos_modules/slopops-sandbox.nix`, on both units. It
+     can't gain privileges, so `sudo` fails even on pizza, where `slopops` is
+     also the account slop-deploy lets start a deploy. It has no
+     capabilities, can't see other users' processes, and finds the system
+     read-only apart from its home.
+   - Denying `slop-deploy` and `sudo` from Bash, as guard rails against a
+     mistake rather than a boundary.
    - On the chat page, answering a prompt is a request to the server, which
      listens on a socket owned by root and Caddy's group. `slopops` can't open
      it, so the agent can't approve its own deploy with `curl`. The server

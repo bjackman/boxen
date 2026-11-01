@@ -72,7 +72,7 @@ pkgs.testers.runNixOSTest (
       config.driverConfiguration // { test_script = localScript; }
     );
 
-    claude = pkgs.bjackman.slopops.claudeConfig { probeHosts = [ "target" ]; };
+    claude = pkgs.bjackman.slopops.claudeConfig { };
     claudeSettings = pkgs.writers.writeJSON "slopops-settings.json" claude.settings;
     mcpConfig = pkgs.writers.writeJSON "slopops-mcp.json" { inherit (claude) mcpServers; };
   in

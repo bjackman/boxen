@@ -12,14 +12,10 @@
 let
   user = config.bjackman.slopDeploy.user;
   homePath = "/var/lib/slopops";
-  probeHosts = builtins.attrNames homelab.nodes;
   deployHosts = builtins.attrNames (
     lib.filterAttrs (_: node: node.bjackman.slopDeploy.enable) homelab.nodes
   );
-  claude = pkgs.bjackman.slopops.claudeConfig {
-    inherit probeHosts;
-    prometheusUrl = "http://pizza:9090";
-  };
+  claude = pkgs.bjackman.slopops.claudeConfig { prometheusUrl = "http://pizza:9090"; };
   probeClient = config.bjackman.slopClient.probeClient;
   slopDeploy = pkgs.writeShellScriptBin "slop-deploy" ''
     exec ${

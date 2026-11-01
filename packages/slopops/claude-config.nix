@@ -7,40 +7,8 @@
   slopops,
 }:
 {
-  # What slop-probe on PATH reaches.
-  probeHosts,
   prometheusUrl ? null,
 }:
-let
-  # Read-only, so that looking needs no approval. Anything not here asks.
-  observe = [
-    "Read"
-    "Grep"
-    "Glob"
-    "Bash(slop-probe hosts)"
-    # Anchored on the host because slop-probe's own flags, given first, would
-    # override its wrapper's: --ssh-user and --key-file could point it at the
-    # deploy key. After the host, a flag is a probe option the host refuses.
-  ]
-  ++ map (host: "Bash(slop-probe ${host}:*)") probeHosts
-  ++ [
-    # Not with arguments: --upload-pack runs whatever it's given.
-    "Bash(git fetch)"
-    "Bash(git log:*)"
-    "Bash(git show:*)"
-    "Bash(git diff:*)"
-    "Bash(git rev-parse:*)"
-    "Bash(grep:*)"
-    "Bash(head:*)"
-    "Bash(tail:*)"
-    "Bash(wc:*)"
-    "Bash(sort:*)"
-    "Bash(uniq:*)"
-    "Bash(cut:*)"
-    "Bash(jq:*)"
-  ]
-  ++ lib.optional (prometheusUrl != null) "Bash(curl -s ${prometheusUrl}/:*)";
-in
 {
   mcpServers.slopops = {
     type = "stdio";
@@ -51,10 +19,14 @@ in
   settings = {
     permissions = {
       defaultMode = "default";
-      allow = observe;
+      allow = [
+        "Bash"
+        "Read"
+        "Grep"
+        "Glob"
+      ];
       ask = [ "mcp__slopops__deploy" ];
-      # Deploys go through the tool, so that each one asks. slop-deploy from
-      # Bash, or on pizza sudo, would be a way round that.
+      # Guard rails, not a boundary: Bash can reach the deploy key anyway.
       deny = [
         "Bash(slop-deploy:*)"
         "Bash(sudo:*)"
@@ -77,6 +49,10 @@ in
 
     Brendan approves each deploy before it runs. If he denies one, ask what he
     wants instead; don't try again, or another way.
+
+    You can run any other command without asking. The session is only loosely
+    sandboxed, and the deploy key is within your reach: never use it, `ssh` or
+    `slop-deploy` to get round asking for a deploy.
 
     ## The repository
 
