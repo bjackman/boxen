@@ -61,6 +61,7 @@ stdenv.mkDerivation (finalAttrs: {
     cp chat/server.mts chat/events.ts $out/lib/slopops/chat/
     cp chat/web/index.html chat/web/style.css chat/web/manifest.webmanifest chat/web/icon.svg \
       chat/web/dist/web/app.js chat/web/dist/sw.js $out/lib/slopops/chat/web/
+    cp node_modules/marked/lib/marked.esm.js $out/lib/slopops/chat/web/marked.js
     makeWrapper ${lib.getExe nodejs} $out/bin/slopops-mcp \
       --add-flags $out/lib/slopops/mcp.mts
     makeWrapper ${lib.getExe nodejs} $out/bin/slopops-chat \

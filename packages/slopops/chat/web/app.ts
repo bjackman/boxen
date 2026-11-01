@@ -1,4 +1,11 @@
 import type { ChatEvent } from "../events.ts";
+import { Marked } from "./marked.js";
+
+declare global {
+  interface Element {
+    setHTML?(html: string): void;
+  }
+}
 
 function byId<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -42,6 +49,15 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
+const markdown = new Marked({ gfm: true });
+
+function agentText(text: string): HTMLElement {
+  const el = element("div", "agent");
+  if (el.setHTML) el.setHTML(markdown.parse(text, { async: false }));
+  else el.append(element("p", "plain", text));
+  return el;
+}
+
 function showLocalError(err: unknown): void {
   append(element("p", "error", (err as Error).message));
 }
@@ -76,7 +92,7 @@ function render(event: ChatEvent): void {
       setBusy(true);
       break;
     case "text":
-      append(element("p", "agent", event.text));
+      append(agentText(event.text));
       break;
     case "tool": {
       const details = element("details", "tool");

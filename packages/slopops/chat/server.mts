@@ -333,6 +333,7 @@ async function resetConversation(): Promise<void> {
 const staticFiles: Record<string, string> = {
   "/": "index.html",
   "/app.js": "app.js",
+  "/marked.js": "marked.js",
   "/sw.js": "sw.js",
   "/style.css": "style.css",
   "/manifest.webmanifest": "manifest.webmanifest",
@@ -390,10 +391,18 @@ function streamEvents(req: IncomingMessage, res: ServerResponse): void {
   });
 }
 
+// The agent's Markdown is sanitised before it's shown; this is in case that
+// misses something. Images are same-origin only, so one can't carry data away.
+const contentSecurityPolicy =
+  "default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+
 async function serveStatic(pathname: string, res: ServerResponse): Promise<void> {
   const name = staticFiles[pathname];
   if (!name) throw new HttpError(404, "Not found");
-  res.writeHead(200, { "content-type": contentTypes[extname(name)] ?? "application/octet-stream" });
+  res.writeHead(200, {
+    "content-type": contentTypes[extname(name)] ?? "application/octet-stream",
+    "content-security-policy": contentSecurityPolicy,
+  });
   res.end(await readFile(join(webDirPath, name)));
 }
 

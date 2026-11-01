@@ -220,8 +220,10 @@ pkgs.testers.runNixOSTest {
         assert status("/nope") == "404"
 
     with subtest("the page and its assets are served"):
-        for path in ["/app.js", "/sw.js", "/style.css", "/manifest.webmanifest", "/icon.svg"]:
+        for path in ["/app.js", "/marked.js", "/sw.js", "/style.css", "/manifest.webmanifest", "/icon.svg"]:
             assert status(path) == "200", path
+        headers = machine.succeed(curl("-D - -o /dev/null http://chat/")).lower()
+        assert "content-security-policy: default-src 'self';" in headers, headers
         assert "key" in json.loads(machine.succeed(curl("http://chat/api/push/key")))
 
     with subtest("the stream sends its headers before there are any events"):
