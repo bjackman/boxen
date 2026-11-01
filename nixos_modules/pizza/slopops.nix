@@ -120,6 +120,8 @@ in
     path = agentPath;
   };
 
+  systemd.services.slopops-remote-control.serviceConfig = import ../slopops-sandbox.nix;
+
   systemd.services.slopops-chat = {
     after = [ "gerrit.service" ];
     # As for the Remote Control session.

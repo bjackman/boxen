@@ -83,7 +83,7 @@ in
         SLOPOPS_CHAT_USER = cfg.allowedUser;
         SLOPOPS_CHAT_VAPID_SUBJECT = cfg.vapidSubject;
       };
-      serviceConfig = {
+      serviceConfig = import ./slopops-sandbox.nix // {
         User = cfg.user;
         Group = config.users.users.${cfg.user}.group;
         ExecStart = lib.getExe' pkgs.bjackman.slopops "slopops-chat";
