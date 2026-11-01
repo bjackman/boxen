@@ -76,6 +76,34 @@
   # Debugging resumes that come back with no outputs.
   boot.kernelParams = [ "nvidia_modeset.debug=1" ];
 
+  # nvidia-drm restores the console's pre-suspend modeset before the MST
+  # topology is re-detected, the restore fails, and wlroots is often left with a
+  # stale CRTC that makes every later commit fail with EINVAL. Switching VT away
+  # and back makes it reset its state.
+  systemd.services.resume-vt-kick = {
+    after = [ "suspend.target" ];
+    wantedBy = [ "suspend.target" ];
+    path = [
+      pkgs.kbd
+      pkgs.jq
+      config.programs.sway.package
+    ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      shopt -s nullglob
+      sleep 5
+      socks=(/run/user/*/sway-ipc.*.sock)
+      [ ''${#socks[@]} -gt 0 ] || exit 0
+      for sock in "''${socks[@]}"; do
+        swaymsg -s "$sock" -t get_outputs | jq -e 'any(.[]; .active)' >/dev/null && exit 0
+      done
+      vt=$(fgconsole)
+      chvt 63
+      sleep 2
+      chvt "$vt"
+    '';
+  };
+
   bjackman.impermanence.enable = true;
 
   # So that GDM and Gnome and stuff have a persistent monitors setup.
