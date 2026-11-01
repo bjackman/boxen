@@ -338,6 +338,9 @@ const staticFiles: Record<string, string> = {
   "/style.css": "style.css",
   "/manifest.webmanifest": "manifest.webmanifest",
   "/icon.svg": "icon.svg",
+  "/icon-192.png": "icon-192.png",
+  "/icon-512.png": "icon-512.png",
+  "/icon-maskable-512.png": "icon-maskable-512.png",
 };
 const contentTypes: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -345,6 +348,7 @@ const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
   ".webmanifest": "application/manifest+json",
   ".svg": "image/svg+xml",
+  ".png": "image/png",
 };
 
 class HttpError extends Error {

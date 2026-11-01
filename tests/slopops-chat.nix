@@ -220,7 +220,7 @@ pkgs.testers.runNixOSTest {
         assert status("/nope") == "404"
 
     with subtest("the page and its assets are served"):
-        for path in ["/app.js", "/marked.js", "/sw.js", "/style.css", "/manifest.webmanifest", "/icon.svg"]:
+        for path in ["/app.js", "/marked.js", "/sw.js", "/style.css", "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png"]:
             assert status(path) == "200", path
         headers = machine.succeed(curl("-D - -o /dev/null http://chat/")).lower()
         assert "content-security-policy: default-src 'self';" in headers, headers
