@@ -103,13 +103,17 @@ thing being contained is a confused agent deploying at a bad moment.
    units and errors in the journal since the deploy, compared with before it,
    decide whether to recommend a rollback.
 
-1. **The service doesn't restart when its own configuration changes.** pizza
-   deploys pizza, so a deploy that changes the service would otherwise restart
-   the agent that asked for it. The deploy itself survives that, being a
-   unit, but the turn wouldn't. The change takes effect when the service is
-   next restarted on purpose. A restart that does cut a turn short is
-   followed by a message telling the agent so, once: if that turn is cut
-   short too, it waits for me.
+1. **A deploy restarts the service, even mid-turn.** pizza deploys pizza, so a
+   deploy that changes the service restarts the agent that asked for it. The
+   deploy survives that, being a unit of its own, but the turn doesn't. The
+   restarted service tells the agent its turn was cut short, so it finds out
+   how the deploy ended and carries on. It does that once: if that turn is
+   cut short too, it waits for me.
+
+   **Rejected: not restarting when the service changes.** A deploy then
+   doesn't take effect until the service is restarted by hand. Restarting
+   once the agent is idle would avoid the interruption altogether, and is
+   worth building if it gets annoying.
 
 1. **Other hosts fetch master from Gerrit over git://.** Only pizza can read
    Gerrit's repository from disk. `gerrit-git-daemon` serves `boxen` from it

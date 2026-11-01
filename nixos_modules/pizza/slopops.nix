@@ -125,9 +125,6 @@ in
 
   systemd.services.slopops-chat = {
     after = [ "gerrit.service" ];
-    # pizza deploys pizza, so a deploy that changes this unit would otherwise
-    # restart the agent that asked for it, mid-deploy.
-    restartIfChanged = false;
     serviceConfig = {
       ExecStartPre = lib.getExe prepare;
       EnvironmentFile = config.age.secrets.slopops-claude-env.path;
