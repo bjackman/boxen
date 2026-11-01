@@ -49,8 +49,18 @@ in
                   description = "Subdomain to proxy the service under";
                 };
                 port = lib.mkOption {
-                  type = int;
+                  type = nullOr int;
+                  default = null;
                   description = "Port the service exposes";
+                };
+                socketPath = lib.mkOption {
+                  type = nullOr str;
+                  default = null;
+                  description = ''
+                    Unix socket the service listens on instead of a port, for a
+                    service that must only be reached through the proxy. Only
+                    for services on the proxy's own host.
+                  '';
                 };
                 oidc = {
                   enable = lib.mkOption {
@@ -178,15 +188,26 @@ in
       '';
     in
     lib.mkIf cfg.host {
-      assertions = lib.mapAttrsToList (name: service: {
-        assertion = service.allowedUsers == null || service.forwardAuth;
-        message = ''
-          IAP Service '${name}' sets `allowedUsers` but not `forwardAuth`, so the
-          Authelia rule carrying that restriction is never consulted. Either turn
-          on forwardAuth or configure the restriction via oidc.autheliaConfig
-          instead (I dunno how).
-        '';
-      }) cfg.services;
+      assertions =
+        lib.mapAttrsToList (name: service: {
+          assertion = service.allowedUsers == null || service.forwardAuth;
+          message = ''
+            IAP Service '${name}' sets `allowedUsers` but not `forwardAuth`, so the
+            Authelia rule carrying that restriction is never consulted. Either turn
+            on forwardAuth or configure the restriction via oidc.autheliaConfig
+            instead (I dunno how).
+          '';
+        }) cfg.services
+        ++ lib.concatMap (service: [
+          {
+            assertion = (service.port == null) != (service.socketPath == null);
+            message = "IAP service '${service.name}' must set exactly one of `port` and `socketPath`.";
+          }
+          {
+            assertion = service.socketPath == null || service.host == "localhost";
+            message = "IAP service '${service.name}' sets `socketPath` but isn't on the proxy's host.";
+          }
+        ]) allServices;
 
       services.caddy = {
         enable = true;
@@ -227,7 +248,12 @@ in
               @${service.subdomain} host ${service.fqdn}
               handle @${service.subdomain} {
                 ${lib.optionalString service.forwardAuth forwardAuth}
-                reverse_proxy ${service.host}:${builtins.toString service.port}
+                reverse_proxy ${
+                  if service.socketPath != null then
+                    "unix/${service.socketPath}"
+                  else
+                    "${service.host}:${builtins.toString service.port}"
+                }
               }
             '') allServices
           )}
