@@ -5,6 +5,7 @@
   nodejs,
   makeWrapper,
   writeText,
+  claude-code,
 }:
 let
   packageLock = lib.importJSON ./package-lock.json;
@@ -40,6 +41,12 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
+    sdkPackagePath=node_modules/@anthropic-ai/claude-agent-sdk/package.json
+    wantedVersion=$(node -p "require('./$sdkPackagePath').claudeCodeVersion")
+    if [ "$wantedVersion" != ${claude-code.version} ]; then
+      echo "The Agent SDK is built for claude-code $wantedVersion, not ${claude-code.version}: run update-deps" >&2
+      exit 1
+    fi
     node_modules/.bin/tsc -p chat/tsconfig.json
     node_modules/.bin/tsc -p chat/web/tsconfig.json
     node_modules/.bin/tsc -p chat/web/sw.tsconfig.json

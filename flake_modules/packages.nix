@@ -33,7 +33,9 @@
       slop-probe = final.callPackage ../packages/go-tools/probe.nix { };
       gerrit-ci = final.callPackage ../packages/go-tools/gerrit-ci.nix { };
       heating = final.callPackage ../packages/heating { };
-      slopops = final.callPackage ../packages/slopops { };
+      slopops = final.callPackage ../packages/slopops {
+        inherit (final.llm-agents) claude-code;
+      };
       review-bot = final.callPackage ../packages/go-tools/review-bot.nix {
         inherit (final.llm-agents) claude-code;
       };
