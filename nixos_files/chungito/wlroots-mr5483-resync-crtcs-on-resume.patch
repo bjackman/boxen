@@ -1,0 +1,95 @@
+From f8cd39a161a232037c694581e790b3f6893d4adf Mon Sep 17 00:00:00 2001
+From: sjdhome <sjdhoome@gmail.com>
+Date: Sun, 18 Oct 2026 10:44:09 +0800
+Subject: [PATCH] backend/drm: resync connector CRTCs with the kernel on
+ session resume
+
+When the session becomes inactive, handle_session_active() destroys the
+outputs and dealloc_crtc() tries to disable their CRTCs. The DRM FD is
+already paused at that point, so the commit fails and
+wlr_drm_connector.crtc keeps pointing at the CRTC we last assigned.
+
+On resume, connect_drm_connector() trusts that stale pointer to decide
+whether the output starts enabled and which mode is current. If it no
+longer matches the kernel, for instance because the kernel still has
+another connector bound to a CRTC we consider free, every following
+atomic commit is rejected with EINVAL and no output can be configured
+until the compositor restarts. Switching VTs does not help, since the
+same stale state is reused on every resume.
+
+Re-read each connector's CRTC_ID from the kernel before rescanning, so
+that our view matches the kernel again.
+---
+ backend/drm/backend.c     |  5 +++++
+ backend/drm/drm.c         | 26 ++++++++++++++++++++++++++
+ include/backend/drm/drm.h |  1 +
+ 3 files changed, 32 insertions(+)
+
+diff --git a/backend/drm/backend.c b/backend/drm/backend.c
+index 8f00fc316..cd600d925 100644
+--- a/backend/drm/backend.c
++++ b/backend/drm/backend.c
+@@ -123,6 +123,11 @@ static void handle_session_active(struct wl_listener *listener, void *data) {
+ 		return;
+ 	}
+ 
++	// Disabling CRTCs fails while the session is inactive, so the CRTCs we
++	// recorded for the connectors destroyed above may be stale. Re-read them
++	// from the kernel, otherwise later commits mix our view with the kernel's
++	// and get rejected.
++	refresh_drm_connector_crtcs(drm);
+ 	scan_drm_connectors(drm, NULL);
+ }
+ 
+diff --git a/backend/drm/drm.c b/backend/drm/drm.c
+index dd3edfa7f..3ad84e7ee 100644
+--- a/backend/drm/drm.c
++++ b/backend/drm/drm.c
+@@ -1558,6 +1558,32 @@ static struct wlr_drm_crtc *connector_get_current_crtc(
+ 	return NULL;
+ }
+ 
++void refresh_drm_connector_crtcs(struct wlr_drm_backend *drm) {
++	struct wlr_drm_connector *conn;
++	wl_list_for_each(conn, &drm->connectors, link) {
++		if (conn->lease) {
++			continue;
++		}
++
++		drmModeConnector *drm_conn = drmModeGetConnector(drm->fd, conn->id);
++		if (!drm_conn) {
++			wlr_drm_conn_log_errno(conn, WLR_ERROR, "Failed to get DRM connector");
++			continue;
++		}
++		struct wlr_drm_crtc *crtc = connector_get_current_crtc(conn, drm_conn);
++		drmModeFreeConnector(drm_conn);
++
++		if (crtc != conn->crtc) {
++			char old_crtc_str[16], new_crtc_str[16];
++			format_nullable_crtc(old_crtc_str, sizeof(old_crtc_str), conn->crtc);
++			format_nullable_crtc(new_crtc_str, sizeof(new_crtc_str), crtc);
++			wlr_drm_conn_log(conn, WLR_INFO, "Resyncing CRTC with kernel: %s → %s",
++				old_crtc_str, new_crtc_str);
++		}
++		conn->crtc = crtc;
++	}
++}
++
+ static struct wlr_drm_connector *create_drm_connector(struct wlr_drm_backend *drm,
+ 		const drmModeConnector *drm_conn) {
+ 	struct wlr_drm_connector *wlr_conn = calloc(1, sizeof(*wlr_conn));
+diff --git a/include/backend/drm/drm.h b/include/backend/drm/drm.h
+index 62a44a5eb..c1fd0d537 100644
+--- a/include/backend/drm/drm.h
++++ b/include/backend/drm/drm.h
+@@ -236,6 +236,7 @@ void finish_drm_resources(struct wlr_drm_backend *drm);
+ void scan_drm_connectors(struct wlr_drm_backend *state,
+ 	struct wlr_device_hotplug_event *event);
+ void scan_drm_leases(struct wlr_drm_backend *drm);
++void refresh_drm_connector_crtcs(struct wlr_drm_backend *drm);
+ bool commit_drm_device(struct wlr_drm_backend *drm,
+ 	const struct wlr_backend_output_state *states, size_t states_len, bool test_only);
+ int handle_drm_event(int fd, uint32_t mask, void *data);
+-- 
+GitLab
+

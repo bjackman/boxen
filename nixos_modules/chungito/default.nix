@@ -38,6 +38,18 @@
       });
     };
   programs.sway.extraOptions = [ "--unsupported-gpu" ];
+  # Backport of https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/5483,
+  # fixes outputs never coming back after resume. Drop once it's in the wlroots
+  # release nixpkgs' sway uses (and consider dropping resume-vt-kick too).
+  programs.sway.package = pkgs.sway.override {
+    sway-unwrapped = pkgs.sway-unwrapped.override {
+      wlroots_0_20 = pkgs.wlroots_0_20.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [
+          ../../nixos_files/chungito/wlroots-mr5483-resync-crtcs-on-resume.patch
+        ];
+      });
+    };
+  };
 
   # Didn't help:
   # https://discourse.nixos.org/t/psa-for-those-with-hibernation-issues-on-nvidia/61834
@@ -76,7 +88,8 @@
   # nvidia-drm restores the console's pre-suspend modeset before the MST
   # topology is re-detected, the restore fails, and wlroots is often left with a
   # stale CRTC that makes every later commit fail with EINVAL. Switching VT away
-  # and back makes it reset its state.
+  # and back makes it reset its state. Shouldn't be needed with the wlroots
+  # backport above, kept as a fallback.
   systemd.services.resume-vt-kick = {
     after = [ "suspend.target" ];
     wantedBy = [ "suspend.target" ];
