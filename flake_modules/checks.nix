@@ -13,6 +13,7 @@
         // {
           heating = pkgs.callPackage ../tests/heating.nix { };
           slop-deploy = pkgs.callPackage ../tests/slop-deploy.nix { };
+          slopops-chat = pkgs.callPackage ../tests/slopops-chat.nix { };
         };
     };
 }
