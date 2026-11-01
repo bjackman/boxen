@@ -45,14 +45,21 @@ needs a call from inside a session.
 
 ## Decisions
 
-1. **slopops is a Remote Control session, not a chat loop of its own.**
+1. **slopops is a Remote Control session, and a chat page of its own.**
    `slopops-remote-control` runs `claude remote-control` as `slopops` on pizza,
    with its own login, home and mirror of boxen. On pizza that's the account
    slop-deploy makes for deploys, which defaults its home to `/var/empty`;
-   pizza overrides it with a real one. claude.ai/code already gives
-   a UI on web and phone, notifications, resumable sessions and approval
-   prompts. Building those around the Agent SDK would be most of the work, for
-   no gain in what the agent can do.
+   pizza overrides it with a real one. claude.ai/code gives it a UI on web and
+   phone, notifications, resumable sessions and approval prompts.
+
+   But that session is tied to claude.ai. It needs an interactive login that
+   expires, and the only way to start a turn from outside is a Routine bound
+   to the session, which is janky. So the same agent also runs behind a chat
+   page, `packages/slopops/chat`: a server on pizza that runs it through the
+   Agent SDK, behind Caddy and Authelia like the other services, with the
+   review bot's long-lived token. It keeps the conversation and its own
+   approval prompts, and notifies with Web Push. It shares the account, the
+   mirror and `~/.claude`, so the same rules make deploys ask.
 
 1. **Deploying is an MCP tool behind an approval prompt.** `packages/slopops`
    is a small MCP server whose `deploy` tool runs a deploy and waits for it.
@@ -75,6 +82,11 @@ needs a call from inside a session.
    - The ways round the tool are denied rather than left to ask: `slop-deploy`
      from Bash, and `sudo`, since on pizza `slopops` is also the account
      slop-deploy lets start a deploy.
+   - On the chat page, answering a prompt is a request to the server, which
+     listens on a socket owned by root and Caddy's group. `slopops` can't open
+     it, so the agent can't approve its own deploy with `curl`. The server
+     also checks the user Authelia vouched for, and that a POST came from the
+     page.
    - An `ask` rule holds even if the session is started with
      `--permission-mode bypassPermissions` (checked with Claude Code 2.1.300),
      so a stray flag on the service can't quietly turn the prompts off.
