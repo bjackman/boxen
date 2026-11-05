@@ -40,6 +40,9 @@ let
   chatUser = "brendan";
   mirrorPath = "${homePath}/boxen.git";
   gerrit = homelab.servers.gerrit;
+  gerritProject = "boxen";
+  gerritSshDestination = "slopbot@${gerrit.networking.hostName}";
+  gerritSshPort = toString gerrit.bjackman.gerritSshPort;
   # Recorded in the mirror's config, so the agent's own fetches use it too.
   gerritSshCommand = lib.escapeShellArgs [
     "ssh"
@@ -61,11 +64,19 @@ let
       if [ ! -e ${mirrorPath} ]; then
           GIT_SSH_COMMAND=${lib.escapeShellArg gerritSshCommand} git clone --quiet --mirror \
               -c core.sshCommand=${lib.escapeShellArg gerritSshCommand} \
-              ssh://slopbot@${gerrit.networking.hostName}:${toString gerrit.bjackman.gerritSshPort}/boxen ${mirrorPath}
+              ssh://${gerritSshDestination}:${gerritSshPort}/${gerritProject} ${mirrorPath}
       fi
       mkdir -p "$HOME/.claude"
       ln -sfn ${pkgs.writers.writeJSON "slopops-settings.json" claude.settings} "$HOME/.claude/settings.json"
       ln -sfn ${claude.instructions} "$HOME/.claude/CLAUDE.md"
+    '';
+  };
+  masterEvents = pkgs.writeShellApplication {
+    name = "slopops-master-events";
+    runtimeInputs = [ pkgs.openssh ];
+    text = ''
+      exec ${gerritSshCommand} -p ${gerritSshPort} ${gerritSshDestination} \
+          gerrit stream-events -s ref-updated -s dropped-output
     '';
   };
 in
@@ -121,6 +132,10 @@ in
     inherit (claude) mcpServers;
     vapidSubject = config.bjackman.iap.services.slopops.url;
     path = agentPath;
+    masterWatch = {
+      eventsCommandPath = lib.getExe masterEvents;
+      project = gerritProject;
+    };
   };
 
   systemd.services.slopops-chat = {

@@ -1,6 +1,6 @@
 # slopops: an agent that deploys the homelab
 
-**Status: in use, at phase 1.** Sibling to
+**Status: in use, at phase 1, with phase 3's notifications.** Sibling to
 [`agent_prod_access.md`](agent_prod_access.md), which lets agents look at the
 homelab but not change it. This is the one change worth handing over:
 deploying what review has already put on master.
@@ -115,6 +115,24 @@ thing being contained is a confused agent deploying at a bad moment.
    once the agent is idle would avoid the interruption altogether, and is
    worth building if it gets annoying.
 
+1. **The chat tells the agent when master has moved and settled.** The server
+   follows Gerrit's `stream-events` for `ref-updated` on master, with slopbot's
+   key, and runs `git ls-remote` whenever the stream connects, to catch what it
+   missed. Once master has stayed put for 5 minutes and the agent is idle, it
+   starts a turn with the commits since it last said. Merges come in bursts, so
+   a turn sooner would look at half of one. That turn notifies me only if it
+   asks to deploy, and then its end does too, so that I hear how the deploy
+   went. So that it hears about master at all, the service starts at boot
+   rather than when the page is first opened.
+
+   The stream has no keepalive. Gerrit is on pizza and `pizza` resolves to
+   loopback there, so the stream ends when Gerrit goes away rather than dying
+   unnoticed.
+
+   **Rejected: polling**, with `git ls-remote` every minute or so. It wakes up
+   over and over to find, nearly always, nothing. Asking the agent on a timer,
+   as first planned, costs a turn each time as well.
+
 1. **Other hosts fetch master from Gerrit over git://.** Only pizza can read
    Gerrit's repository from disk. `gerrit-git-daemon` serves `boxen` from it
    read-only, unauthenticated, and only to the tailnet, so norte and sandy
@@ -142,9 +160,8 @@ thing being contained is a confused agent deploying at a bad moment.
 1. **Knowing what's running.** A probe for
    `/run/current-system/configuration-revision`, so that "pizza is three
    commits behind" doesn't need guessing from store paths.
-1. **Proactive.** The chat server asks the agent, on a timer, to check
-   whether master has moved; if it has, the agent proposes a deploy for me to
-   approve.
+1. **Proactive.** The chat server tells the agent when master has moved, and
+   the agent proposes a deploy for me to approve. Done ahead of phase 2.
 1. **Earned autonomy.** Auto-approve the ordinary case (the tip passed CI, the
    host is healthy before and after) and keep the prompt for rollbacks and
    anything unusual.
