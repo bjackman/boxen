@@ -76,9 +76,12 @@ stdenv.mkDerivation (finalAttrs: {
     runHook postInstall
   '';
 
-  passthru.claudeConfig = import ./claude-config.nix {
-    inherit lib writeText;
-    slopops = finalAttrs.finalPackage;
+  passthru = {
+    inherit claude-code;
+    claudeConfig = import ./claude-config.nix {
+      inherit lib writeText;
+      slopops = finalAttrs.finalPackage;
+    };
   };
 
   meta.mainProgram = "slopops-mcp";

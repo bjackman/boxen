@@ -24,7 +24,7 @@ writeShellApplication {
 
     # packages/slopops requires the Agent SDK's patch version to match
     # claude-code's.
-    claudeCodeVersion=$(nix eval --raw --inputs-from . llm-agents#claude-code.version)
+    claudeCodeVersion=$(nix eval --raw .#slopops.claude-code.version)
     sdk=@anthropic-ai/claude-agent-sdk
     cd packages/slopops
     sdkVersion=$(jq -r --arg sdk "$sdk" '.dependencies[$sdk]' package.json)
