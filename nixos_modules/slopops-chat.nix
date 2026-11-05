@@ -50,6 +50,29 @@ in
       default = [ ];
       description = "Packages on the agent's PATH.";
     };
+    masterWatch = lib.mkOption {
+      type = lib.types.nullOr (
+        lib.types.submodule {
+          options = {
+            eventsCommandPath = lib.mkOption {
+              type = lib.types.path;
+              description = "Prints Gerrit's stream-events, at least ref-updated and dropped-output.";
+            };
+            project = lib.mkOption {
+              type = lib.types.str;
+              description = "The Gerrit project that is the working directory's origin.";
+            };
+            quietPeriodSecs = lib.mkOption {
+              type = lib.types.ints.positive;
+              default = 300;
+              description = "How long master must stay put before the agent is told it moved.";
+            };
+          };
+        }
+      );
+      default = null;
+      description = "Tell the agent when master moves, once it has settled and the agent is idle.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -74,7 +97,8 @@ in
         "network-online.target"
       ];
       wants = [ "network-online.target" ];
-      inherit (cfg) path;
+      wantedBy = lib.optional (cfg.masterWatch != null) "multi-user.target";
+      path = cfg.path ++ lib.optional (cfg.masterWatch != null) pkgs.git;
       environment = {
         SHELL = lib.getExe pkgs.bashInteractive;
         SLOPOPS_CHAT_STATE_DIR = cfg.stateDirPath;
@@ -82,6 +106,11 @@ in
         SLOPOPS_CHAT_MCP_CONFIG = pkgs.writers.writeJSON "slopops-mcp.json" cfg.mcpServers;
         SLOPOPS_CHAT_USER = cfg.allowedUser;
         SLOPOPS_CHAT_VAPID_SUBJECT = cfg.vapidSubject;
+      }
+      // lib.optionalAttrs (cfg.masterWatch != null) {
+        SLOPOPS_CHAT_MASTER_EVENTS_COMMAND_PATH = cfg.masterWatch.eventsCommandPath;
+        SLOPOPS_CHAT_MASTER_PROJECT = cfg.masterWatch.project;
+        SLOPOPS_CHAT_MASTER_QUIET_SECS = toString cfg.masterWatch.quietPeriodSecs;
       };
       serviceConfig = {
         User = cfg.user;

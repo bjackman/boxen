@@ -1,13 +1,20 @@
 # The slopops chat server in a VM, with the real claude CLI and Agent SDK. What
 # it fakes is the model: an Anthropic API that answers "touch <file>" with that
 # Bash command and anything else with text, so that every turn that touches a
-# file asks for approval.
+# file asks for approval. Gerrit's event stream is faked too, by a file the test
+# appends events to.
 { pkgs }:
 let
   socketPath = "/run/slopops-chat.sock";
   homePath = "/var/lib/slopops";
   workPath = "${homePath}/work";
+  originPath = "${homePath}/origin";
+  gerritEventsPath = "${homePath}/gerrit-events";
   apiPort = 8090;
+
+  fakeGerritEvents = pkgs.writeShellScript "fake-gerrit-events" ''
+    exec ${pkgs.coreutils}/bin/tail -n 0 -F ${gerritEventsPath}
+  '';
 
   fakeApi = pkgs.writers.writePython3 "fake-anthropic-api" { } ''
     import json
@@ -137,7 +144,10 @@ pkgs.testers.runNixOSTest {
       group = "proxy";
     };
     users.groups.proxy = { };
-    systemd.tmpfiles.rules = [ "d ${workPath} 0755 slopops slopops -" ];
+    systemd.tmpfiles.rules = [
+      "d ${workPath} 0755 slopops slopops -"
+      "f ${gerritEventsPath} 0644 root root -"
+    ];
 
     bjackman.slopopsChat = {
       enable = true;
@@ -148,6 +158,11 @@ pkgs.testers.runNixOSTest {
       workingDirPath = workPath;
       stateDirPath = "${homePath}/chat";
       vapidSubject = "https://chat.example";
+      masterWatch = {
+        eventsCommandPath = fakeGerritEvents;
+        project = "boxen";
+        quietPeriodSecs = 10;
+      };
     };
     systemd.services.slopops-chat = {
       after = [ "fake-anthropic-api.service" ];
@@ -164,7 +179,10 @@ pkgs.testers.runNixOSTest {
       serviceConfig.ExecStart = fakeApi;
     };
 
-    environment.systemPackages = [ pkgs.curl ];
+    environment.systemPackages = [
+      pkgs.curl
+      pkgs.git
+    ];
   };
 
   testScript = ''
@@ -293,5 +311,67 @@ pkgs.testers.runNixOSTest {
         assert post("/api/reset", {}) == "200"
         wait_for_event("stream-after-second-restart", lambda e: e["kind"] == "reset")
         assert "sessionId" not in json.loads(machine.succeed("cat ${homePath}/chat/session.json"))
+
+    def git(*args):
+        command = " ".join(shlex.quote(arg) for arg in args)
+        return machine.succeed(f"runuser -u slopops -- env HOME=${homePath} git {command}").strip()
+
+    def commit(message):
+        git("-C", "${originPath}", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", message)
+        return git("-C", "${originPath}", "rev-parse", "HEAD")
+
+    def gerrit_event(rev, ref="refs/heads/master", project="boxen"):
+        line = json.dumps({"type": "ref-updated", "refUpdate": {"project": project, "refName": ref, "newRev": rev}})
+        machine.succeed(f"echo {shlex.quote(line)} >> ${gerritEventsPath}")
+
+    def master_moves(unit):
+        return [e for e in events(unit) if e["kind"] == "masterMoved"]
+
+    with subtest("master is only recorded when first seen"):
+        git("init", "-q", "-b", "master", "${originPath}")
+        first = commit("first")
+        git("-C", "${workPath}", "init", "-q")
+        git("-C", "${workPath}", "remote", "add", "origin", "${originPath}")
+        machine.succeed("systemctl restart slopops-chat.service")
+        watch("stream-master")
+        machine.wait_until_succeeds(f"grep -q {first} ${homePath}/chat/master.json", timeout=30)
+        time.sleep(12)
+        assert not master_moves("stream-master")
+
+    with subtest("a burst of moves on master reaches the agent once it has settled"):
+        second = commit("second")
+        gerrit_event(second)
+        time.sleep(6)
+        third = commit("third")
+        gerrit_event(third)
+        gerrit_event("1" * 40, ref="refs/heads/other")
+        gerrit_event("2" * 40, project="other")
+        time.sleep(7)
+        assert not master_moves("stream-master")
+        moved = wait_for_event("stream-master", lambda e: e["kind"] == "masterMoved")
+        assert (moved["from"], moved["to"]) == (first, third), moved
+        wait_for_event("stream-master", lambda e: e["kind"] == "turnEnd" and e["seq"] > moved["seq"])
+        time.sleep(12)
+        assert len(master_moves("stream-master")) == 1
+
+    with subtest("a move waits for the agent to be idle"):
+        assert post("/api/messages", {"text": "touch busy"}) == "200"
+        approval = wait_for_event("stream-master", lambda e: e["kind"] == "approval" and "busy" in json.dumps(e["input"]))
+        fourth = commit("fourth")
+        gerrit_event(fourth)
+        time.sleep(15)
+        assert len(master_moves("stream-master")) == 1
+        assert post("/api/approvals", {"id": approval["id"], "allow": True}) == "200"
+        turn_end = wait_for_event("stream-master", lambda e: e["kind"] == "turnEnd" and e["seq"] > approval["seq"])
+        moved = wait_for_event("stream-master", lambda e: e["kind"] == "masterMoved" and e["to"] == fourth)
+        assert moved["from"] == third and moved["seq"] > turn_end["seq"], moved
+        wait_for_event("stream-master", lambda e: e["kind"] == "turnEnd" and e["seq"] > moved["seq"])
+
+    with subtest("a move the stream missed is caught when it reconnects"):
+        fifth = commit("fifth")
+        machine.succeed("pkill -u slopops -f 'tail -n 0 -F'")
+        moved = wait_for_event("stream-master", lambda e: e["kind"] == "masterMoved" and e["to"] == fifth)
+        assert moved["from"] == fourth, moved
+        assert json.loads(machine.succeed("cat ${homePath}/chat/master.json")) == {"notifiedRev": fifth}
   '';
 }
