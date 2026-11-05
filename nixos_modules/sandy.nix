@@ -4,6 +4,7 @@
     ./brendan.nix
     ./common.nix
     ./iap.nix
+    ./node-exporter.nix
     ./server.nix
     ./slop-deploy.nix
     ./slop-probe.nix
