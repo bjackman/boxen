@@ -4,11 +4,14 @@
 // Approving a tool call is a POST to this server, so who can connect to it
 // decides who can approve a deploy. Only the reverse proxy should be able to
 // connect, and it still checks the user Authelia vouched for.
+import { execFile, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { appendFileSync, readFileSync } from "node:fs";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { extname, join } from "node:path";
+import { createInterface } from "node:readline";
+import { promisify } from "node:util";
 import {
   query,
   type CanUseTool,
@@ -36,6 +39,13 @@ const claudePath = requireEnv("SLOPOPS_CHAT_CLAUDE_PATH");
 const mcpConfigPath = requireEnv("SLOPOPS_CHAT_MCP_CONFIG");
 const allowedUser = requireEnv("SLOPOPS_CHAT_USER");
 const vapidSubject = requireEnv("SLOPOPS_CHAT_VAPID_SUBJECT");
+const masterWatch = process.env.SLOPOPS_CHAT_MASTER_EVENTS_COMMAND_PATH
+  ? {
+      eventsCommandPath: process.env.SLOPOPS_CHAT_MASTER_EVENTS_COMMAND_PATH,
+      project: requireEnv("SLOPOPS_CHAT_MASTER_PROJECT"),
+      quietMs: Number(requireEnv("SLOPOPS_CHAT_MASTER_QUIET_SECS")) * 1000,
+    }
+  : null;
 
 await mkdir(stateDirPath, { recursive: true });
 
@@ -77,13 +87,16 @@ const events: ChatEvent[] = await readFile(eventsPath, "utf8").then(
 );
 const listeners = new Set<(event: ChatEvent) => void>();
 let turnOpen = false;
-let turnOpenedBy: "user" | "restarted" | null = null;
+let turnOpenedBy: "user" | "restarted" | "masterMoved" | null = null;
+let turnAskedApproval = false;
 
 function record(event: ChatEvent): void {
-  if (event.kind === "user" || event.kind === "restarted") {
+  if (event.kind === "user" || event.kind === "restarted" || event.kind === "masterMoved") {
     turnOpen = true;
     turnOpenedBy = event.kind;
+    turnAskedApproval = false;
   }
+  if (event.kind === "approval") turnAskedApproval = true;
   if (event.kind === "turnEnd" || event.kind === "reset") turnOpen = false;
 }
 events.forEach(record);
@@ -306,11 +319,14 @@ async function handleMessage(message: SDKMessage): Promise<void> {
       const error =
         message.subtype === "success" ? (message.is_error ? message.result : undefined) : message.errors.join("\n");
       emit({ kind: "turnEnd", ok, error });
-      notify(
-        "slopops",
-        message.subtype === "success" ? truncate(message.result, 200) : "The turn failed.",
-        "turn-end",
-      );
+      // A move of master reaches the phone only if the agent asks to deploy.
+      if (turnOpenedBy !== "masterMoved" || turnAskedApproval) {
+        notify(
+          "slopops",
+          message.subtype === "success" ? truncate(message.result, 200) : "The turn failed.",
+          "turn-end",
+        );
+      }
       break;
     }
   }
@@ -342,6 +358,104 @@ async function resetConversation(): Promise<void> {
   delete session.sessionId;
   await writeJson(sessionPath, session);
   emit({ kind: "reset" });
+}
+
+// When master moves
+
+type GerritEvent = { type?: string; refUpdate?: { project?: string; refName?: string; newRev?: string } };
+
+// Gerrit's event stream says when master moves, and an ls-remote whenever it
+// connects covers what it missed while it wasn't. Master has to stay put for
+// quietMs before the agent hears about it, since merges come in bursts.
+async function watchMaster(eventsCommandPath: string, project: string, quietMs: number): Promise<void> {
+  const statePath = join(stateDirPath, "master.json");
+  const state = await readJson<{ notifiedRev?: string }>(statePath, () => ({}));
+  let latestRev: string | undefined;
+  let quietTimer: NodeJS.Timeout | undefined;
+
+  const save = () =>
+    writeJson(statePath, state).catch((err: unknown) => console.error(`slopops-chat: saving ${statePath}: ${err}`));
+
+  function announce(): void {
+    const from = state.notifiedRev;
+    const to = latestRev;
+    if (quietTimer || turnOpen || from === undefined || to === undefined || to === from) return;
+    state.notifiedRev = to;
+    void save();
+    agent ??= startAgent();
+    emit({ kind: "masterMoved", from, to });
+    agent.inbox.push(
+      `master has moved from ${from} to ${to} since slopops-chat last told you, and has settled there. Fetch, ` +
+        "work out which hosts are behind and what the new commits would change on them, and ask to deploy " +
+        `wherever you would. ${allowedUser} isn't notified of your answer, only of an approval prompt, so if ` +
+        "nothing is worth deploying just say so in a line.",
+    );
+  }
+
+  function seen(rev: string): void {
+    if (rev === latestRev) return;
+    latestRev = rev;
+    clearTimeout(quietTimer);
+    quietTimer = undefined;
+    if (state.notifiedRev === undefined) {
+      state.notifiedRev = rev;
+      void save();
+    } else if (rev !== state.notifiedRev) {
+      quietTimer = setTimeout(() => {
+        quietTimer = undefined;
+        announce();
+      }, quietMs);
+    }
+  }
+
+  async function catchUp(): Promise<void> {
+    try {
+      const { stdout } = await promisify(execFile)("git", ["ls-remote", "origin", "refs/heads/master"]);
+      const rev = stdout.split("\t")[0];
+      if (!/^[0-9a-f]{40}$/.test(rev)) throw new Error(`unexpected output ${JSON.stringify(stdout)}`);
+      seen(rev);
+    } catch (err) {
+      console.error(`slopops-chat: finding master with git ls-remote: ${(err as Error).message}`);
+    }
+  }
+
+  function connect(): void {
+    const child = spawn(eventsCommandPath, [], { stdio: ["ignore", "pipe", "inherit"] });
+    createInterface({ input: child.stdout }).on("line", (line) => {
+      let event: GerritEvent;
+      try {
+        event = JSON.parse(line) as GerritEvent;
+      } catch {
+        return;
+      }
+      if (event.type === "dropped-output") {
+        void catchUp();
+      } else if (
+        event.type === "ref-updated" &&
+        event.refUpdate?.project === project &&
+        event.refUpdate.refName === "refs/heads/master" &&
+        event.refUpdate.newRev
+      ) {
+        seen(event.refUpdate.newRev);
+      }
+    });
+    let ended = false;
+    const reconnect = (why: string) => {
+      if (ended) return;
+      ended = true;
+      console.error(`slopops-chat: Gerrit's event stream ended (${why}), reconnecting in 30s`);
+      setTimeout(connect, 30_000);
+    };
+    child.on("spawn", () => void catchUp());
+    child.on("error", (err) => reconnect(err.message));
+    child.on("close", (status, signal) => reconnect(`exit status ${status ?? signal}`));
+  }
+
+  // Deferred so that the end of the turn reaches the page first.
+  listeners.add((event) => {
+    if (event.kind === "turnEnd" || event.kind === "reset") setImmediate(announce);
+  });
+  connect();
 }
 
 // HTTP
@@ -496,9 +610,11 @@ if (process.env.LISTEN_FDS === "1") {
 }
 console.error("slopops-chat: listening");
 
+if (masterWatch) await watchMaster(masterWatch.eventsCommandPath, masterWatch.project, masterWatch.quietMs);
+
 // Only once: if a resumed turn doesn't survive either, another resume would
 // likely go the same way.
-if (interruptedTurnOpenedBy === "user") resumeAfterRestart();
+if (interruptedTurnOpenedBy === "user" || interruptedTurnOpenedBy === "masterMoved") resumeAfterRestart();
 else if (interruptedTurnOpenedBy === "restarted") {
   notify("slopops", "slopops-chat restarted twice during a turn, so it has stopped.", "turn-end");
 }

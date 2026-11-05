@@ -9,6 +9,7 @@ export type ChatEventBody =
   | { kind: "decision"; id: string; allow: boolean; reason: "user" | "cancelled" }
   | { kind: "turnEnd"; ok: boolean; error?: string }
   | { kind: "reset" }
-  | { kind: "restarted" };
+  | { kind: "restarted" }
+  | { kind: "masterMoved"; from: string; to: string };
 
 export type ChatEvent = ChatEventBody & { seq: number; at: string };

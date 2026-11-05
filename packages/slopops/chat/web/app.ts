@@ -148,6 +148,10 @@ function render(event: ChatEvent): void {
       setBusy(true);
       append(element("p", "divider", "slopops-chat restarted, so slopops is picking up where it left off"));
       break;
+    case "masterMoved":
+      setBusy(true);
+      append(element("p", "divider", `master moved: ${event.from.slice(0, 12)}..${event.to.slice(0, 12)}`));
+      break;
   }
 }
 
