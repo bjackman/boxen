@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   pkgsUnstable,
   ...
 }:
@@ -222,19 +223,59 @@ in
         # Seemed to work fine when tested.
         (makeProfile "chungito-desk" (chungitoDesk presets.dell-u3225qe-b))
 
-        # The right monitor is also daisy-chained off the left one for the Mac.
-        # Both heads have the same description so match by connector name.
-        (makeProfile "chungito-desk-daisy-chain" (
-          chungitoDesk (presets.dell-u3225qe-b // { criteria = "DP-4"; })
-          ++ [
-            {
-              monitor = presets.dell-u3225qe-b // {
-                criteria = "DP-2";
-              };
-              status = "disable";
-            }
-          ]
-        ))
+        # The right monitor is also daisy-chained off the left one for the Mac,
+        # so it appears as two heads with the same description. nvidia names
+        # the connectors differently depending on whether MST detection
+        # happened at boot or on hotplug, so instead of matching by name,
+        # enable whichever head can do 4K120 (only the direct link has the
+        # bandwidth).
+        (
+          let
+            right = presets.dell-u3225qe-b;
+            scale = 1.25;
+            mode = "3840x2160@119.999Hz";
+            enableDirectHead = pkgs.writeShellApplication {
+              name = "kanshi-enable-direct-head";
+              runtimeInputs = [
+                pkgs.sway
+                pkgs.jq
+              ];
+              text = ''
+                head=$(swaymsg -t get_outputs -r | jq -r '
+                  [.[] | select(.make + " " + .model + " " + .serial == "${right.criteria}")
+                       | select(any(.modes[]; .width == 3840 and .height == 2160 and .refresh == 119999))
+                       | .name] | first // empty')
+                if [[ -z "$head" ]]; then
+                  echo "no head for ${right.criteria} supports ${mode}" >&2
+                  exit 1
+                fi
+                swaymsg output "$head" enable mode ${mode} \
+                  position ${toString (divScale presets.dell-u3225qe-a.width scale)} 0 scale ${toString scale}
+              '';
+            };
+            base = makeProfile "chungito-desk-daisy-chain" [
+              {
+                monitor = presets.dell-u3225qe-a;
+                mode = "3840x2160@119.999Hz";
+                inherit scale;
+              }
+              {
+                monitor = right;
+                status = "disable";
+              }
+              {
+                monitor = right;
+                status = "disable";
+              }
+            ];
+          in
+          base
+          // {
+            profile = base.profile // {
+              exec = [ (pkgs.lib.getExe enableDirectHead) ];
+            };
+          }
+        )
       ];
   };
 }
