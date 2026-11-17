@@ -226,27 +226,35 @@ in
         # The right monitor is also daisy-chained off the left one for the Mac,
         # so it appears as two heads with the same description. nvidia names
         # the connectors differently depending on whether MST detection
-        # happened at boot or on hotplug, so instead of matching by name,
-        # enable whichever head can do 4K120 (only the direct link has the
-        # bandwidth).
+        # happened at boot or on hotplug, and both heads advertise the same
+        # modes, so tell them apart by the EDID product code, which the monitor
+        # reports differently on its DP-out-chained input.
         (
           let
             right = presets.dell-u3225qe-b;
             scale = 1.25;
             mode = "3840x2160@119.999Hz";
+            # Little-endian bytes 10-11 of the EDID.
+            directProductCode = "6e43";
             enableDirectHead = pkgs.writeShellApplication {
               name = "kanshi-enable-direct-head";
               runtimeInputs = [
                 pkgs.sway
                 pkgs.jq
+                pkgs.coreutils
               ];
               text = ''
-                head=$(swaymsg -t get_outputs -r | jq -r '
-                  [.[] | select(.make + " " + .model + " " + .serial == "${right.criteria}")
-                       | select(any(.modes[]; .width == 3840 and .height == 2160 and .refresh == 119999))
-                       | .name] | first // empty')
+                head=""
+                for name in $(swaymsg -t get_outputs -r | jq -r '
+                    .[] | select(.make + " " + .model + " " + .serial == "${right.criteria}") | .name'); do
+                  for edidPath in /sys/class/drm/card*-"$name"/edid; do
+                    if [[ "$(od -An -tx1 -j10 -N2 "$edidPath" | tr -d ' ')" == "${directProductCode}" ]]; then
+                      head=$name
+                    fi
+                  done
+                done
                 if [[ -z "$head" ]]; then
-                  echo "no head for ${right.criteria} supports ${mode}" >&2
+                  echo "no head for ${right.criteria} has EDID product code ${directProductCode}" >&2
                   exit 1
                 fi
                 swaymsg output "$head" enable mode ${mode} \
