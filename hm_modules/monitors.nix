@@ -264,7 +264,9 @@ in
                 status = "disable";
               }
               {
-                monitor = right;
+                monitor = right // {
+                  criteria = "*";
+                };
                 status = "disable";
               }
             ];
