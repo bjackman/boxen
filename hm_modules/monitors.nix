@@ -129,7 +129,9 @@ let
               }
               // (if spec ? scale then { inherit scale; } else { })
               // (if spec ? mode then { inherit (spec) mode; } else { })
-              // (if spec ? status then { inherit (spec) status; } else { });
+              // {
+                status = spec.status or "enable";
+              };
             in
             {
               resolved = acc.resolved // {
