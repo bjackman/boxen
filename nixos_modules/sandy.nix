@@ -4,6 +4,7 @@
     ./brendan.nix
     ./common.nix
     ./iap.nix
+    ./nix-cache.nix
     ./node-exporter.nix
     ./server.nix
     ./slop-deploy.nix
@@ -15,6 +16,8 @@
   ];
 
   networking.hostName = "sandy";
+
+  bjackman.nixCache.use = true;
 
   bjackman.slopDeploy.enable = true;
 
