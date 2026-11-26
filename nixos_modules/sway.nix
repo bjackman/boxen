@@ -8,8 +8,11 @@ let
   sway = config.programs.sway.package;
   kanshiCfg = config.home-manager.users.brendan.services.kanshi;
   kanshiConfigPath = config.home-manager.users.brendan.xdg.configFile."kanshi/config".source;
+  wallpaperPath = ../hm_files/common/clouds_95-4k.png;
   greeterSwayConfigPath = pkgs.writeText "greeter-sway-config" ''
     xwayland disable
+    swaybg_command ${lib.getExe pkgs.swaybg}
+    output * bg ${wallpaperPath} fill
     exec ${lib.getExe kanshiCfg.package} --config ${kanshiConfigPath}
     exec "${lib.getExe config.programs.regreet.package}; ${sway}/bin/swaymsg exit"
   '';
@@ -40,7 +43,24 @@ in
   fonts.packages = with pkgs; [ nerd-fonts.symbols-only ];
 
   # Run the greeter under sway so it gets the same output layout as the session.
-  programs.regreet.enable = true;
+  programs.regreet = {
+    enable = true;
+    settings = {
+      background = {
+        path = "${wallpaperPath}";
+        fit = "Cover";
+      };
+      GTK.application_prefer_dark_theme = false;
+      appearance.greeting_msg = "Welcome to ${config.networking.hostName}";
+      widget.clock.format = "%H:%M";
+    };
+    font = {
+      package = pkgs.dejavu_fonts;
+      name = "DejaVu Sans";
+      size = 11;
+    };
+    extraCss = ../nixos_files/regreet.css;
+  };
   services.greetd.settings.default_session.command = lib.concatStringsSep " " [
     "${pkgs.coreutils}/bin/env"
     "XDG_DATA_DIRS=${config.services.displayManager.sessionData.desktops}/share"

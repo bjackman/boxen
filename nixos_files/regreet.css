@@ -1,0 +1,120 @@
+/* Colours and bevels match hm_files/common/quickshell/Theme.qml. */
+
+* {
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  -gtk-icon-shadow: none;
+  transition: none;
+  outline: none;
+  color: #000000;
+}
+
+frame,
+frame > border {
+  border: none;
+}
+
+frame.background {
+  background: #c0c0c0;
+  border-style: solid;
+  border-width: 2px;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  box-shadow:
+    inset 2px 2px #dfdfdf,
+    inset -2px -2px #808080;
+  padding: 2px;
+}
+
+/* The greeting, dressed as the dialog's title bar. */
+frame.background grid > label:first-child {
+  background: #000080;
+  color: #ffffff;
+  padding: 4px 6px;
+}
+
+button {
+  background: #c0c0c0;
+  border-style: solid;
+  border-width: 2px;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  box-shadow:
+    inset 2px 2px #dfdfdf,
+    inset -2px -2px #808080;
+  min-height: 32px;
+  padding: 2px 12px;
+}
+
+button:hover {
+  background: #c0c0c0;
+}
+
+button:active,
+button:checked {
+  background: #b0b0b0;
+  border-color: #000000 #ffffff #ffffff #000000;
+  box-shadow:
+    inset 2px 2px #808080,
+    inset -2px -2px #dfdfdf;
+}
+
+button:focus-visible {
+  outline: 1px dotted #000000;
+  outline-offset: -6px;
+}
+
+button.suggested-action,
+button.destructive-action {
+  background: #c0c0c0;
+  color: #000000;
+}
+
+button.suggested-action label,
+button.destructive-action label {
+  color: #000000;
+}
+
+entry,
+combobox button.combo,
+combobox button.combo:hover,
+combobox button.combo:checked {
+  background: #ffffff;
+  border-style: solid;
+  border-width: 2px;
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow:
+    inset 2px 2px #000000,
+    inset -2px -2px #dfdfdf;
+  min-height: 32px;
+  padding: 0 6px;
+}
+
+entry:focus-within {
+  outline: none;
+}
+
+entry selection,
+popover modelbutton:hover,
+popover row:selected,
+popover row:hover {
+  background: #000080;
+  color: #ffffff;
+}
+
+popover > contents,
+popover > arrow {
+  background: #c0c0c0;
+  border-style: solid;
+  border-width: 2px;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 2px;
+}
+
+infobar.error > revealer > box {
+  background: #c0c0c0;
+  color: #cc0000;
+}
+
+infobar.error label {
+  color: #cc0000;
+}
