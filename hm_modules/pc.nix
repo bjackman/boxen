@@ -19,7 +19,6 @@
   ];
 
   home.packages = with pkgs; [
-    llm-agents.antigravity-cli
     vlc
     nautilus
   ];
