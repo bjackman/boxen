@@ -8,13 +8,35 @@ let
   sway = config.programs.sway.package;
   kanshiCfg = config.home-manager.users.brendan.services.kanshi;
   kanshiConfigPath = config.home-manager.users.brendan.xdg.configFile."kanshi/config".source;
+  systemctl = "${config.systemd.package}/bin/systemctl";
+  greeterSettingsPath = pkgs.writeText "GreeterSettings.qml" ''
+    pragma Singleton
+
+    import Quickshell
+
+    Singleton {
+        readonly property string hostName: ${builtins.toJSON config.networking.hostName}
+        readonly property string userName: "brendan"
+        readonly property list<string> sessionCommand: ${builtins.toJSON [ "${sway}/bin/sway" ]}
+        readonly property list<string> powerOffCommand: ${builtins.toJSON [ systemctl "poweroff" ]}
+        readonly property list<string> rebootCommand: ${builtins.toJSON [ systemctl "reboot" ]}
+    }
+  '';
+  greeterConfigDir = pkgs.runCommand "quickshell-greeter" { } ''
+    mkdir $out
+    cp ${../nixos_files/greeter}/*.qml $out/
+    for f in Theme Bevel PushButton BarText Icons; do
+      cp ${../hm_files/common/quickshell}/$f.qml $out/
+    done
+    cp ${greeterSettingsPath} $out/GreeterSettings.qml
+  '';
   wallpaperPath = ../hm_files/common/clouds_95-4k.png;
   greeterSwayConfigPath = pkgs.writeText "greeter-sway-config" ''
     xwayland disable
     swaybg_command ${lib.getExe pkgs.swaybg}
     output * bg ${wallpaperPath} fill
     exec ${lib.getExe kanshiCfg.package} --config ${kanshiConfigPath}
-    exec "${lib.getExe config.programs.regreet.package}; ${sway}/bin/swaymsg exit"
+    exec "${lib.getExe pkgs.quickshell} --path ${greeterConfigDir}; ${sway}/bin/swaymsg exit"
   '';
 in
 {
@@ -39,40 +61,16 @@ in
     enable = true;
     wrapperFeatures.gtk = true;
   };
-  # For bzmenu/pwmenu
-  fonts.packages = with pkgs; [ nerd-fonts.symbols-only ];
+  fonts.packages = with pkgs; [
+    # For bzmenu/pwmenu
+    nerd-fonts.symbols-only
+    # For the greeter's icons.
+    font-awesome
+  ];
 
   # Run the greeter under sway so it gets the same output layout as the session.
-  programs.regreet = {
+  services.greetd = {
     enable = true;
-    settings = {
-      background = {
-        path = "${wallpaperPath}";
-        fit = "Cover";
-      };
-      GTK.application_prefer_dark_theme = false;
-      appearance.greeting_msg = "Welcome to ${config.networking.hostName}";
-      widget.clock.format = "%H:%M";
-    };
-    font = {
-      package = pkgs.dejavu_fonts;
-      name = "DejaVu Sans";
-      size = 11;
-    };
-    extraCss = ../nixos_files/regreet.css;
-  };
-  services.greetd.settings.default_session.command = lib.concatStringsSep " " [
-    "${pkgs.coreutils}/bin/env"
-    "XDG_DATA_DIRS=${config.services.displayManager.sessionData.desktops}/share"
-    "${sway}/bin/sway --config ${greeterSwayConfigPath}"
-  ];
-  bjackman.impermanence.extraPersistence.directories = [ "/var/lib/regreet" ];
-  # ReGreet has no default session, without a remembered one it runs the login
-  # shell.
-  systemd.tmpfiles.settings."20-regreet-default-session"."/var/lib/regreet/state.toml".f = {
-    user = "greeter";
-    group = "greeter";
-    mode = "0644";
-    argument = "[user_to_last_sess]\nbrendan = \"Sway\"\n";
+    settings.default_session.command = "${sway}/bin/sway --config ${greeterSwayConfigPath}";
   };
 }

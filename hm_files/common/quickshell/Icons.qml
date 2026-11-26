@@ -27,4 +27,7 @@ Singleton {
 
     readonly property string microphone: "\uf130"
     readonly property string microphoneMuted: "\uf131"
+
+    readonly property string key: "\uf084"
+    readonly property string power: "\uf011"
 }
