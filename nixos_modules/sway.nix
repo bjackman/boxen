@@ -47,4 +47,12 @@ in
     "${sway}/bin/sway --config ${greeterSwayConfigPath}"
   ];
   bjackman.impermanence.extraPersistence.directories = [ "/var/lib/regreet" ];
+  # ReGreet has no default session, without a remembered one it runs the login
+  # shell.
+  systemd.tmpfiles.settings."20-regreet-default-session"."/var/lib/regreet/state.toml".f = {
+    user = "greeter";
+    group = "greeter";
+    mode = "0644";
+    argument = "[user_to_last_sess]\nbrendan = \"Sway\"\n";
+  };
 }
