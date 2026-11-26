@@ -117,9 +117,6 @@
 
   bjackman.impermanence.enable = true;
 
-  # So that GDM and Gnome and stuff have a persistent monitors setup.
-  environment.etc."xdg/monitors.xml".source = ../../nixos_files/chungito/monitors.xml;
-
   programs.steam.enable = true;
 
   # https://wiki.nixos.org/wiki/Maintainers:Fastly#Cache_v2_plans
